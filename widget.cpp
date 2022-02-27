@@ -172,9 +172,10 @@ Widget::Widget(QWidget *parent)
     m_lists_complete_filename = m_settings.value("listsfilename").toString();
 
 
-    topTableView = new QTableView;
+    topTableView = new QTableView(this);
     middleTableWidget = new QTableWidget;
     bottomTableWidget = new QTableWidget;
+    filePrefixTableWidget = new QTableWidget(this);
     directoryView = new QTreeView;
 
     topTableView->setColumnWidth(0,1000);
@@ -188,13 +189,7 @@ Widget::Widget(QWidget *parent)
     bottomTableWidget->setColumnWidth(1,250);
     bottomTableWidget->setSortingEnabled(false);
 
-    // bibModel is not used currently. Remove this.
-    bibModel    = new QStandardItemModel(this);
     biblioModel = new TableModel(this);
-
-    //topTableView->setModel(bibModel);
-    //topTableView->setModel(biblioModel);
-    //topTableView->show();
 
     listWidget = new QListWidget(this);
     listWidget->dragEnabled();
@@ -223,13 +218,6 @@ Widget::Widget(QWidget *parent)
     directoryView->setColumnWidth(2,400);
     directoryView->setSortingEnabled(true);
 
-    // this should be deleted:
-    QGridLayout * mainLayout = new QGridLayout;
-
-
-
-
-
 
     QVBoxLayout* layout = new QVBoxLayout(this);
     QSplitter *  mainSplitter = new QSplitter (Qt::Horizontal,this);
@@ -246,36 +234,16 @@ Widget::Widget(QWidget *parent)
     rightSplitter->addWidget(listWidget);
 
 
+    load_file_prefixes(filePrefixTableWidget);
+    rightSplitter->addWidget(filePrefixTableWidget);
 
-
-
-
-
-    // all these mainLayout should be deleted:
-    mainLayout->addWidget(topTableView,0,0);
-    mainLayout->setRowMinimumHeight(3,0);
-    mainLayout->addWidget(middleTableWidget,2,0);
-    mainLayout->addWidget(bottomTableWidget,4,0);
-    mainLayout->addWidget(directoryView,4,1);
-
-
-    //setLayout(mainLayout);
-    //setMainWidget (mainSplitter);
-
-
-    // delete these:
-    QHBoxLayout * lists_layout = new QHBoxLayout;
-    mainLayout->addLayout(lists_layout,0,1);
-    lists_layout->addWidget(listNamesWidget);
-    lists_layout->addWidget(listWidget);
 
 
     QWidget * middle_right_widget = new QWidget(this);
     QGridLayout * small_grid_layout = new QGridLayout;
     middle_right_widget->setLayout(small_grid_layout);
     rightSplitter->addWidget(middle_right_widget);
-    //delete this one line:
-    mainLayout->addLayout(small_grid_layout,2,1);
+
     m_proposed_new_title_label = new QLabel("Proposed new title") ;
     m_proposed_new_title_widget = new QLineEdit();
     m_new_list_name_widget = new QLineEdit("(enter name of new list here)");
@@ -289,7 +257,6 @@ Widget::Widget(QWidget *parent)
 
     small_grid_layout->addWidget(m_create_new_list_button,0,0);
     small_grid_layout->addWidget(m_new_list_name_widget,0,1);
-    //small_grid_layout->addWidget(m_proposed_new_title_label,1,0);
     small_grid_layout->addWidget(m_change_filename_button,1,0);
     small_grid_layout->addWidget(m_proposed_new_title_widget,1,1);
 
@@ -400,6 +367,39 @@ Widget::~Widget()
    foreach(Entry * entry, m_data_by_key){
       delete entry;
    }
+}
+
+void Widget::load_file_prefixes(QTableWidget* table){
+    int ROWCOUNT = 19;
+    table->setColumnCount(3);
+    table->setColumnWidth(0,6);
+    table->setColumnWidth(1,6);
+    table->setColumnWidth(2,600);
+
+    table->setRowCount(ROWCOUNT);
+    QStringList Column1, Column2, Column3;
+    Column1 << QString("0") << QString("0") <<  QString("0") << QString("0") ;
+    Column2 << QString("0") << QString("1") << QString("2") << QString("3");
+    Column3 << QString("Zellig2Noam") << QString("Linguistica and segmentation") << QString("Prime suspect") << QString ("Battle in the Mind Fields");
+    Column1 << QString("1") << QString("1") << QString("1") << QString("1")<< QString("1") << QString("1") << QString("1");
+    Column2 << QString("") << QString("1") << QString("2")<< QString("3")<< QString("4")<< QString("5")<< QString("6")<< QString("7");
+    Column3 << QString("Linguistics") << QString("Phonology") << QString("Morphology") << QString ("Syntax")<< QString ("History of lx")<< QString ("Semantics")<< QString ("ASL")<< QString ("African");
+    Column1 << QString("1") << QString("2") << QString("2") << QString("2")<< QString("2") << QString("2") << QString("2") << QString("2");
+    Column2 << QString("") << QString("1") << QString("2")<< QString("3")<< QString("4")<< QString("5")<< QString("6")<< QString("7");
+    Column3 << QString("Philosophy") << QString("Philosophy of science") << QString("Philosophy of mathematics") << QString ("Continental philosophy")<< QString ("Analytic philosophy")<< QString ("Continental vs analytic")<< QString ("other history of philosophy");
+
+
+
+    QTableWidgetItem * item1, *item2, *item3;
+    for (int row = 0; row < ROWCOUNT; row++ ){
+        item1 = new QTableWidgetItem(Column1[row]);
+        table->setItem(row,0,item1);
+        item2 = new QTableWidgetItem(Column2[row]);
+        table->setItem(row,1,item2);
+        item3 = new QTableWidgetItem(Column3[row]);
+        table->setItem(row,2,item3);
+
+    }
 }
 
 /*          LISTS           */
@@ -779,16 +779,6 @@ void Entry::write_bibentry_to_bibtex( QTextStream & stream, QStringList & biblio
     }
 
     int fileno = 0;
-/*
-    QString file = "possible_file::" + QString::number(fileno);
-    while(entry->contains_info(file)){
-        this_json_entry[file] = entry->get_info(file);
-        qDebug() << 589 << entry->get_info(file);
-        fileno++;
-        file = "possible_file::" + QString::number(fileno);
-    }
-    */
-
     stream << "\n}\n";
 
 }

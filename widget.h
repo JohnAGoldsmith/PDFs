@@ -90,6 +90,7 @@ private:
 
     QTableWidget * middleTableWidget;
     QTableWidget * bottomTableWidget;
+    QTableWidget * filePrefixTableWidget;
     QTreeView * directoryView;
     QListWidget * listWidget;
     QListWidget * listNamesWidget;
@@ -153,6 +154,7 @@ private:
     void update_data_by_fullfilename (QString, QString, Entry*);
     void update_files_onboard_by_fullfilename(QString, QString, Entry*);
     void update_files_onboard_by_filenamestem(QString, QString, Entry*);
+    void load_file_prefixes(QTableWidget*);
 
 private slots:
 
