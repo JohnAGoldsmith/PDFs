@@ -82,7 +82,7 @@ public:
 private:
 
     TableModel         * biblioModel;
-    QStandardItemModel * bibModel;
+    //QStandardItemModel * bibModel;
 
 
     QTableView * topTableView;
@@ -170,11 +170,11 @@ private slots:
     void write_bibliography_to_bibtex();
     void promote_file_from_preferred_location(Entry*);
 
-    void add_entry_to_bibmodel(Entry *);
-    void add_entry_to_bibmodel_by_fullfilename(Entry*);
-    void add_entry_to_bibmodel_by_key(Entry*);
-    void add_entry_to_bibmodel_by_size(Entry*);
-    void add_entry_to_bibmodel_by_filenamestem(Entry*);
+    void add_entry_to_bibliomodel(Entry *);
+    void add_entry_to_bibliomodel_by_fullfilename(Entry*);
+    void add_entry_to_bibliomodel_by_key(Entry*);
+    void add_entry_to_bibliomodel_by_size(Entry*);
+    void add_entry_to_bibliomodel_by_filenamestem(Entry*);
     void add_entry_to_top_view(Entry*);
     void delete_selected_files();
     void write_bibentry_to_json(Entry *, QJsonObject & );

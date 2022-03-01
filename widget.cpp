@@ -41,7 +41,7 @@ int TableModel::rowCount(const QModelIndex &parent) const
 int TableModel::columnCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
-    return 6;
+    return 7;
 }
 QVariant TableModel::data(const QModelIndex &index, int role) const
  {
@@ -63,7 +63,10 @@ QVariant TableModel::data(const QModelIndex &index, int role) const
              return entry->get_key(); }
          if (index.column() == 4){
              return entry->get_keywords(); }
-
+         if (index.column() == 5){
+             return entry->get_size(); }
+         if (index.column() == 6){
+             return entry->get_on_board_entries().count(); }
      if (role == Qt::FontRole && entry->get_on_board_entries().size() > 0){
          QFont font;
          font.setBold(true);
@@ -90,7 +93,8 @@ QVariant TableModel::headerData(int section, Qt::Orientation orientation, int ro
                 return tr("Item key");
             case 4:
                 return tr("Key words");
-
+            case 5:
+                return tr("Size");
 
         default:
                 return QVariant();
@@ -454,7 +458,7 @@ void Widget::add_entry_to_list( ){
     list->add_entry(m_entry_in_middle_table);
     qDebug() << 294 << "author" << m_entry_in_middle_table->get_author();
     display_list(list);
-    add_entry_to_bibmodel(m_entry_in_middle_table);
+    add_entry_to_bibliomodel(m_entry_in_middle_table);
 }
 void Widget::add_entry_to_list(List* list, Entry* entry ){
     // This is from middle widget
@@ -504,6 +508,7 @@ int function2 (QString line, Entry * entry, int n){ //file_info * this_file_info
     return i_filesize;
 }
 int function3 (QString line, Entry * entry){ //file_info * this_file_info){
+     Q_UNUSED(entry);
     if (line.endsWith("]")){line.chop(1);}
     if (line.startsWith("[ ")) { line.remove(0,2);}
     QStringList pieces = line.split(".pdf,");
@@ -590,7 +595,7 @@ void Widget::read_JSON_file_new(){
                 biblioModel->add_entry(entry);
 
 
-                add_entry_to_bibmodel(entry);
+                add_entry_to_bibliomodel(entry);
                 //upper_table_row_number++;
         }
     }
@@ -778,7 +783,7 @@ void Entry::write_bibentry_to_bibtex( QTextStream & stream, QStringList & biblio
         }
     }
 
-    int fileno = 0;
+    //int fileno = 0;
     stream << "\n}\n";
 
 }
@@ -853,6 +858,7 @@ QString invert_first_author(QString authors){
 
 // THis is no longer used -- the Qt internal functions are used model/view
 void Widget::add_entry_to_top_view (Entry* entry){
+     Q_UNUSED(entry);
 
 }
 
@@ -862,9 +868,10 @@ void Widget::on_top_table_view_clicked(const QModelIndex &index){
 }
 
 void Widget::on_top_table_view_doubleClicked(const QModelIndex &index){
-    //qDebug() << 712;
+    int column_for_key(3);
     int row = index.row();
-    QString key  = bibModel->item(row,3)->text();
+    QModelIndex index2 = biblioModel->index(row,column_for_key);
+    QString key  = biblioModel->data(index2).toString();
     //qDebug() << 715 << key;
     Entry * entry = m_data_by_key[key];
     m_entry_in_top_table = entry;
@@ -901,6 +908,7 @@ void Widget::on_bottom_table_widget_clicked(const QModelIndex & index ){
 }
 
 void Widget::on_bottom_table_widget_doubleClicked(int row, int column){
+     Q_UNUSED(column);
     QTableWidgetItem  * itemfolder =  bottomTableWidget->item(row,2);
     QString foldername = itemfolder->data(Qt::DisplayRole).toString();
     QTableWidgetItem* itemfilename = bottomTableWidget->item(row,1);
@@ -1023,6 +1031,7 @@ void Widget::show_files_with_same_size(){
     int stop_row = 0;
     QList<QString> filenames;
     QTableWidgetItem* item0, *item1, *item2, *item3, *item4, *item5;
+    int color = 0;
     foreach (int size, sizes){
         if (m_files_onboard_by_size.count(size) > 1){
             QTableWidgetItem * item1, * item2, * item3, *item0;
@@ -1040,6 +1049,16 @@ void Widget::show_files_with_same_size(){
                 item5->setData(Qt::DisplayRole, entry->get_info("lastread"));
                 entry->set_bottom_view_filename_item(item1);
                 entry->set_bottom_view_size_item(item3);
+                if (row == start_row ){
+                   if (color == 0){
+                       color = 1;}
+                   else{ color = 0;}
+                }
+                if (color == 0){
+                    item1->setForeground(QColorConstants::Red);}
+                else{
+                    item1->setForeground(QColorConstants::Blue);
+                }
                 bottomTableWidget->setItem(row,0,item0);
                 bottomTableWidget->setItem(row,1,item1);
                 bottomTableWidget->setItem(row,2,item2);
@@ -1079,6 +1098,7 @@ void Widget::link_top_and_bottom_entries_from_size( ){
                 entry_top->set_size_item(this_size);
                 foreach(Entry* entry_bottom, m_files_onboard_by_size.values(this_size) ){                    
                     entry_top->add_to_on_board_entries(entry_bottom);
+                    //entry_top->color_top_view_item_for_size();
                     entry_bottom->add_to_bib_entries(entry_top);
                     entry_bottom->color_bottom_view_item_for_size();
                 }
@@ -1098,19 +1118,19 @@ void Entry::set_size_item(int size){
 }
 void Entry::color_bottom_view_item_for_size(){
     QTableWidgetItem* item_bottom = m_bottom_view_size_item;
-    item_bottom->setBackground(QBrush(QColor(0,255, 255)));
+    item_bottom->setForeground(QColorConstants::Red);
 }
 void Entry::color_bottom_view_item_for_filename(){
     QTableWidgetItem* item_bottom = m_bottom_view_filename_item;
-    item_bottom->setBackground(QBrush(QColor(0,255, 255)));
+    item_bottom->setForeground(QColorConstants::Blue);
 }
 void Entry::color_top_view_item_for_size(){
     QStandardItem* item_top = m_top_view_size_item;
-    item_top->setBackground(QBrush(QColor(0,255, 255)));
+    item_top->setForeground(QColorConstants::Red);
 }
 void Entry::color_top_view_item_for_filename(){
     QStandardItem* item_top = m_top_view_filename_item;
-    item_top->setBackground(QBrush(QColor(0,255, 255)));
+    item_top->setForeground(QColorConstants::Blue);
 }
 void Widget::link_top_and_bottom_entries_from_filename( ){
     QStandardItem * item_top;
@@ -1134,13 +1154,24 @@ void Widget::link_top_and_bottom_entries_from_filename( ){
 }
 void Widget::link_top_and_bottom_entries(){
    int column_for_size = 5;
-   QStandardItem * item = bibModel->item(m_selected_row_in_top_table, column_for_size);
-   item->setText(QString::number(m_entry_in_bottom_table->get_size()));
-   m_entry_in_top_table->set_size(m_entry_in_bottom_table->get_size());
+   int column_for_key = 3;
+   QModelIndex index = biblioModel->index(m_selected_row_in_top_table, column_for_key);
+   QString key = biblioModel->data(index).toString();
+   Entry * top_entry = m_data_by_key[key];
+   int size = m_entry_in_bottom_table->get_size();
+   top_entry->set_size(size);
+   biblioModel->dataChanged(index, index);
+   top_entry->add_to_on_board_entries(m_entry_in_bottom_table);
+
+   //QStandardItem * item = biblioModel->item(m_selected_row_in_top_table, column_for_size);
+   //item->setText(QString::number(m_entry_in_bottom_table->get_size()));
+   //m_entry_in_top_table->set_size(size);
    m_entry_in_top_table->set_filenameStem(m_entry_in_bottom_table->get_filenamestem());
    m_entry_in_top_table->set_folder(m_entry_in_bottom_table->get_folder());
    m_entry_in_top_table->set_filenameFull(m_entry_in_bottom_table->get_filenamefull());
 }
+
+
 
 /*              MIDDLE           VIEW           */
 
@@ -1215,7 +1246,7 @@ void Widget::display_entry_on_middle_table(){
         }
         QString value = entry->get_info(label);
         item = new QTableWidgetItem(label);
-        qDebug() << 923 << label << value;
+        //qDebug() << 923 << label << value;
         middleTableWidget->setItem(row_number,0,item);
         item = new QTableWidgetItem(value);
         middleTableWidget->setItem(row_number,1,item);
@@ -1251,7 +1282,7 @@ void Widget::put_file_info_on_middle_table_widget(int bottom_widget_row){
     QString filename(bottomTableWidget->item(bottom_widget_row,1)->text());
     QString foldername(bottomTableWidget->item(bottom_widget_row,2)->text());
     QString fullname = foldername + "/" + filename;
-    qDebug() << 1067 << fullname;
+    //qDebug() << 1067 << fullname;
     Entry* entry = m_files_onboard_by_filenamefull[fullname];
     m_entry_in_bottom_table = entry;
     m_entry_in_middle_table = entry;
@@ -1266,26 +1297,26 @@ void Widget::on_middle_widget_item_changed(int row, int column ){
     }
 }
 /*              BIB MODEL               */
-void Widget::add_entry_to_bibmodel(Entry* entry){
+void Widget::add_entry_to_bibliomodel(Entry* entry){
 
-    add_entry_to_bibmodel_by_key(entry);
-    add_entry_to_bibmodel_by_filenamestem(entry);
-    add_entry_to_bibmodel_by_fullfilename(entry);
-    add_entry_to_bibmodel_by_size(entry);
+    add_entry_to_bibliomodel_by_key(entry);
+    add_entry_to_bibliomodel_by_filenamestem(entry);
+    add_entry_to_bibliomodel_by_fullfilename(entry);
+    add_entry_to_bibliomodel_by_size(entry);
     //add_entry_to_top_view(entry); // ???
 }
-void Widget::add_entry_to_bibmodel_by_size(Entry * entry ){
+void Widget::add_entry_to_bibliomodel_by_size(Entry * entry ){
 
     int this_size = entry->get_size();
     m_data_by_size.insert(this_size, entry);
 }
-void Widget::add_entry_to_bibmodel_by_fullfilename(Entry* entry){
+void Widget::add_entry_to_bibliomodel_by_fullfilename(Entry* entry){
     m_data_by_fullfilename[entry->get_filenamefull()] = entry;
 }
-void Widget::add_entry_to_bibmodel_by_filenamestem(Entry* entry){
+void Widget::add_entry_to_bibliomodel_by_filenamestem(Entry* entry){
     m_data_by_filenamestem.insert(entry->get_filenamestem(), entry);
 }
-void Widget::add_entry_to_bibmodel_by_key(Entry* entry){
+void Widget::add_entry_to_bibliomodel_by_key(Entry* entry){
     QString key;
     if (entry->get_key().length() > 0 && m_data_by_key.contains(entry->get_key())){
         m_filename_collisions.insert(entry->get_key(), entry);
