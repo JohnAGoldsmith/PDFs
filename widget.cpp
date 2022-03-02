@@ -458,7 +458,7 @@ void Widget::add_entry_to_list( ){
     list->add_entry(m_entry_in_middle_table);
     qDebug() << 294 << "author" << m_entry_in_middle_table->get_author();
     display_list(list);
-    add_entry_to_bibliomodel(m_entry_in_middle_table);
+    register_biblioentry_by_key_name_and_size(m_entry_in_middle_table);
 }
 void Widget::add_entry_to_list(List* list, Entry* entry ){
     // This is from middle widget
@@ -562,22 +562,11 @@ void Widget::read_JSON_file_new(){
         QJsonObject  json_settings;
         json_settings = json_doc[0].toObject();
         // not doing anything currently.
-
-
         json_bibliography = json_doc[2].toObject();
-    } else {
-        // Old format::
-        if(!json_doc.isObject()){
-                qDebug() << "JSON doc root is not an object.";
-        }
-        json_bibliography = json_doc.object();
     }
-
-
     if(json_bibliography.isEmpty()){
         qDebug() << "The array is empty";
     }
-    //int upper_table_row_number = 0;
     foreach (QString item_key, json_bibliography.keys()){     
         if(! json_bibliography[item_key].isObject()) {continue;}
         QJsonObject j_this_entry =  json_bibliography[item_key].toObject();
@@ -593,10 +582,7 @@ void Widget::read_JSON_file_new(){
                 }
                 promote_file_from_preferred_location(entry);
                 biblioModel->add_entry(entry);
-
-
-                add_entry_to_bibliomodel(entry);
-                //upper_table_row_number++;
+                register_biblioentry_by_key_name_and_size(entry);
         }
     }
 
@@ -1297,26 +1283,27 @@ void Widget::on_middle_widget_item_changed(int row, int column ){
     }
 }
 /*              BIB MODEL               */
-void Widget::add_entry_to_bibliomodel(Entry* entry){
-
-    add_entry_to_bibliomodel_by_key(entry);
-    add_entry_to_bibliomodel_by_filenamestem(entry);
-    add_entry_to_bibliomodel_by_fullfilename(entry);
-    add_entry_to_bibliomodel_by_size(entry);
-    //add_entry_to_top_view(entry); // ???
+void Widget::register_biblioentry_by_key_name_and_size(Entry* entry){
+    register_biblioentry_by_key(entry);
+    register_biblioentry_by_filenamestem(entry);
+    register_biblioentry_by_fullfilename(entry);
+    register_biblioentry_by_size(entry);
 }
-void Widget::add_entry_to_bibliomodel_by_size(Entry * entry ){
-
+void Widget::register_biblioentry_by_size(Entry * entry ){
     int this_size = entry->get_size();
+    if (m_data_by_size.contains(this_size)){
+        qDebug() << 1310 << entry->get_author() << entry->get_filenamestem();
+    }
     m_data_by_size.insert(this_size, entry);
+
 }
-void Widget::add_entry_to_bibliomodel_by_fullfilename(Entry* entry){
+void Widget::register_biblioentry_by_fullfilename(Entry* entry){
     m_data_by_fullfilename[entry->get_filenamefull()] = entry;
 }
-void Widget::add_entry_to_bibliomodel_by_filenamestem(Entry* entry){
+void Widget::register_biblioentry_by_filenamestem(Entry* entry){
     m_data_by_filenamestem.insert(entry->get_filenamestem(), entry);
 }
-void Widget::add_entry_to_bibliomodel_by_key(Entry* entry){
+void Widget::register_biblioentry_by_key(Entry* entry){
     QString key;
     if (entry->get_key().length() > 0 && m_data_by_key.contains(entry->get_key())){
         m_filename_collisions.insert(entry->get_key(), entry);

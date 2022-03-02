@@ -170,11 +170,11 @@ private slots:
     void write_bibliography_to_bibtex();
     void promote_file_from_preferred_location(Entry*);
 
-    void add_entry_to_bibliomodel(Entry *);
-    void add_entry_to_bibliomodel_by_fullfilename(Entry*);
-    void add_entry_to_bibliomodel_by_key(Entry*);
-    void add_entry_to_bibliomodel_by_size(Entry*);
-    void add_entry_to_bibliomodel_by_filenamestem(Entry*);
+    void register_biblioentry_by_key_name_and_size(Entry *);
+    void register_biblioentry_by_fullfilename(Entry*);
+    void register_biblioentry_by_key(Entry*);
+    void register_biblioentry_by_size(Entry*);
+    void register_biblioentry_by_filenamestem(Entry*);
     void add_entry_to_top_view(Entry*);
     void delete_selected_files();
     void write_bibentry_to_json(Entry *, QJsonObject & );
