@@ -179,6 +179,7 @@ Widget::Widget(QWidget *parent)
     topTableView = new QTableView(this);
     middleTableWidget = new QTableWidget;
     bottomTableWidget = new QTableWidget;
+    bottomTableWidget2 = new QTableWidget;
     filePrefixTableWidget = new QTableWidget(this);
     directoryView = new QTreeView;
 
@@ -192,6 +193,17 @@ Widget::Widget(QWidget *parent)
     bottomTableWidget->setColumnWidth(0,600);
     bottomTableWidget->setColumnWidth(1,250);
     bottomTableWidget->setSortingEnabled(false);
+    bottomTableWidget->setColumnCount(3);
+    bottomTableWidget->setColumnWidth(0,600);
+    bottomTableWidget->setColumnWidth(1,250);
+    bottomTableWidget->setSortingEnabled(false);
+
+    bottomTableWidget2->setColumnWidth(0,1000);
+    bottomTableWidget2->setColumnWidth(1,1000);
+    bottomTableWidget2->setColumnWidth(3,800);
+    bottomTableWidget2->setColumnWidth(4,800);
+    bottomTableWidget2->setVisible(false);
+
 
     biblioModel = new TableModel(this);
 
@@ -227,13 +239,14 @@ Widget::Widget(QWidget *parent)
     QSplitter *  mainSplitter = new QSplitter (Qt::Horizontal,this);
     layout->addWidget(mainSplitter);
     mainSplitter->setSizes(QList<int>({4000, 4000}));
-    QSplitter *  leftSplitter = new QSplitter(Qt::Vertical, mainSplitter);
-    QSplitter *  rightSplitter = new QSplitter(Qt::Vertical,mainSplitter);
+    leftSplitter = new QSplitter(Qt::Vertical, mainSplitter);
+    rightSplitter = new QSplitter(Qt::Vertical,mainSplitter);
     mainSplitter->addWidget(leftSplitter);
     mainSplitter->addWidget(rightSplitter);
     leftSplitter->addWidget(topTableView);
     leftSplitter->addWidget(middleTableWidget);
     leftSplitter->addWidget(bottomTableWidget);
+    leftSplitter->addWidget(bottomTableWidget2);
     rightSplitter->addWidget(listNamesWidget);
     rightSplitter->addWidget(listWidget);
 
@@ -585,11 +598,11 @@ void Widget::read_JSON_file_new(){
                 register_biblioentry_by_key_name_and_size(entry);
         }
     }
+    place_entries_with_shared_keys_on_table();
 
     QSortFilterProxyModel * proxyModel = new QSortFilterProxyModel () ;
     proxyModel->setSourceModel( biblioModel );
     topTableView->setModel( proxyModel );
-
     topTableView->setColumnWidth(0,400);
     topTableView->setColumnWidth(1,400);
     topTableView->setColumnWidth(2,400);
@@ -626,7 +639,41 @@ void Widget::read_JSON_file_new(){
     }
    link_top_and_bottom_entries_from_size();
    link_top_and_bottom_entries_from_filename();
+   //bottomTableWidget2->setVisible(true);
+   place_entries_with_shared_filename_on_table();
 }
+void Widget::place_entries_with_shared_keys_on_table(){
+
+}
+void Widget::place_entries_with_shared_filename_on_table(){
+    int row(0), rowcount(0);
+    bottomTableWidget2->setVisible(true);
+    bottomTableWidget2->setColumnCount(2);
+    bottomTableWidget2->setRowCount(25);
+    bottomTableWidget2->setColumnWidth(0,400);
+    bottomTableWidget2->setColumnWidth(1,500);
+    foreach (QString  filename, m_data_by_filenamestem.uniqueKeys() ){
+        if (filename.length() == 0){continue;}
+        QList<Entry*> entries = m_data_by_filenamestem.values(filename);
+        if (entries.count() > 1) { rowcount++; }
+    }
+    bottomTableWidget2->setRowCount(rowcount);
+    foreach (QString  filename, m_data_by_filenamestem.uniqueKeys() ){
+        if (filename.length() == 0){continue;}
+        QList<Entry*> entries = m_data_by_filenamestem.values(filename);
+        if (entries.count() < 2) { continue; }
+        foreach (Entry* entry, entries){
+            QTableWidgetItem * item = new QTableWidgetItem (entry->get_filenamestem());
+            qDebug() << 661 << entry->get_filenamestem();
+            bottomTableWidget2->setItem(row,0,item);
+            QTableWidgetItem * item1 = new QTableWidgetItem (entry->get_key());
+            bottomTableWidget2->setItem(row,1, item1);
+            row++;
+
+        }
+    }
+}
+
 QList<Entry*>  Widget::get_entries_by_size(int n){
     QList<Entry*>  list = m_data_by_size.values(n);
     return list;
@@ -1292,7 +1339,7 @@ void Widget::register_biblioentry_by_key_name_and_size(Entry* entry){
 void Widget::register_biblioentry_by_size(Entry * entry ){
     int this_size = entry->get_size();
     if (m_data_by_size.contains(this_size)){
-        qDebug() << 1310 << entry->get_author() << entry->get_filenamestem();
+        //qDebug() << 1310 << entry->get_author() << entry->get_filenamestem();
     }
     m_data_by_size.insert(this_size, entry);
 

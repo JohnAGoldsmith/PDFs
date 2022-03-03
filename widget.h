@@ -21,6 +21,7 @@
 #include <QShortcut>
 #include <QAbstractTableModel>
 #include <QSortFilterProxyModel>
+#include <QSplitter>
 
 
 struct bibentry;
@@ -88,8 +89,11 @@ private:
     QTableView * topTableView;
     QSortFilterProxyModel * proxyModel_for_topTableView;
 
+    QSplitter    * leftSplitter;
+    QSplitter    * rightSplitter;
     QTableWidget * middleTableWidget;
     QTableWidget * bottomTableWidget;
+    QTableWidget * bottomTableWidget2;
     QTableWidget * filePrefixTableWidget;
     QTreeView * directoryView;
     QListWidget * listWidget;
@@ -155,7 +159,8 @@ private:
     void update_files_onboard_by_fullfilename(QString, QString, Entry*);
     void update_files_onboard_by_filenamestem(QString, QString, Entry*);
     void load_file_prefixes(QTableWidget*);
-
+    void place_entries_with_shared_keys_on_table();
+    void place_entries_with_shared_filename_on_table();
 private slots:
 
     void quit_now() {QApplication::quit();}
