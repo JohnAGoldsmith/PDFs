@@ -107,6 +107,9 @@ private:
     QPushButton * m_add_to_list_button;
     QPushButton * m_link_two_entries;
     QPushButton * m_delete_selected_files_button;
+    QPushButton * m_check_biblio_for_shared_key_button;
+    QPushButton * m_check_biblio_for_shared_size_button;
+    QPushButton * m_check_biblio_for_shared_filename_button;
     QLineEdit * m_new_list_name_widget;
 
 
@@ -122,10 +125,10 @@ private:
     int m_selected_row_in_top_table;
 
 
-    QMap<QString, Entry*> m_data_by_key;
-    QMap<QString, Entry*> m_data_by_fullfilename;
+    QMap<QString, Entry*>      m_data_by_key;
+    QMap<QString, Entry*>      m_data_by_fullfilename;
     QMultiMap<QString, Entry*> m_data_by_filenamestem;
-    QMultiMap<int,Entry*> m_data_by_size;
+    QMultiMap<int,Entry*>      m_data_by_size;
     QMap<QString, Entry*>      m_files_onboard_by_filenamefull;
     QMultiMap<QString, Entry*> m_files_onboard_by_filenamestem;
     QMultiMap<int, Entry*>     m_files_onboard_by_size;
@@ -159,8 +162,7 @@ private:
     void update_files_onboard_by_fullfilename(QString, QString, Entry*);
     void update_files_onboard_by_filenamestem(QString, QString, Entry*);
     void load_file_prefixes(QTableWidget*);
-    void place_entries_with_shared_keys_on_table();
-    void place_entries_with_shared_filename_on_table();
+
 private slots:
 
     void quit_now() {QApplication::quit();}
@@ -197,6 +199,9 @@ private slots:
     void link_top_and_bottom_entries();
     QString test_key_for_uniqueness(QString key);
     void show_files_with_same_size();
+    void place_entries_with_shared_keys_on_table();
+    void place_entries_with_shared_filename_on_table();
+    void place_entries_with_shared_size_on_table();
 
     /*    Lists              */
     //void read_lists_file();

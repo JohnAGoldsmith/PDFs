@@ -41,7 +41,7 @@ int TableModel::rowCount(const QModelIndex &parent) const
 int TableModel::columnCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
-    return 7;
+    return 9;
 }
 QVariant TableModel::data(const QModelIndex &index, int role) const
  {
@@ -56,9 +56,9 @@ QVariant TableModel::data(const QModelIndex &index, int role) const
          if (index.column() == 0){
              return entry->get_author();}
          if (index.column() == 1) {
-             return entry->get_filenamestem();}
+             return entry->get_title();}
          if (index.column() == 2){
-             return entry->get_folder(); }
+             return entry->get_year(); }
          if (index.column() == 3){
              return entry->get_key(); }
          if (index.column() == 4){
@@ -67,6 +67,11 @@ QVariant TableModel::data(const QModelIndex &index, int role) const
              return entry->get_size(); }
          if (index.column() == 6){
              return entry->get_on_board_entries().count(); }
+         if (index.column() == 7){
+             return entry->get_folder(); }
+         if (index.column() == 8){
+             return entry->get_filenamestem(); }
+
      if (role == Qt::FontRole && entry->get_on_board_entries().size() > 0){
          QFont font;
          font.setBold(true);
@@ -86,18 +91,23 @@ QVariant TableModel::headerData(int section, Qt::Orientation orientation, int ro
             case 0:
                 return tr("Author");
             case 1:
-                return tr("Filename");
+                return tr("Title");
             case 2:
-                return tr("Folder");
+                return tr("Year");
             case 3:
                 return tr("Item key");
             case 4:
                 return tr("Key words");
             case 5:
                 return tr("Size");
-
-        default:
-                return QVariant();
+            case 6:
+                return tr("File count");
+            case 7:
+                return tr("Folder");
+            case 8:
+                return tr("Filename");
+            default:
+                    return QVariant();
         }
     }
     return QVariant();
@@ -183,10 +193,6 @@ Widget::Widget(QWidget *parent)
     filePrefixTableWidget = new QTableWidget(this);
     directoryView = new QTreeView;
 
-    topTableView->setColumnWidth(0,1000);
-    topTableView->setColumnWidth(1,1000);
-    topTableView->setColumnWidth(3,800);
-    topTableView->setColumnWidth(4,800);
     topTableView->setSelectionMode(QAbstractItemView::SingleSelection);
     topTableView->setSortingEnabled(true);
     bottomTableWidget->setColumnCount(5);
@@ -271,6 +277,9 @@ Widget::Widget(QWidget *parent)
     m_add_to_list_button = new QPushButton("Add entry to selected list (^U)");
     m_link_two_entries = new QPushButton("Link top and bottom entries (^Z)");
     m_delete_selected_files_button = new QPushButton("Delete selected files");
+    m_check_biblio_for_shared_key_button = new QPushButton("Check biblio for shared keys");
+    m_check_biblio_for_shared_size_button = new QPushButton("Check biblio for shared sizes");
+    m_check_biblio_for_shared_filename_button = new QPushButton("Check biblio for shared filenames");
 
     small_grid_layout->addWidget(m_create_new_list_button,0,0);
     small_grid_layout->addWidget(m_new_list_name_widget,0,1);
@@ -282,6 +291,9 @@ Widget::Widget(QWidget *parent)
     small_grid_layout->addWidget(m_add_to_list_button,4,0);
     small_grid_layout->addWidget(m_link_two_entries,5,0);
     small_grid_layout->addWidget(m_delete_selected_files_button,6,0);
+    small_grid_layout->addWidget(m_check_biblio_for_shared_key_button,7,0);
+    small_grid_layout->addWidget(m_check_biblio_for_shared_size_button,8,0);
+    small_grid_layout->addWidget(m_check_biblio_for_shared_filename_button,9,0);
     m_current_list = nullptr;
 
     rightSplitter->addWidget(directoryView);
@@ -314,6 +326,12 @@ Widget::Widget(QWidget *parent)
                 this,SLOT(add_entry_to_list()));
     connect(m_delete_selected_files_button,SIGNAL(clicked()),
                 this,SLOT(delete_selected_files()));
+    connect(m_check_biblio_for_shared_key_button,SIGNAL(clicked()),
+                this,SLOT(place_entries_with_shared_keys_on_table()));
+    connect(m_check_biblio_for_shared_filename_button,SIGNAL(clicked()),
+                this,SLOT(place_entries_with_shared_filename_on_table()));
+    connect(m_check_biblio_for_shared_size_button,SIGNAL(clicked()),
+                this,SLOT(place_entries_with_shared_size_on_table()));
 
     m_keyCtrlA = new QShortcut(this);
     m_keyCtrlA->setKey(Qt::CTRL + Qt::Key_A);
@@ -598,15 +616,21 @@ void Widget::read_JSON_file_new(){
                 register_biblioentry_by_key_name_and_size(entry);
         }
     }
-    place_entries_with_shared_keys_on_table();
+    //place_entries_with_shared_keys_on_table();
 
     QSortFilterProxyModel * proxyModel = new QSortFilterProxyModel () ;
     proxyModel->setSourceModel( biblioModel );
     topTableView->setModel( proxyModel );
-    topTableView->setColumnWidth(0,400);
+    topTableView->setColumnWidth(0,300);
     topTableView->setColumnWidth(1,400);
-    topTableView->setColumnWidth(2,400);
-    topTableView->setColumnWidth(3,100);
+    topTableView->setColumnWidth(2,100);
+    topTableView->setColumnWidth(3,400);
+    topTableView->setColumnWidth(4,300);
+    topTableView->setColumnWidth(5,100);
+    topTableView->setColumnWidth(6,100);
+    topTableView->setColumnWidth(7,400);
+    topTableView->setColumnWidth(8,400);
+
     // What follows has to be done *after* the entries have been loaded: this is the List information.
    if (NewFormatFlag){
        QJsonArray json_lists_array;
@@ -640,40 +664,122 @@ void Widget::read_JSON_file_new(){
    link_top_and_bottom_entries_from_size();
    link_top_and_bottom_entries_from_filename();
    //bottomTableWidget2->setVisible(true);
-   place_entries_with_shared_filename_on_table();
+   //place_entries_with_shared_filename_on_table();
+   //place_entries_with_shared_keys_on_table();
 }
 void Widget::place_entries_with_shared_keys_on_table(){
-
+    int row(0), rowcount(0);
+    qDebug() << 660 << "check for shared key";
+    foreach (QString  key, m_data_by_key.uniqueKeys() ){
+        if (key.length() == 0){continue;}
+        QList<Entry*> entries = m_data_by_key.values(key);
+        if (entries.count() > 1) { rowcount++; }
+    }
+    qDebug() << 658 << rowcount;
+    if (rowcount == 0) return;
+    bottomTableWidget2->clear();
+    bottomTableWidget2->setVisible(true);
+    bottomTableWidget2->setColumnCount(2);
+    bottomTableWidget2->setColumnWidth(0,400);
+    bottomTableWidget2->setColumnWidth(1,500);
+    bottomTableWidget2->setRowCount(rowcount);
+    foreach (QString  key, m_data_by_key.uniqueKeys() ){
+        if (key.length() == 0){continue;}
+        QList<Entry*> entries = m_data_by_key.values(key);
+        if (entries.count() < 2) { continue; }
+        foreach (Entry* entry, entries){
+            QTableWidgetItem * item = new QTableWidgetItem (entry->get_filenamestem());
+            qDebug() << 664 << entry->get_filenamestem();
+            bottomTableWidget2->setItem(row,0,item);
+            QTableWidgetItem * item1 = new QTableWidgetItem (entry->get_key());
+            bottomTableWidget2->setItem(row,1, item1);
+            row++;
+        }
+    }
 }
 void Widget::place_entries_with_shared_filename_on_table(){
     int row(0), rowcount(0);
-    bottomTableWidget2->setVisible(true);
-    bottomTableWidget2->setColumnCount(2);
-    bottomTableWidget2->setRowCount(25);
-    bottomTableWidget2->setColumnWidth(0,400);
-    bottomTableWidget2->setColumnWidth(1,500);
+    qDebug() << 690 << "check for shared filename";
+
     foreach (QString  filename, m_data_by_filenamestem.uniqueKeys() ){
         if (filename.length() == 0){continue;}
         QList<Entry*> entries = m_data_by_filenamestem.values(filename);
         if (entries.count() > 1) { rowcount++; }
     }
+    if (rowcount == 0) return;
+
     bottomTableWidget2->setRowCount(rowcount);
+    bottomTableWidget2->setVisible(true);
+    bottomTableWidget2->setColumnCount(2);
+    bottomTableWidget2->setColumnWidth(0,400);
+    bottomTableWidget2->setColumnWidth(1,500);
     foreach (QString  filename, m_data_by_filenamestem.uniqueKeys() ){
         if (filename.length() == 0){continue;}
         QList<Entry*> entries = m_data_by_filenamestem.values(filename);
         if (entries.count() < 2) { continue; }
         foreach (Entry* entry, entries){
-            QTableWidgetItem * item = new QTableWidgetItem (entry->get_filenamestem());
-            qDebug() << 661 << entry->get_filenamestem();
+            QTableWidgetItem * item = new QTableWidgetItem (entry->get_author());
+            qDebug() << 708 << entry->get_filenamestem();
             bottomTableWidget2->setItem(row,0,item);
-            QTableWidgetItem * item1 = new QTableWidgetItem (entry->get_key());
+            QTableWidgetItem * item1 = new QTableWidgetItem (entry->get_filenamestem());
             bottomTableWidget2->setItem(row,1, item1);
             row++;
-
         }
     }
 }
+void Widget::place_entries_with_shared_size_on_table(){
+    int row(0), rowcount(0);
+    int color(0);
+    int startrow(0);
+    qDebug() << 718 << "check for shared size";
 
+    foreach (int size, m_data_by_size.uniqueKeys() ){
+        if (size == 0){continue;}
+        QList<Entry*> entries = m_data_by_size.values(size);
+        if (entries.count() > 1) { rowcount++; }
+    }
+    if (rowcount == 0) {return;}
+
+    bottomTableWidget2->setRowCount(rowcount);
+    bottomTableWidget2->setVisible(true);
+    bottomTableWidget2->setColumnCount(5);
+    bottomTableWidget2->setColumnWidth(0,400);
+    bottomTableWidget2->setColumnWidth(1,500);
+    foreach (int size, m_data_by_size.uniqueKeys() ){
+        if (size == 0){continue;}
+        QList<Entry*> entries = m_data_by_size.values(size);
+        if (entries.count() < 2) { continue; }
+        startrow = row;
+        foreach (Entry* entry, entries){
+            QTableWidgetItem * item0 = new QTableWidgetItem (entry->get_title());
+            if (row == startrow){
+                if (color == 0){
+                    color = 1;
+                } else{
+                    color = 0;
+                }
+            }
+            if (color == 0) {
+                item0->setForeground(QColorConstants::Red);
+            }
+            else {
+                item0 ->setForeground(QColorConstants::Blue);
+            }
+
+            bottomTableWidget2->setItem(row,0,item0);
+            QTableWidgetItem * item1 = new QTableWidgetItem (entry->get_author());
+            bottomTableWidget2->setItem(row,1,item1);
+
+            QTableWidgetItem * item2 = new QTableWidgetItem (entry->get_key());
+            bottomTableWidget2->setItem(row,2, item2);
+            QTableWidgetItem * item3 = new QTableWidgetItem (entry->get_key());
+            bottomTableWidget2->setItem(row,3, item3);
+            QTableWidgetItem * item4 = new QTableWidgetItem (QString::number(entry->get_size()));
+            bottomTableWidget2->setItem(row,4, item4);
+            row++;
+        }
+    }
+}
 QList<Entry*>  Widget::get_entries_by_size(int n){
     QList<Entry*>  list = m_data_by_size.values(n);
     return list;
@@ -910,7 +1016,6 @@ void Widget::on_top_table_view_doubleClicked(const QModelIndex &index){
     m_entry_in_top_table = entry;
     QString filename = entry->get_info("filenamefull");
     QDesktopServices::openUrl(QUrl::fromLocalFile(filename));
-
 }
 
 
