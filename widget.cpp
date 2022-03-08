@@ -50,7 +50,7 @@ QVariant TableModel::data(const QModelIndex &index, int role) const
 
      if (index.row() >= m_entries.size() || index.row() < 0)
          return QVariant();
-
+     //qDebug() << 54 << "data index"<< index << "row" << index.row() << "author" << m_entries.at(index.row())->get_author();
      if (role == Qt::DisplayRole) {
          Entry* entry   = m_entries.at(index.row());
          if (index.column() == 0){
@@ -114,6 +114,7 @@ QVariant TableModel::headerData(int section, Qt::Orientation orientation, int ro
 }
 bool TableModel::insertRows(int position, int rows, const QModelIndex &index)
 {
+    /*
     Q_UNUSED(index);
     beginInsertRows(QModelIndex(), position, position+rows-1);
 
@@ -125,11 +126,14 @@ bool TableModel::insertRows(int position, int rows, const QModelIndex &index)
     }
 
     endInsertRows();
+    */
     return true;
+
 }
 bool TableModel::removeRows(int position, int rows, const QModelIndex &index)
 {
     Q_UNUSED(index);
+    /*
     beginRemoveRows(QModelIndex(), position, position+rows-1);
 
     for (int row=0; row < rows; ++row) {
@@ -137,6 +141,7 @@ bool TableModel::removeRows(int position, int rows, const QModelIndex &index)
     }
 
     endRemoveRows();
+    */
     return true;
 }
 bool TableModel::setData(const QModelIndex &index, const QVariant &value, int role)
@@ -322,6 +327,8 @@ Widget::Widget(QWidget *parent)
                 this,SLOT(new_list()));
     connect(m_save_biblio_file_button,SIGNAL(clicked()),
                 this,SLOT(write_bibliography()));
+    connect(m_link_two_entries,SIGNAL(clicked()),
+                this,SLOT(link_top_and_bottom_entries()));
     connect(m_add_to_list_button,SIGNAL(clicked()),
                 this,SLOT(add_entry_to_list()));
     connect(m_delete_selected_files_button,SIGNAL(clicked()),
@@ -618,9 +625,9 @@ void Widget::read_JSON_file_new(){
     }
     //place_entries_with_shared_keys_on_table();
 
-    QSortFilterProxyModel * proxyModel = new QSortFilterProxyModel () ;
-    proxyModel->setSourceModel( biblioModel );
-    topTableView->setModel( proxyModel );
+    biblioModel->m_proxyModel = new QSortFilterProxyModel () ;
+    biblioModel->m_proxyModel->setSourceModel( biblioModel );
+    topTableView->setModel( biblioModel->m_proxyModel );
     topTableView->setColumnWidth(0,300);
     topTableView->setColumnWidth(1,400);
     topTableView->setColumnWidth(2,100);
@@ -1297,6 +1304,9 @@ void Widget::link_top_and_bottom_entries(){
    QString key = biblioModel->data(index).toString();
    Entry * top_entry = m_data_by_key[key];
    int size = m_entry_in_bottom_table->get_size();
+
+   qDebug() << 1303 << "row"<< m_selected_row_in_top_table << "key" << key << "size" << size;
+
    top_entry->set_size(size);
    biblioModel->dataChanged(index, index);
    top_entry->add_to_on_board_entries(m_entry_in_bottom_table);
@@ -1384,7 +1394,7 @@ void Widget::display_entry_on_middle_table(){
         }
         QString value = entry->get_info(label);
         item = new QTableWidgetItem(label);
-        //qDebug() << 923 << label << value;
+        qDebug() << 923 << label << value;
         middleTableWidget->setItem(row_number,0,item);
         item = new QTableWidgetItem(value);
         middleTableWidget->setItem(row_number,1,item);
@@ -1402,16 +1412,11 @@ void Widget::display_entry_on_middle_table(){
 
 
 void Widget::put_bibitem_info_on_middle_table_widget(const QModelIndex & index){
-    QTableWidgetItem * item;
-    QModelIndex index2;
-    int row = index.row();
-    int col = 3;
-    index2 = biblioModel->index(row,col);
-    QString key = biblioModel->data(index2).toString();
-    //QString key = biblioModel->item(row,3)->text();
-    Entry* entry = m_data_by_key[key];
+    qDebug() << 1415 << index.data().toString() << "row"<< index.row();
+    QModelIndex underlying_index = biblioModel->m_proxyModel->mapToSource(index);
+    int model_row = underlying_index.row();
+    Entry * entry = biblioModel->get_entries().at(model_row);
     m_entry_in_top_table  = entry;
-    m_selected_row_in_top_table = row;
     m_entry_in_middle_table = entry;
     display_entry_on_middle_table();
     m_proposed_new_title_widget->clear();

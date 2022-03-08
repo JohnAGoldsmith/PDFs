@@ -1,4 +1,4 @@
- #ifndef WIDGET_H
+#ifndef WIDGET_H
 #define WIDGET_H
 
 #include <QWidget>
@@ -35,23 +35,17 @@ class TableModel : public QAbstractTableModel
 public:
     TableModel(QObject * parent = nullptr);
     TableModel(QList<Entry*> entries, QObject *parent = 0);
+     QSortFilterProxyModel * m_proxyModel;
 
-    //int rowCount (const QModelIndex &parent) const;
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
-
-    //int columnCount(const QModelIndex &parent) const;
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
-
-    //QVariant data(const QModelIndex &index, int role) const;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
-
     QVariant headerData(int section, Qt::Orientation  value, int role) const override;
-
     bool insertRows(int position, int rows, const QModelIndex &index=QModelIndex());
     bool removeRows(int position, int rows, const QModelIndex &index);
     bool setData(const QModelIndex &index, const QVariant &value, int role=Qt::EditRole);
     Qt::ItemFlags flags(const QModelIndex &index) const;
-    //QList< Entry* > getList();
+    QList< Entry* > get_entries() {return m_entries;}
     void add_entry(Entry* entry){ m_entries.append(entry); }
 
 private:
