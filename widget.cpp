@@ -623,7 +623,6 @@ void Widget::read_JSON_file_new(){
                 register_biblioentry_by_key_name_and_size(entry);
         }
     }
-    //place_entries_with_shared_keys_on_table();
 
     biblioModel->m_proxyModel = new QSortFilterProxyModel () ;
     biblioModel->m_proxyModel->setSourceModel( biblioModel );
@@ -1010,17 +1009,20 @@ void Widget::add_entry_to_top_view (Entry* entry){
 
 void Widget::on_top_table_view_clicked(const QModelIndex &index){
     qDebug() << index << index.row() << index.column() << 851;
+
+    QModelIndex underlying_index = biblioModel->m_proxyModel->mapToSource(index);
+    int model_row = underlying_index.row();
+    Entry * entry = biblioModel->get_entries().at(model_row);
+    m_entry_in_top_table  = entry;
+
     put_bibitem_info_on_middle_table_widget(index);
 }
 
 void Widget::on_top_table_view_doubleClicked(const QModelIndex &index){
-    int column_for_key(3);
-    int row = index.row();
-    QModelIndex index2 = biblioModel->index(row,column_for_key);
-    QString key  = biblioModel->data(index2).toString();
-    //qDebug() << 715 << key;
-    Entry * entry = m_data_by_key[key];
-    m_entry_in_top_table = entry;
+    QModelIndex underlying_index = biblioModel->m_proxyModel->mapToSource(index);
+    int model_row = underlying_index.row();
+    Entry * entry = biblioModel->get_entries().at(model_row);
+    m_entry_in_top_table  = entry;
     QString filename = entry->get_info("filenamefull");
     QDesktopServices::openUrl(QUrl::fromLocalFile(filename));
 }
@@ -1269,13 +1271,11 @@ void Entry::color_bottom_view_item_for_filename(){
     QTableWidgetItem* item_bottom = m_bottom_view_filename_item;
     item_bottom->setForeground(QColorConstants::Blue);
 }
+// deprecated
 void Entry::color_top_view_item_for_size(){
-    QStandardItem* item_top = m_top_view_size_item;
-    item_top->setForeground(QColorConstants::Red);
 }
+//deprecated
 void Entry::color_top_view_item_for_filename(){
-    QStandardItem* item_top = m_top_view_filename_item;
-    item_top->setForeground(QColorConstants::Blue);
 }
 void Widget::link_top_and_bottom_entries_from_filename( ){
     QStandardItem * item_top;
@@ -1288,8 +1288,7 @@ void Widget::link_top_and_bottom_entries_from_filename( ){
                 entry_top->add_to_bib_entries(entry_top_2);
             }
             QList<Entry*> onboard_list = m_files_onboard_by_filenamestem.values(this_filename);
-            foreach (Entry* entry_bottom, onboard_list){
-                //entry_top->color_top_view_item_for_filename();
+            foreach (Entry* entry_bottom, onboard_list){                
                 entry_bottom->color_bottom_view_item_for_filename();
                 entry_top->add_to_on_board_entries(entry_bottom);
                 entry_bottom->add_to_bib_entries(entry_top);
@@ -1298,18 +1297,22 @@ void Widget::link_top_and_bottom_entries_from_filename( ){
     }
 }
 void Widget::link_top_and_bottom_entries(){
+   if (! m_entry_in_top_table) {\
+       qDebug() << 1301 << "Can't link entries, because no item in top view has been selected.";
+       return;
+   }
    int column_for_size = 5;
    int column_for_key = 3;
-   QModelIndex index = biblioModel->index(m_selected_row_in_top_table, column_for_key);
-   QString key = biblioModel->data(index).toString();
-   Entry * top_entry = m_data_by_key[key];
+   //QModelIndex index = biblioModel->index(m_selected_row_in_top_table, column_for_key);
+   //QString key = biblioModel->data(index).toString();
+   //Entry * top_entry = m_data_by_key[key];
    int size = m_entry_in_bottom_table->get_size();
 
-   qDebug() << 1303 << "row"<< m_selected_row_in_top_table << "key" << key << "size" << size;
+   qDebug() << 1303 << "row"<< m_selected_row_in_top_table << "size" << size;
 
-   top_entry->set_size(size);
-   biblioModel->dataChanged(index, index);
-   top_entry->add_to_on_board_entries(m_entry_in_bottom_table);
+   m_entry_in_top_table->set_size(size);
+   //biblioModel->dataChanged(index, index);
+   m_entry_in_top_table->add_to_on_board_entries(m_entry_in_bottom_table);
 
    //QStandardItem * item = biblioModel->item(m_selected_row_in_top_table, column_for_size);
    //item->setText(QString::number(m_entry_in_bottom_table->get_size()));

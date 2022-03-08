@@ -76,13 +76,13 @@ public:
 
 private:
 
+    // Models and views
     TableModel         * biblioModel;
-    //QStandardItemModel * bibModel;
-
-
     QTableView * topTableView;
     QSortFilterProxyModel * proxyModel_for_topTableView;
 
+
+    // GUI
     QSplitter    * leftSplitter;
     QSplitter    * rightSplitter;
     QTableWidget * middleTableWidget;
@@ -106,7 +106,7 @@ private:
     QPushButton * m_check_biblio_for_shared_filename_button;
     QLineEdit * m_new_list_name_widget;
 
-
+    // Keeping track of GUI
     QStringList m_bibliography_labels;
     QStringList m_bibliography_short_labels;
     QString m_root_folder;
