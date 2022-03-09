@@ -307,8 +307,8 @@ Widget::Widget(QWidget *parent)
 
     connect(topTableView,SIGNAL(clicked(QModelIndex)) ,
             this , SLOT(on_top_table_view_clicked(QModelIndex)));
-    connect(topTableView,SIGNAL(doubleClicked(QModelIndex)) ,
-            this , SLOT(on_top_table_view_doubleClicked(QModelIndex)));
+    connect(middleTableWidget,SIGNAL(doubleClicked(QModelIndex)) ,
+            this , SLOT(on_middle_table_widget_doubleClicked(QModelIndex)));
     connect(middleTableWidget,SIGNAL(cellChanged(int,int)) ,
             this , SLOT(on_middle_widget_item_changed(int,int)));
     connect(bottomTableWidget,SIGNAL(clicked(QModelIndex)) ,
@@ -398,10 +398,19 @@ Widget::Widget(QWidget *parent)
 QString from_fullfile_to_filestem(QString fullfilename){
     return fullfilename.mid(fullfilename.lastIndexOf("/") + 1);
 }
-void Widget::keyPressEvent(QKeyEvent *event)
-{
-
+//void Widget::mousePressEvent(QMouseEvent *event)
+//{if (event->modifiers()==Qt::CTRL) {
+// }
+//}
+void Widget::on_middle_table_widget_doubleClicked(int row, int column){
+    if (! m_entry_in_middle_table ){
+        qDebug() << "No entry selected on middle view";
+    }
+    QString filename =  m_entry_in_middle_table->get_filenamefull();
+    QDesktopServices::openUrl(QUrl::fromLocalFile(filename));
 }
+
+
 
 /*                WIDGETS             */
 Widget::~Widget()
@@ -410,6 +419,8 @@ Widget::~Widget()
       delete entry;
    }
 }
+
+
 
 void Widget::load_file_prefixes(QTableWidget* table){
     int ROWCOUNT = 19;
@@ -840,8 +851,8 @@ void Widget::write_bibliography_to_json( ){
     json_top.append(json_array_for_lists);
 
     QJsonObject json_object_for_biblio;
-    foreach (QString doc_key, m_data_by_key.keys()){
-        write_bibentry_to_json(m_data_by_key[doc_key], json_object_for_biblio ); //TODO  HERE IS WHERE I stopped. have to iterate over the right key.
+    foreach (Entry* entry, biblioModel->get_entries()){
+        write_bibentry_to_json(entry, json_object_for_biblio ); //TODO  HERE IS WHERE I stopped. have to iterate over the right key.
     }
     json_top.append(json_object_for_biblio);
 
@@ -869,8 +880,8 @@ void Widget::write_bibliography_to_bibtex(){
          return;
     }
     QTextStream stream(&file);
-    foreach (QString doc_key, m_data_by_key.keys()){
-        m_data_by_key[doc_key] -> write_bibentry_to_bibtex(  stream , m_bibliography_labels); //TODO  HERE IS WHERE I stopped. have to iterate over the right key.
+    foreach (Entry* entry, biblioModel->get_entries()){
+        entry -> write_bibentry_to_bibtex(  stream , m_bibliography_labels); //TODO  HERE IS WHERE I stopped. have to iterate over the right key.
     }
     qDebug() << 770 << filename;
     file.close();
@@ -1016,15 +1027,15 @@ void Widget::on_top_table_view_clicked(const QModelIndex &index){
     m_entry_in_top_table  = entry;
 
     put_bibitem_info_on_middle_table_widget(index);
+    if (QApplication::keyboardModifiers() ){
+        int i = 5;
+    }
+
+
 }
 
 void Widget::on_top_table_view_doubleClicked(const QModelIndex &index){
-    QModelIndex underlying_index = biblioModel->m_proxyModel->mapToSource(index);
-    int model_row = underlying_index.row();
-    Entry * entry = biblioModel->get_entries().at(model_row);
-    m_entry_in_top_table  = entry;
-    QString filename = entry->get_info("filenamefull");
-    QDesktopServices::openUrl(QUrl::fromLocalFile(filename));
+
 }
 
 
@@ -1241,17 +1252,18 @@ void Widget::link_top_and_bottom_entries_from_size( ){
     foreach (int this_size, m_data_by_size.uniqueKeys()){         
         if (this_size==0) { continue; }
         foreach (Entry* entry_top, m_data_by_size.values(this_size)){
-            if (m_files_onboard_by_size.contains(this_size)){
-                entry_top->set_size_item(this_size);
+            if (m_files_onboard_by_size.contains(this_size)){                              
                 foreach(Entry* entry_bottom, m_files_onboard_by_size.values(this_size) ){                    
-                    entry_top->add_to_on_board_entries(entry_bottom);
-                    //entry_top->color_top_view_item_for_size();
+                    entry_top->add_to_on_board_entries(entry_bottom);                    
                     entry_bottom->add_to_bib_entries(entry_top);
                     entry_bottom->color_bottom_view_item_for_size();
                 }
             }
         }
     }
+}
+void Entry::add_to_on_board_entries(Entry *bottom_entry){
+    m_links_to_on_board_entries.append(bottom_entry);
 }
 // Don't use this next function??
 void Entry::set_size_item(int size){
@@ -1301,22 +1313,17 @@ void Widget::link_top_and_bottom_entries(){
        qDebug() << 1301 << "Can't link entries, because no item in top view has been selected.";
        return;
    }
+   if (! m_entry_in_bottom_table) {\
+       qDebug() << 1301 << "Can't link entries, because no item in bottom view has been selected.";
+       return;
+   }
    int column_for_size = 5;
    int column_for_key = 3;
-   //QModelIndex index = biblioModel->index(m_selected_row_in_top_table, column_for_key);
-   //QString key = biblioModel->data(index).toString();
-   //Entry * top_entry = m_data_by_key[key];
    int size = m_entry_in_bottom_table->get_size();
 
    qDebug() << 1303 << "row"<< m_selected_row_in_top_table << "size" << size;
-
    m_entry_in_top_table->set_size(size);
-   //biblioModel->dataChanged(index, index);
    m_entry_in_top_table->add_to_on_board_entries(m_entry_in_bottom_table);
-
-   //QStandardItem * item = biblioModel->item(m_selected_row_in_top_table, column_for_size);
-   //item->setText(QString::number(m_entry_in_bottom_table->get_size()));
-   //m_entry_in_top_table->set_size(size);
    m_entry_in_top_table->set_filenameStem(m_entry_in_bottom_table->get_filenamestem());
    m_entry_in_top_table->set_folder(m_entry_in_bottom_table->get_folder());
    m_entry_in_top_table->set_filenameFull(m_entry_in_bottom_table->get_filenamefull());
@@ -1354,7 +1361,7 @@ void Widget::set_new_filename(){
     update_data_by_fullfilename(full_old_name, full_new_name,entry);
     update_files_onboard_by_fullfilename(full_old_name, full_new_name, entry);
     update_files_onboard_by_filenamestem(old_filestem, new_name, entry);
-    //entry->get_bottom_view_filename_item()->setText(new_name);
+    biblioModel->add_entry(entry);
     entry->set_filename_item_bottom(new_name);
     m_files_onboard_by_filenamestem.remove(old_filestem);
     m_files_onboard_by_filenamestem.insert(new_name, entry);

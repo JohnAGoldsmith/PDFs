@@ -81,6 +81,9 @@ private:
     QTableView * topTableView;
     QSortFilterProxyModel * proxyModel_for_topTableView;
 
+    // Mouse events
+    // QInputEvent  modifiers gives Qt::KeyboardModifiers one of which is Qt::ControlModifier there is also enum Qt::Modifier Qt::CTRL
+    //void mousePressEvent(QMouseEvent);
 
     // GUI
     QSplitter    * leftSplitter;
@@ -160,7 +163,8 @@ private:
 private slots:
 
     void quit_now() {QApplication::quit();}
-    void keyPressEvent(QKeyEvent * event);
+    //void keyPressEvent(QKeyEvent * event);
+    //void mousePressEvent(QMouseEvent * event);
     void read_JSON_file_old();
     void read_JSON_file_new();
     //void read_JSON_file();
@@ -183,6 +187,7 @@ private slots:
     void put_file_info_on_middle_table_widget(int bottom_widget_row);
     void on_top_table_view_clicked(const QModelIndex &  );
     void on_top_table_view_doubleClicked(const QModelIndex &);
+    void on_middle_table_widget_doubleClicked(int row, int column);
     void on_bottom_table_widget_clicked(const QModelIndex & );
     void on_bottom_table_widget_doubleClicked(int row, int column);
     void on_middle_widget_item_changed(int row, int column);
@@ -262,7 +267,7 @@ public:
     void set_size(int s) {size = s;}
     void append_keywords(QString k){info["keywords"] = get_keywords() + " " + k;}
     void add_to_bib_entries(Entry* entry){m_links_to_bib_entries.append(entry);}
-    void add_to_on_board_entries(Entry* entry) {m_links_to_on_board_entries.append(entry);}
+    void add_to_on_board_entries(Entry* entry);
     void set_top_view_size_item (QStandardItem* item ){m_top_view_size_item = item;}
     void set_bottom_view_size_item(QTableWidgetItem* item ) {m_bottom_view_size_item = item;}
     void set_top_view_filename_item (QStandardItem* item ){m_top_view_filename_item = item;}
