@@ -200,6 +200,7 @@ Widget::Widget(QWidget *parent)
 
     topTableView->setSelectionMode(QAbstractItemView::SingleSelection);
     topTableView->setSortingEnabled(true);
+
     bottomTableWidget->setColumnCount(5);
     bottomTableWidget->setColumnWidth(0,600);
     bottomTableWidget->setColumnWidth(1,250);
@@ -207,14 +208,11 @@ Widget::Widget(QWidget *parent)
     bottomTableWidget->setColumnCount(3);
     bottomTableWidget->setColumnWidth(0,600);
     bottomTableWidget->setColumnWidth(1,250);
-    bottomTableWidget->setSortingEnabled(false);
-
     bottomTableWidget2->setColumnWidth(0,1000);
     bottomTableWidget2->setColumnWidth(1,1000);
     bottomTableWidget2->setColumnWidth(3,800);
     bottomTableWidget2->setColumnWidth(4,800);
     bottomTableWidget2->setVisible(false);
-
 
     biblioModel = new TableModel(this);
 
@@ -307,8 +305,8 @@ Widget::Widget(QWidget *parent)
 
     connect(topTableView,SIGNAL(clicked(QModelIndex)) ,
             this , SLOT(on_top_table_view_clicked(QModelIndex)));
-    connect(middleTableWidget,SIGNAL(doubleClicked(QModelIndex)) ,
-            this , SLOT(on_middle_table_widget_doubleClicked(QModelIndex)));
+    connect(middleTableWidget,SIGNAL(cellDoubleClicked(int,int)) ,
+            this , SLOT(on_middle_table_widget_doubleClicked(int,int)));
     connect(middleTableWidget,SIGNAL(cellChanged(int,int)) ,
             this , SLOT(on_middle_widget_item_changed(int,int)));
     connect(bottomTableWidget,SIGNAL(clicked(QModelIndex)) ,
@@ -402,7 +400,7 @@ QString from_fullfile_to_filestem(QString fullfilename){
 //{if (event->modifiers()==Qt::CTRL) {
 // }
 //}
-void Widget::on_middle_table_widget_doubleClicked(int row, int column){
+void Widget::on_middle_table_widget_doubleClicked(int row,int column){
     if (! m_entry_in_middle_table ){
         qDebug() << "No entry selected on middle view";
     }
@@ -622,6 +620,10 @@ void Widget::read_JSON_file_new(){
         if (j_this_entry.count() > 0){
                 Entry* entry = new Entry();
                 foreach (QString entry_internal_key, j_this_entry.keys()){
+                    if (entry_internal_key == "filenamestem" ||
+                        entry_internal_key == "folder"){
+                        continue;
+                    }
                     if (entry_internal_key == "size"){
                         entry->set_size(j_this_entry["size"].toInt());
                     } else {
@@ -1257,10 +1259,13 @@ void Widget::link_top_and_bottom_entries_from_size( ){
                     entry_top->add_to_on_board_entries(entry_bottom);                    
                     entry_bottom->add_to_bib_entries(entry_top);
                     entry_bottom->color_bottom_view_item_for_size();
+                    entry_top->set_filenameFull(entry_bottom->get_filenamefull());
+                    entry_top->set_filenameStem(entry_bottom->get_filenamestem());
+                    entry_top->set_folder(entry_bottom->get_folder());
                 }
             }
         }
-    }
+      }
 }
 void Entry::add_to_on_board_entries(Entry *bottom_entry){
     m_links_to_on_board_entries.append(bottom_entry);
@@ -1278,6 +1283,21 @@ void Entry::set_size_item(int size){
 void Entry::color_bottom_view_item_for_size(){
     QTableWidgetItem* item_bottom = m_bottom_view_size_item;
     item_bottom->setForeground(QColorConstants::Red);
+}
+QString Entry::get_filenamefull() {
+    QString filenamefull;
+    if (info.contains("filenamefull")){
+        filenamefull = info["filenamefull"];
+    }
+    {if (filenamefull.length() > 0){
+        return filenamefull;
+        }
+    }
+    if (info["filenamestem"].length()>0 &&
+         info["folder"].length() > 0){
+            return info["folder"]  + "/" + info["filenamestem"];
+    }
+    return QString();
 }
 void Entry::color_bottom_view_item_for_filename(){
     QTableWidgetItem* item_bottom = m_bottom_view_filename_item;

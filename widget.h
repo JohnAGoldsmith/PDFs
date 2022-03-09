@@ -187,7 +187,7 @@ private slots:
     void put_file_info_on_middle_table_widget(int bottom_widget_row);
     void on_top_table_view_clicked(const QModelIndex &  );
     void on_top_table_view_doubleClicked(const QModelIndex &);
-    void on_middle_table_widget_doubleClicked(int row, int column);
+    void on_middle_table_widget_doubleClicked(int,int);
     void on_bottom_table_widget_clicked(const QModelIndex & );
     void on_bottom_table_widget_doubleClicked(int row, int column);
     void on_middle_widget_item_changed(int row, int column);
@@ -244,7 +244,7 @@ public:
     QString get_author() {if (info.contains("author")) {return info["author"];} else{return QString();}}
     QString get_year() {if (info.contains("year")) {return info["year"];} else{return QString();}}
     QString get_folder()  {if (info.contains("folder")) {return info["folder"];} else{return QString();}}
-    QString get_filenamefull() {if (info.contains("filenamefull")) {return info["filenamefull"];} else{return QString();}}
+    QString get_filenamefull();
     QString get_keywords() {if (info.contains("keywords")) {return info["keywords"];} else{ return QString();}}
     QStringList* get_multiple_filenamefulls() {return &m_multiple_filenamefulls;}
     QString get_filenamestem() {if (info.contains("filenamestem")) {return info["filenamestem"];} else{return QString();}}
