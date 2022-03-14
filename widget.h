@@ -97,6 +97,7 @@ private:
     QListWidget * listNamesWidget;
     QLabel    * m_proposed_new_title_label;
     QLineEdit * m_proposed_new_title_widget;
+    QPushButton * m_delete_size_on_selected_biblio_entries;
     QPushButton * m_change_root_directory;
     QPushButton * m_change_filename_button;
     QPushButton * m_create_new_list_button;
@@ -119,7 +120,7 @@ private:
     Entry* m_entry_in_top_table;
     Entry* m_entry_in_middle_table;
     Entry* m_entry_in_bottom_table;
-    int m_selected_row_in_top_table;
+    //int m_selected_row_in_top_table;
 
 
     QMap<QString, Entry*>      m_data_by_key;
@@ -168,39 +169,39 @@ private slots:
     void read_JSON_file_old();
     void read_JSON_file_new();
     //void read_JSON_file();
-    void search_folders_for_pdf();
-    void set_new_root_folder();
-    void write_bibliography();
-    void write_bibliography_to_json();
-    void write_bibliography_to_bibtex();
-    void promote_file_from_preferred_location(Entry*);
-
-    void register_biblioentry_by_key_name_and_size(Entry *);
-    void register_biblioentry_by_fullfilename(Entry*);
-    void register_biblioentry_by_key(Entry*);
-    void register_biblioentry_by_size(Entry*);
-    void register_biblioentry_by_filenamestem(Entry*);
     void add_entry_to_top_view(Entry*);
     void delete_selected_files();
-    void write_bibentry_to_json(Entry *, QJsonObject & );
+    void delete_size_on_selected_biblio_entries();
     void generate_new_title();
-    void put_file_info_on_middle_table_widget(int bottom_widget_row);
+    void link_top_and_bottom_entries_from_size();
+    void link_top_and_bottom_entries_from_filename();
+    void link_top_and_bottom_entries();
+    void mark_file_as_indexed(QString);
     void on_top_table_view_clicked(const QModelIndex &  );
     void on_top_table_view_doubleClicked(const QModelIndex &);
     void on_middle_table_widget_doubleClicked(int,int);
     void on_bottom_table_widget_clicked(const QModelIndex & );
     void on_bottom_table_widget_doubleClicked(int row, int column);
     void on_middle_widget_item_changed(int row, int column);
-    void set_new_filename();
-    void mark_file_as_indexed(QString);
-    void link_top_and_bottom_entries_from_size();
-    void link_top_and_bottom_entries_from_filename();
-    void link_top_and_bottom_entries();
-    QString test_key_for_uniqueness(QString key);
-    void show_files_with_same_size();
     void place_entries_with_shared_keys_on_table();
     void place_entries_with_shared_filename_on_table();
     void place_entries_with_shared_size_on_table();
+    void promote_file_from_preferred_location(Entry*);
+    void put_file_info_on_middle_table_widget(int bottom_widget_row);
+    void register_biblioentry_by_key_name_and_size(Entry *);
+    void register_biblioentry_by_fullfilename(Entry*);
+    void register_biblioentry_by_key(Entry*);
+    void register_biblioentry_by_size(Entry*);
+    void register_biblioentry_by_filenamestem(Entry*);
+    void search_folders_for_pdf();
+    void set_new_root_folder();
+    void set_new_filename();
+    void show_files_with_same_size();
+    QString test_key_for_uniqueness(QString key);
+    void write_bibliography();
+    void write_bibliography_to_json();
+    void write_bibliography_to_bibtex();
+    void write_bibentry_to_json(Entry *, QJsonObject & );
 
     /*    Lists              */
     //void read_lists_file();
@@ -224,6 +225,7 @@ class Entry {
     QMap<QString,QString> info;
     QString key;
     int size;
+    bool m_selected_for_deletion;
     QDateTime m_creation_time;
     QStringList m_multiple_filenamefulls;
     QStandardItem * m_top_view_size_item;
@@ -234,9 +236,9 @@ class Entry {
     QList<Entry*> m_links_to_bib_entries;
 public:
     Entry();
-    Entry(QString this_key) {key = this_key;}
+    Entry(QString this_key) {key = this_key; }
     Entry(QString filename, QString path, qint64 size);
-    Entry(QString filename, QString path, int size);
+    Entry(QString filename, QString path, int size) ;
     ~Entry();
     int     get_size() {return size;}
     QString get_key() {if (info.contains("key")) {return info["key"];} else{return QString();}}
@@ -268,6 +270,8 @@ public:
     void append_keywords(QString k){info["keywords"] = get_keywords() + " " + k;}
     void add_to_bib_entries(Entry* entry){m_links_to_bib_entries.append(entry);}
     void add_to_on_board_entries(Entry* entry);
+    bool selected_for_deletion() {return m_selected_for_deletion;}
+    void set_selected_for_deletion(bool value) {m_selected_for_deletion = value;}
     void set_top_view_size_item (QStandardItem* item ){m_top_view_size_item = item;}
     void set_bottom_view_size_item(QTableWidgetItem* item ) {m_bottom_view_size_item = item;}
     void set_top_view_filename_item (QStandardItem* item ){m_top_view_filename_item = item;}

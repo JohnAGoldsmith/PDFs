@@ -48,15 +48,17 @@ QVariant TableModel::data(const QModelIndex &index, int role) const
      if (!index.isValid())
          return QVariant();
 
+     Entry* entry   = m_entries.at(index.row());
+
      if (index.row() >= m_entries.size() || index.row() < 0)
          return QVariant();
      //qDebug() << 54 << "data index"<< index << "row" << index.row() << "author" << m_entries.at(index.row())->get_author();
      if (role == Qt::DisplayRole) {
-         Entry* entry   = m_entries.at(index.row());
+
          if (index.column() == 0){
              return entry->get_author();}
          if (index.column() == 1) {
-             return entry->get_title();}
+              return entry->get_title();}
          if (index.column() == 2){
              return entry->get_year(); }
          if (index.column() == 3){
@@ -71,13 +73,28 @@ QVariant TableModel::data(const QModelIndex &index, int role) const
              return entry->get_folder(); }
          if (index.column() == 8){
              return entry->get_filenamestem(); }
-
+     }
      if (role == Qt::FontRole && entry->get_on_board_entries().size() > 0){
          QFont font;
          font.setBold(true);
          return font;
      }
 
+     if (role==Qt::ForegroundRole && entry->get_on_board_entries().size() > 0 ){
+         QBrush brush;
+         brush.setColor(Qt::GlobalColor(Qt::darkBlue));
+         return brush;
+     }
+     if (role==Qt::CheckStateRole){
+         if (index.column()==5){
+             qDebug() << 90 ;
+             if (entry->selected_for_deletion()){
+                 qDebug() << 92;
+                 return Qt::Checked;
+             }
+             qDebug() << 95;
+             return Qt::Unchecked;
+         }
      }
      return QVariant();
  }
@@ -280,23 +297,25 @@ Widget::Widget(QWidget *parent)
     m_add_to_list_button = new QPushButton("Add entry to selected list (^U)");
     m_link_two_entries = new QPushButton("Link top and bottom entries (^Z)");
     m_delete_selected_files_button = new QPushButton("Delete selected files");
+    m_delete_size_on_selected_biblio_entries = new QPushButton("Delete size on selected biblio entries");
     m_check_biblio_for_shared_key_button = new QPushButton("Check biblio for shared keys");
     m_check_biblio_for_shared_size_button = new QPushButton("Check biblio for shared sizes");
     m_check_biblio_for_shared_filename_button = new QPushButton("Check biblio for shared filenames");
+
 
     small_grid_layout->addWidget(m_create_new_list_button,0,0);
     small_grid_layout->addWidget(m_new_list_name_widget,0,1);
     small_grid_layout->addWidget(m_change_filename_button,1,0);
     small_grid_layout->addWidget(m_proposed_new_title_widget,1,1);
-
-    small_grid_layout->addWidget(m_change_root_directory,2,0);
-    small_grid_layout->addWidget(m_save_biblio_file_button,3,0);
-    small_grid_layout->addWidget(m_add_to_list_button,4,0);
-    small_grid_layout->addWidget(m_link_two_entries,5,0);
-    small_grid_layout->addWidget(m_delete_selected_files_button,6,0);
-    small_grid_layout->addWidget(m_check_biblio_for_shared_key_button,7,0);
-    small_grid_layout->addWidget(m_check_biblio_for_shared_size_button,8,0);
-    small_grid_layout->addWidget(m_check_biblio_for_shared_filename_button,9,0);
+    small_grid_layout->addWidget(m_delete_size_on_selected_biblio_entries,2,0);
+    small_grid_layout->addWidget(m_change_root_directory,3,0);
+    small_grid_layout->addWidget(m_save_biblio_file_button,4,0);
+    small_grid_layout->addWidget(m_add_to_list_button,5,0);
+    small_grid_layout->addWidget(m_link_two_entries,6,0);
+    small_grid_layout->addWidget(m_delete_selected_files_button,7,0);
+    small_grid_layout->addWidget(m_check_biblio_for_shared_key_button,8,0);
+    small_grid_layout->addWidget(m_check_biblio_for_shared_size_button,9,0);
+    small_grid_layout->addWidget(m_check_biblio_for_shared_filename_button,10,0);
     m_current_list = nullptr;
 
     rightSplitter->addWidget(directoryView);
@@ -307,6 +326,8 @@ Widget::Widget(QWidget *parent)
             this , SLOT(on_top_table_view_clicked(QModelIndex)));
     connect(middleTableWidget,SIGNAL(cellDoubleClicked(int,int)) ,
             this , SLOT(on_middle_table_widget_doubleClicked(int,int)));
+    connect(m_delete_size_on_selected_biblio_entries,SIGNAL(clicked()) ,
+            this , SLOT(delete_size_on_selected_biblio_entries())  );
     connect(middleTableWidget,SIGNAL(cellChanged(int,int)) ,
             this , SLOT(on_middle_widget_item_changed(int,int)));
     connect(bottomTableWidget,SIGNAL(clicked(QModelIndex)) ,
@@ -645,7 +666,7 @@ void Widget::read_JSON_file_new(){
     topTableView->setColumnWidth(2,100);
     topTableView->setColumnWidth(3,400);
     topTableView->setColumnWidth(4,300);
-    topTableView->setColumnWidth(5,100);
+    topTableView->setColumnWidth(5,150);
     topTableView->setColumnWidth(6,100);
     topTableView->setColumnWidth(7,400);
     topTableView->setColumnWidth(8,400);
@@ -1019,14 +1040,40 @@ void Widget::add_entry_to_top_view (Entry* entry){
      Q_UNUSED(entry);
 
 }
+void Widget::delete_size_on_selected_biblio_entries(){
+    int column_for_size = 5;
+    for (int rowno = 0; rowno<biblioModel->rowCount(); rowno++){
 
+        QModelIndex index = biblioModel->index(rowno, column_for_size);
+        if (biblioModel->itemData(index).value(Qt::CheckStateRole) == Qt::Checked) {
+            qDebug() << 1049 << "row number to be deleting size"<< rowno;
+            biblioModel->get_entries().at(rowno)->set_size(0);
+            biblioModel->dataChanged(index, index);
+        }
+    }
+}
 void Widget::on_top_table_view_clicked(const QModelIndex &index){
-    qDebug() << index << index.row() << index.column() << 851;
+
 
     QModelIndex underlying_index = biblioModel->m_proxyModel->mapToSource(index);
     int model_row = underlying_index.row();
+    qDebug() <<1035 <<  index << "index row"<<index.row() << "model row" <<model_row ;
     Entry * entry = biblioModel->get_entries().at(model_row);
     m_entry_in_top_table  = entry;
+
+    int column_for_size(5);
+    if (index.column() == column_for_size){
+        if (!entry->selected_for_deletion()   ){
+            qDebug() << 1059 << "this box is not checked";
+            entry->set_selected_for_deletion(true);
+            qDebug() << 1061 << "this box is now checked";
+        } else {
+            qDebug() << 1063 << "Box was checked";
+            entry->set_selected_for_deletion(false);
+             qDebug() << 1061 << "this box is now not checked";
+        }
+    }
+    biblioModel->dataChanged(underlying_index, underlying_index);
 
     put_bibitem_info_on_middle_table_widget(index);
     if (QApplication::keyboardModifiers() ){
@@ -1087,7 +1134,7 @@ void Widget::search_folders_for_pdf()
     // For each entry in the top model, remove the link to items in the bottom widget:
 
     foreach (QString key, m_data_by_key.keys()){
-        qDebug() << 836 << key;
+        //qDebug() << 836 << key;
         m_data_by_key[key]->remove_bottom_view_links();
     }
 
@@ -1262,6 +1309,7 @@ void Widget::link_top_and_bottom_entries_from_size( ){
                     entry_top->set_filenameFull(entry_bottom->get_filenamefull());
                     entry_top->set_filenameStem(entry_bottom->get_filenamestem());
                     entry_top->set_folder(entry_bottom->get_folder());
+
                 }
             }
         }
@@ -1341,7 +1389,7 @@ void Widget::link_top_and_bottom_entries(){
    int column_for_key = 3;
    int size = m_entry_in_bottom_table->get_size();
 
-   qDebug() << 1303 << "row"<< m_selected_row_in_top_table << "size" << size;
+   qDebug() << 1303 << "row"<< m_entry_in_top_table << "size" << size;
    m_entry_in_top_table->set_size(size);
    m_entry_in_top_table->add_to_on_board_entries(m_entry_in_bottom_table);
    m_entry_in_top_table->set_filenameStem(m_entry_in_bottom_table->get_filenamestem());
@@ -1424,7 +1472,7 @@ void Widget::display_entry_on_middle_table(){
         }
         QString value = entry->get_info(label);
         item = new QTableWidgetItem(label);
-        qDebug() << 923 << label << value;
+        //qDebug() << 923 << label << value;
         middleTableWidget->setItem(row_number,0,item);
         item = new QTableWidgetItem(value);
         middleTableWidget->setItem(row_number,1,item);
@@ -1442,12 +1490,12 @@ void Widget::display_entry_on_middle_table(){
 
 
 void Widget::put_bibitem_info_on_middle_table_widget(const QModelIndex & index){
-    qDebug() << 1415 << index.data().toString() << "row"<< index.row();
-    QModelIndex underlying_index = biblioModel->m_proxyModel->mapToSource(index);
-    int model_row = underlying_index.row();
-    Entry * entry = biblioModel->get_entries().at(model_row);
-    m_entry_in_top_table  = entry;
-    m_entry_in_middle_table = entry;
+    //qDebug() << 1415 << index.data().toString() << "row"<< index.row();
+    //QModelIndex underlying_index = biblioModel->m_proxyModel->mapToSource(index);
+    //int model_row = underlying_index.row();
+    //Entry * entry = biblioModel->get_entries().at(model_row);
+    //m_entry_in_top_table  = entry;
+    m_entry_in_middle_table = m_entry_in_top_table;
     display_entry_on_middle_table();
     m_proposed_new_title_widget->clear();
 }
@@ -1595,6 +1643,7 @@ Entry::Entry(){
     m_bottom_view_size_item = NULL;
     m_bottom_view_filename_item = NULL;
     m_creation_time = QDateTime(QDate::currentDate(), QTime::currentTime());
+     m_selected_for_deletion = false;
 }
 Entry::~Entry(){
 
@@ -1611,6 +1660,7 @@ Entry::Entry(QString stem, QString folder, qint64 a_size)
     m_bottom_view_size_item = NULL;
     m_bottom_view_filename_item = NULL;
     m_creation_time = QDateTime(QDate::currentDate(), QTime::currentTime());
+     m_selected_for_deletion = false;
 }
 Entry::Entry(QString stem, QString folder, int this_size)
 {
@@ -1624,6 +1674,7 @@ Entry::Entry(QString stem, QString folder, int this_size)
   m_bottom_view_size_item = NULL;
   m_bottom_view_filename_item = NULL;
   m_creation_time = QDateTime(QDate::currentDate(), QTime::currentTime());
+   m_selected_for_deletion = false;
 }
 void Entry::set_info(QString this_key,QString this_value)
 {   if (this_key == "size"){
