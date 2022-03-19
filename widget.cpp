@@ -56,7 +56,8 @@ QVariant TableModel::data(const QModelIndex &index, int role) const
      if (role == Qt::DisplayRole) {
 
          if (index.column() == 0){
-             return entry->get_author();}
+             //return entry->get_author();}  // testing ***
+             return invert_first_author_if_necessary(entry->get_author());}  // testing ***
          if (index.column() == 1) {
               return entry->get_title();}
          if (index.column() == 2){
@@ -86,13 +87,10 @@ QVariant TableModel::data(const QModelIndex &index, int role) const
          return brush;
      }
      if (role==Qt::CheckStateRole){
-         if (index.column()==5){
-             qDebug() << 90 ;
+         if (index.column()==5){             
              if (entry->selected_for_deletion()){
-                 qDebug() << 92;
                  return Qt::Checked;
-             }
-             qDebug() << 95;
+             }             
              return Qt::Unchecked;
          }
      }
@@ -279,7 +277,7 @@ Widget::Widget(QWidget *parent)
 
     load_file_prefixes(filePrefixTableWidget);
     rightSplitter->addWidget(filePrefixTableWidget);
-
+    filePrefixTableWidget->setSelectionMode( QAbstractItemView::SingleSelection );
 
 
     QWidget * middle_right_widget = new QWidget(this);
@@ -359,6 +357,7 @@ Widget::Widget(QWidget *parent)
     connect(m_check_biblio_for_shared_size_button,SIGNAL(clicked()),
                 this,SLOT(place_entries_with_shared_size_on_table()));
 
+
     m_keyCtrlA = new QShortcut(this);
     m_keyCtrlA->setKey(Qt::CTRL + Qt::Key_A);
     connect(m_keyCtrlA, SIGNAL(activated()), this, SLOT(show_files_with_same_size()));
@@ -421,6 +420,9 @@ QString from_fullfile_to_filestem(QString fullfilename){
 //{if (event->modifiers()==Qt::CTRL) {
 // }
 //}
+
+
+
 void Widget::on_middle_table_widget_doubleClicked(int row,int column){
     if (! m_entry_in_middle_table ){
         qDebug() << "No entry selected on middle view";
@@ -1016,22 +1018,61 @@ void Widget::promote_file_from_preferred_location(Entry* entry){
         filename = "possible_file::"  + QString::number(fileno);
     }
 }
-QString invert_first_author(QString authors){
-    QString surname, first_author, result;
-    if (authors.length()==0) {return "author";}
-    QStringList author_list = authors.split("and");
-    first_author = author_list[0].trimmed();
-    if (! first_author.contains(",")) {
-       QStringList name_list = first_author.split(" ");
-       QString surname = name_list.takeLast() + ",";
-       name_list.prepend(surname);
-       first_author = name_list.join(" ");
-       author_list.replace(0, first_author);
-    }
-     result = author_list.join (" and ");
-    return result;
+QString get_first_author(QString names){
+    if (names.length()==0) {return "author";}
+    if (! names.contains(" and ")) { return names;}
+    return names.split(" and ")[0].trimmed();
 }
-
+QString find_surname(QString name){
+    if (name.length() == 0) {return "author";}
+    if (name.contains(",")){
+        return name.split(",")[0];
+    }
+    QStringList names;
+    QStringList suffixes;
+    suffixes  << "Jr." << "Sr.";
+    if (name.contains(" ")){
+        names = name.split(" ", Qt::SkipEmptyParts);
+        int ct = names.count();
+        if (suffixes.contains(names[ct-1]))
+            {return names[ct-2] + names[ct-1];}
+        else{
+            return names[ct-1];}
+    } else{
+        return name;
+    }
+}
+QString prepose_surname_if_necessary(QString name){
+    if (name.length() == 0) {return "author";}
+    if (name.contains(",")) {return name;}
+    QStringList names;
+    QStringList suffixes;
+    suffixes  << "Jr." << "Sr.";
+    if (name.contains(" ")){
+        names = name.split(" ", Qt::SkipEmptyParts);
+        int ct = names.count();
+        if (suffixes.contains(names[ct-1])){
+            names.prepend(names.takeLast() + ",");
+            names.prepend(names.takeLast());
+        }
+        else{
+            names.prepend(names.takeLast() + ",");
+        }
+        return names.join(" ");
+    } else{
+        return QString("author");
+    }
+}
+// Currently not used:
+QString invert_first_author_if_necessary(QString authors){
+    QString first_author = prepose_surname_if_necessary(get_first_author(authors));
+    if (authors.contains(" and ")){
+       QStringList author_list = authors.split("and");
+       author_list.replace(0,first_author);
+       return  author_list.join (" and ");
+    }
+    return first_author;
+}
 /*                 TOP VIEW                     */
 
 
@@ -1308,8 +1349,7 @@ void Widget::link_top_and_bottom_entries_from_size( ){
                     entry_bottom->color_bottom_view_item_for_size();
                     entry_top->set_filenameFull(entry_bottom->get_filenamefull());
                     entry_top->set_filenameStem(entry_bottom->get_filenamestem());
-                    entry_top->set_folder(entry_bottom->get_folder());
-
+                    entry_top->set_folder(entry_bottom->get_folder());                    
                 }
             }
         }
@@ -1328,9 +1368,21 @@ void Entry::set_size_item(int size){
        m_bottom_view_size_item->setText(QString::number(size));
     }
 }
+void Entry::add_keywords(QTableWidget* middlewidget){
+    int row_for_keywords = 7;
+    set_keywords(middlewidget->item(row_for_keywords,1)->text());
+}
+void Entry::mark_bottom_view_entry_as_matched_to_biblio(){
+     QTableWidgetItem* item_bottom = m_bottom_view_size_item;
+     item_bottom->setForeground(Qt::GlobalColor(Qt::darkBlue));
+
+}
 void Entry::color_bottom_view_item_for_size(){
-    QTableWidgetItem* item_bottom = m_bottom_view_size_item;
-    item_bottom->setForeground(QColorConstants::Red);
+    m_bottom_view_size_item->setForeground(QBrush(QColor(Qt::blue)));
+    m_bottom_view_filename_item->setForeground(QBrush(QColor(Qt::blue)));
+    QFont font;
+    font.setBold(true);
+    m_bottom_view_filename_item->setFont(font);
 }
 QString Entry::get_filenamefull() {
     QString filenamefull;
@@ -1395,6 +1447,9 @@ void Widget::link_top_and_bottom_entries(){
    m_entry_in_top_table->set_filenameStem(m_entry_in_bottom_table->get_filenamestem());
    m_entry_in_top_table->set_folder(m_entry_in_bottom_table->get_folder());
    m_entry_in_top_table->set_filenameFull(m_entry_in_bottom_table->get_filenamefull());
+   m_entry_in_top_table->add_keywords(middleTableWidget);
+
+
 }
 
 
@@ -1409,6 +1464,7 @@ void Widget::set_new_filename(){
     QString title =  middleTableWidget->item(1,1)->text();
     QString year =  middleTableWidget->item(2,1)->text();
     QString old_filestem = middleTableWidget->item(4,1)->text();
+    QString new_keywords = middleTableWidget->item(7,1)->text();
     qDebug() << 1000 << old_filestem;
     QString full_old_name = entry->get_filenamefull();
     QString full_new_name = entry->get_folder() + "/" + new_name;
@@ -1426,10 +1482,13 @@ void Widget::set_new_filename(){
     entry->set_author(author);
     entry->set_title(title);
     entry->set_year(year);
+    entry->set_key(new_name);
+    entry->set_keywords(new_keywords);
     update_data_by_fullfilename(full_old_name, full_new_name,entry);
     update_files_onboard_by_fullfilename(full_old_name, full_new_name, entry);
     update_files_onboard_by_filenamestem(old_filestem, new_name, entry);
     biblioModel->add_entry(entry);
+    //biblioModel->dataChanged(entry,entry);
     entry->set_filename_item_bottom(new_name);
     m_files_onboard_by_filenamestem.remove(old_filestem);
     m_files_onboard_by_filenamestem.insert(new_name, entry);
@@ -1558,39 +1617,11 @@ void Widget::register_biblioentry_by_key(Entry* entry){
         }
     }
 }
-QString find_surname(QString authors){
-    QString author;
-    QStringList names;
-    QStringList suffixes;
-    suffixes  << "Jr." << "Sr.";
-    if (authors.length() == 0) {return "author not specified";}
-    if (authors.contains(" and ")){
-        QStringList author_list = authors.split("and");
-        author = author_list[0].trimmed();
-    } else{
-        author = authors;
-    }
-    if (author.contains(",")){
-        return author.split(",")[0];
-    }
-    if (author.contains(" ")){
-        names = author.split(" ");
-        int ct = names.count();
-        if (suffixes.contains(names[ct-1]))
-            {return names[ct-2];}
-        else{
-            return names[ct-1];
-        }
-    } else{
-        return author;
-    }
-}
 
 void Widget::generate_new_title(){
-    QString author, title, new_title, year, new_filename;
+    QString author_surname, title, new_title, year, new_filename;
     if (middleTableWidget->item(0,1)) {
-        author = middleTableWidget->item(0,1)->text();
-        author = find_surname(author);
+        author_surname = find_surname(get_first_author(middleTableWidget->item(0,1)->text()));
     }
     int max_title_length = 50;
     if (middleTableWidget->item(1,1)){
@@ -1610,8 +1641,12 @@ void Widget::generate_new_title(){
     if (middleTableWidget->item(2,1)){
         year = middleTableWidget->item(2,1)->text();
     }
+    if (filePrefixTableWidget->selectedItems().count() > 0){
+        int row = filePrefixTableWidget->selectedItems().at(0)->row();
+        qDebug() << 1625 << "selected row number" << row;
+    }
     if (year.length() > 0) { new_filename = year + "_";}
-    if (author.length() > 0) { new_filename += author; }
+    if (author_surname.length() > 0) { new_filename += author_surname; }
     new_filename +=  new_title;
     new_filename += ".pdf";
     m_proposed_new_title_widget->setText(new_filename);

@@ -28,6 +28,11 @@ struct bibentry;
 class List;
 class Entry;
 
+QString get_first_author(QString names);
+QString find_surname(QString name);
+QString prepose_surname_if_necessary(QString name);
+QString invert_first_author_if_necessary(QString authors);
+
 class TableModel : public QAbstractTableModel
 {
     Q_OBJECT
@@ -92,11 +97,11 @@ private:
     QTableWidget * bottomTableWidget;
     QTableWidget * bottomTableWidget2;
     QTableWidget * filePrefixTableWidget;
-    QTreeView * directoryView;
+    QTreeView    * directoryView;
     QListWidget * listWidget;
     QListWidget * listNamesWidget;
-    QLabel    * m_proposed_new_title_label;
-    QLineEdit * m_proposed_new_title_widget;
+    QLabel      * m_proposed_new_title_label;
+    QLineEdit   * m_proposed_new_title_widget;
     QPushButton * m_delete_size_on_selected_biblio_entries;
     QPushButton * m_change_root_directory;
     QPushButton * m_change_filename_button;
@@ -120,7 +125,6 @@ private:
     Entry* m_entry_in_top_table;
     Entry* m_entry_in_middle_table;
     Entry* m_entry_in_bottom_table;
-    //int m_selected_row_in_top_table;
 
 
     QMap<QString, Entry*>      m_data_by_key;
@@ -240,6 +244,8 @@ public:
     Entry(QString filename, QString path, qint64 size);
     Entry(QString filename, QString path, int size) ;
     ~Entry();
+
+    void    add_keywords(QTableWidget *);
     int     get_size() {return size;}
     QString get_key() {if (info.contains("key")) {return info["key"];} else{return QString();}}
     QString get_title() {if (info.contains("title")) {return info["title"];} else{return QString();}}
@@ -255,11 +261,13 @@ public:
     //QTableWidgetItem * get_bottom_view_filename_item() {return m_bottom_view_filename_item;}
     QList<Entry*> get_on_board_entries(){return m_links_to_on_board_entries;}
     QList<Entry*> get_links_to_bib_entries() {return m_links_to_bib_entries;}
+    void mark_bottom_view_entry_as_matched_to_biblio();
     void color_bottom_view_item_for_size();
     void color_bottom_view_item_for_filename();
     void color_top_view_item_for_size();
     void color_top_view_item_for_filename();
     void set_key(QString s) {info["key"] = s;}
+    void set_keywords(QString s) {info["keywords"] = s;}
     void set_title(QString s)  {info["title"] = s;}
     void set_author(QString s) {info["author"] = s;}
     void set_year(QString s) {info["year"] = s;}
