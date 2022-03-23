@@ -22,6 +22,7 @@
 #include <QAbstractTableModel>
 #include <QSortFilterProxyModel>
 #include <QSplitter>
+#include <QFileSystemModel>
 
 
 struct bibentry;
@@ -52,7 +53,7 @@ public:
     Qt::ItemFlags flags(const QModelIndex &index) const;
     QList< Entry* > get_entries() {return m_entries;}
     void add_entry(Entry* entry){ m_entries.append(entry); }
-
+    void replace_entry(int row, Entry*);
 private:
     QList<Entry*> m_entries;
 };
@@ -82,9 +83,10 @@ public:
 private:
 
     // Models and views
-    TableModel         * biblioModel;
-    QTableView * topTableView;
+    TableModel            * biblioModel;
+    QTableView            * topTableView;
     QSortFilterProxyModel * proxyModel_for_topTableView;
+    QFileSystemModel      * file_system_model;
 
     // Mouse events
     // QInputEvent  modifiers gives Qt::KeyboardModifiers one of which is Qt::ControlModifier there is also enum Qt::Modifier Qt::CTRL
@@ -97,15 +99,17 @@ private:
     QTableWidget * bottomTableWidget;
     QTableWidget * bottomTableWidget2;
     QTableWidget * filePrefixTableWidget;
-    QTreeView    * directoryView;
+    QTreeView    * m_directoryView;
+    QFileSystemModel * m_file_system_model;
     QListWidget * listWidget;
     QListWidget * listNamesWidget;
     QLabel      * m_proposed_new_title_label;
     QLineEdit   * m_proposed_new_title_widget;
+    QPushButton * m_create_new_list_button;
+    QPushButton * m_change_filename_button;
+    QPushButton * m_generate_new_filename_button;
     QPushButton * m_delete_size_on_selected_biblio_entries;
     QPushButton * m_change_root_directory;
-    QPushButton * m_change_filename_button;
-    QPushButton * m_create_new_list_button;
     QPushButton * m_save_biblio_file_button;
     QPushButton * m_add_to_list_button;
     QPushButton * m_link_two_entries;
@@ -120,6 +124,7 @@ private:
     QStringList m_bibliography_short_labels;
     QString m_root_folder;
     QString m_json_folder;
+    QString m_directory_view_root;
     QSettings m_settings;
     QString m_prefered_location; // if a copy is found in this folder, then it automatically becomes the primary location of the file.
     Entry* m_entry_in_top_table;
@@ -277,7 +282,7 @@ public:
     void set_size(int s) {size = s;}
     void append_keywords(QString k){info["keywords"] = get_keywords() + " " + k;}
     void add_to_bib_entries(Entry* entry){m_links_to_bib_entries.append(entry);}
-    void add_to_on_board_entries(Entry* entry);
+    void add_to_onboard_entries(Entry* entry);
     bool selected_for_deletion() {return m_selected_for_deletion;}
     void set_selected_for_deletion(bool value) {m_selected_for_deletion = value;}
     void set_top_view_size_item (QStandardItem* item ){m_top_view_size_item = item;}

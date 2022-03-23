@@ -43,6 +43,13 @@ int TableModel::columnCount(const QModelIndex &parent) const
     Q_UNUSED(parent);
     return 9;
 }
+void TableModel::replace_entry(int row, Entry * entry){
+    if (row < 0 || row >= m_entries.count()){
+        qDebug() << 48 << "Attempted to add an item to an impossible row number "<< row;
+        return;
+    }
+    m_entries[row] = entry;
+}
 QVariant TableModel::data(const QModelIndex &index, int role) const
  {
      if (!index.isValid())
@@ -127,21 +134,17 @@ QVariant TableModel::headerData(int section, Qt::Orientation orientation, int ro
     }
     return QVariant();
 }
-bool TableModel::insertRows(int position, int rows, const QModelIndex &index)
+bool TableModel::insertRows(int position, int how_many_rows, const QModelIndex &index)
 {
-    /*
+
     Q_UNUSED(index);
-    beginInsertRows(QModelIndex(), position, position+rows-1);
+    beginInsertRows(QModelIndex(), position, position + how_many_rows - 1);
 
-    for (int row=0; row < rows; row++) {
-        //QPair<QString, QString> pair(" ", " ");
+    for (int row=0; row < how_many_rows; row++) {
         Entry * entry = new Entry();
-        m_entries.insert(position, entry);
-        //listOfPairs.insert(position, pair);
+        m_entries.insert(position, entry);         
     }
-
     endInsertRows();
-    */
     return true;
 
 }
@@ -205,13 +208,16 @@ Widget::Widget(QWidget *parent)
     m_json_folder = m_settings.value("jsonfoldername", "/home/").toString();
     m_lists_complete_filename = m_settings.value("listsfilename").toString();
 
+    QPalette palette = QPalette();
+    palette.setColor(QPalette::Window,QColor(0,0,200,250));
+    setPalette(palette);
 
     topTableView = new QTableView(this);
     middleTableWidget = new QTableWidget;
     bottomTableWidget = new QTableWidget;
     bottomTableWidget2 = new QTableWidget;
     filePrefixTableWidget = new QTableWidget(this);
-    directoryView = new QTreeView;
+    m_directoryView = new QTreeView;
 
     topTableView->setSelectionMode(QAbstractItemView::SingleSelection);
     topTableView->setSortingEnabled(true);
@@ -219,7 +225,7 @@ Widget::Widget(QWidget *parent)
     bottomTableWidget->setColumnCount(5);
     bottomTableWidget->setColumnWidth(0,600);
     bottomTableWidget->setColumnWidth(1,250);
-    bottomTableWidget->setSortingEnabled(false);
+    bottomTableWidget->setSortingEnabled(true);
     bottomTableWidget->setColumnCount(3);
     bottomTableWidget->setColumnWidth(0,600);
     bottomTableWidget->setColumnWidth(1,250);
@@ -249,14 +255,14 @@ Widget::Widget(QWidget *parent)
     new_list("Linguistica");
     new_list("Phonology");
 
-    QFileSystemModel * model = new QFileSystemModel;
-    model->setFilter(QDir::Dirs);
-    model->setRootPath("/home/john/");
-    directoryView->setModel(model);
-    directoryView->setColumnWidth(0,400);
-    directoryView->setColumnWidth(1,100);
-    directoryView->setColumnWidth(2,400);
-    directoryView->setSortingEnabled(true);
+    m_file_system_model = new QFileSystemModel(this);
+    m_file_system_model->setFilter(QDir::Dirs);
+    m_file_system_model->setRootPath("/home/john/");
+    m_directoryView->setModel(m_file_system_model);
+    m_directoryView->setColumnWidth(0,400);
+    m_directoryView->setColumnWidth(1,100);
+    m_directoryView->setColumnWidth(2,400);
+    m_directoryView->setSortingEnabled(true);
 
 
     QVBoxLayout* layout = new QVBoxLayout(this);
@@ -288,6 +294,7 @@ Widget::Widget(QWidget *parent)
     m_proposed_new_title_label = new QLabel("Proposed new title") ;
     m_proposed_new_title_widget = new QLineEdit();
     m_new_list_name_widget = new QLineEdit("(enter name of new list here)");
+    m_generate_new_filename_button = new QPushButton("Generate new filename and key");
     m_change_filename_button = new QPushButton("Change file name to (^K):");
     m_change_root_directory = new QPushButton("Change root directory");
     m_create_new_list_button = new QPushButton("Create new list (^N):");
@@ -305,18 +312,20 @@ Widget::Widget(QWidget *parent)
     small_grid_layout->addWidget(m_new_list_name_widget,0,1);
     small_grid_layout->addWidget(m_change_filename_button,1,0);
     small_grid_layout->addWidget(m_proposed_new_title_widget,1,1);
-    small_grid_layout->addWidget(m_delete_size_on_selected_biblio_entries,2,0);
-    small_grid_layout->addWidget(m_change_root_directory,3,0);
-    small_grid_layout->addWidget(m_save_biblio_file_button,4,0);
-    small_grid_layout->addWidget(m_add_to_list_button,5,0);
-    small_grid_layout->addWidget(m_link_two_entries,6,0);
-    small_grid_layout->addWidget(m_delete_selected_files_button,7,0);
-    small_grid_layout->addWidget(m_check_biblio_for_shared_key_button,8,0);
-    small_grid_layout->addWidget(m_check_biblio_for_shared_size_button,9,0);
-    small_grid_layout->addWidget(m_check_biblio_for_shared_filename_button,10,0);
+    small_grid_layout->addWidget(m_generate_new_filename_button,2,0);
+
+    small_grid_layout->addWidget(m_delete_size_on_selected_biblio_entries,3,0);
+    small_grid_layout->addWidget(m_change_root_directory,4,0);
+    small_grid_layout->addWidget(m_save_biblio_file_button,5,0);
+    small_grid_layout->addWidget(m_add_to_list_button,6,0);
+    small_grid_layout->addWidget(m_link_two_entries,7,0);
+    small_grid_layout->addWidget(m_delete_selected_files_button,8,0);
+    small_grid_layout->addWidget(m_check_biblio_for_shared_key_button,9,0);
+    small_grid_layout->addWidget(m_check_biblio_for_shared_size_button,10,0);
+    small_grid_layout->addWidget(m_check_biblio_for_shared_filename_button,11,0);
     m_current_list = nullptr;
 
-    rightSplitter->addWidget(directoryView);
+    rightSplitter->addWidget(m_directoryView);
 
 
 
@@ -326,8 +335,11 @@ Widget::Widget(QWidget *parent)
             this , SLOT(on_middle_table_widget_doubleClicked(int,int)));
     connect(m_delete_size_on_selected_biblio_entries,SIGNAL(clicked()) ,
             this , SLOT(delete_size_on_selected_biblio_entries())  );
-    connect(middleTableWidget,SIGNAL(cellChanged(int,int)) ,
-            this , SLOT(on_middle_widget_item_changed(int,int)));
+    //connect(middleTableWidget,SIGNAL(cellChanged(int,int)) ,
+    //        this , SLOT(on_middle_widget_item_changed(int,int)));
+    connect(m_generate_new_filename_button,SIGNAL(clicked()) ,
+            this , SLOT(generate_new_title())  );
+
     connect(bottomTableWidget,SIGNAL(clicked(QModelIndex)) ,
             this , SLOT(on_bottom_table_widget_clicked(QModelIndex)));
     connect(bottomTableWidget,SIGNAL(cellDoubleClicked(int,int)) ,
@@ -609,6 +621,9 @@ void Widget::read_JSON_file_new(){
     int slash_loc = filename.lastIndexOf("/") + 1;
     QString foldername = filename.left(slash_loc);
     m_json_folder= foldername;
+
+
+
     if (!fileIn.open(QIODevice::ReadWrite | QIODevice::Text))
         return;
     QByteArray bytearray = fileIn.readAll();
@@ -631,7 +646,11 @@ void Widget::read_JSON_file_new(){
         }
         QJsonObject  json_settings;
         json_settings = json_doc[0].toObject();
-        // not doing anything currently.
+        if (json_settings.contains("m_directory_view_root") && json_settings["m_directory_view_root"].isString() ){
+            m_directory_view_root = json_settings["m_directory_view_root"].toString();
+            m_file_system_model->setRootPath(m_directory_view_root);
+            //m_file_system_model->dataChanged();
+        }
         json_bibliography = json_doc[2].toObject();
     }
     if(json_bibliography.isEmpty()){
@@ -869,6 +888,7 @@ void Widget::write_bibliography_to_json( ){
     QJsonObject json_settings;
     json_settings["m_root_folder"] = m_root_folder;
     json_settings["m_json_folder"] = m_json_folder;
+    json_settings["m_directory_view_root"] = m_directory_view_root;
     json_top.append(json_settings);
 
     QJsonArray json_array_for_lists;
@@ -1257,7 +1277,7 @@ void Widget::search_folders_for_pdf()
         bottomTableWidget->setItem(rowno, 5, item5);
         rowno++;
     }
-    bottomTableWidget->setSortingEnabled(true);
+    //bottomTableWidget->setSortingEnabled(true);
     link_top_and_bottom_entries_from_size(); // TODO: clear out any previous linkings before doing this;
     link_top_and_bottom_entries_from_filename(); // TODO: clear out any previous linkings before doing this;
     //show_files_with_same_size();
@@ -1344,7 +1364,7 @@ void Widget::link_top_and_bottom_entries_from_size( ){
         foreach (Entry* entry_top, m_data_by_size.values(this_size)){
             if (m_files_onboard_by_size.contains(this_size)){                              
                 foreach(Entry* entry_bottom, m_files_onboard_by_size.values(this_size) ){                    
-                    entry_top->add_to_on_board_entries(entry_bottom);                    
+                    entry_top->add_to_onboard_entries(entry_bottom);
                     entry_bottom->add_to_bib_entries(entry_top);
                     entry_bottom->color_bottom_view_item_for_size();
                     entry_top->set_filenameFull(entry_bottom->get_filenamefull());
@@ -1355,7 +1375,7 @@ void Widget::link_top_and_bottom_entries_from_size( ){
         }
       }
 }
-void Entry::add_to_on_board_entries(Entry *bottom_entry){
+void Entry::add_to_onboard_entries(Entry *bottom_entry){
     m_links_to_on_board_entries.append(bottom_entry);
 }
 // Don't use this next function??
@@ -1422,7 +1442,7 @@ void Widget::link_top_and_bottom_entries_from_filename( ){
             QList<Entry*> onboard_list = m_files_onboard_by_filenamestem.values(this_filename);
             foreach (Entry* entry_bottom, onboard_list){                
                 entry_bottom->color_bottom_view_item_for_filename();
-                entry_top->add_to_on_board_entries(entry_bottom);
+                entry_top->add_to_onboard_entries(entry_bottom);
                 entry_bottom->add_to_bib_entries(entry_top);
             }
         }
@@ -1443,7 +1463,7 @@ void Widget::link_top_and_bottom_entries(){
 
    qDebug() << 1303 << "row"<< m_entry_in_top_table << "size" << size;
    m_entry_in_top_table->set_size(size);
-   m_entry_in_top_table->add_to_on_board_entries(m_entry_in_bottom_table);
+   m_entry_in_top_table->add_to_onboard_entries(m_entry_in_bottom_table);
    m_entry_in_top_table->set_filenameStem(m_entry_in_bottom_table->get_filenamestem());
    m_entry_in_top_table->set_folder(m_entry_in_bottom_table->get_folder());
    m_entry_in_top_table->set_filenameFull(m_entry_in_bottom_table->get_filenamefull());
@@ -1456,44 +1476,50 @@ void Widget::link_top_and_bottom_entries(){
 
 /*              MIDDLE           VIEW           */
 
+
 void Widget::set_new_filename(){
     QString new_name = m_proposed_new_title_widget->text();
     if (new_name.length() == 0) {return;}
-    Entry* entry = m_entry_in_middle_table;
+    Entry* entry_onboard = m_entry_in_middle_table;
     QString author = middleTableWidget->item(0,1)->text();
     QString title =  middleTableWidget->item(1,1)->text();
     QString year =  middleTableWidget->item(2,1)->text();
     QString old_filestem = middleTableWidget->item(4,1)->text();
     QString new_keywords = middleTableWidget->item(7,1)->text();
-    qDebug() << 1000 << old_filestem;
-    QString full_old_name = entry->get_filenamefull();
-    QString full_new_name = entry->get_folder() + "/" + new_name;
-    QFileInfo   fileinfo (full_old_name);
-    QFile file(full_old_name);
-    if (fileinfo.exists()){
-        bool value = file.rename(full_new_name);
-        if (value) {qDebug() << "Success! changed name";} else{qDebug() << "Failure to change.";}
-    }else{
-        qDebug() << 889 << "Hmm, couldnt find that file.";
-    }
-    qDebug() << 823 << full_old_name << full_new_name<< "\n" ;
-    entry->set_filenameStem(new_name);
-    entry->set_filenameFull(full_new_name);
-    entry->set_author(author);
-    entry->set_title(title);
-    entry->set_year(year);
-    entry->set_key(new_name);
-    entry->set_keywords(new_keywords);
-    update_data_by_fullfilename(full_old_name, full_new_name,entry);
-    update_files_onboard_by_fullfilename(full_old_name, full_new_name, entry);
-    update_files_onboard_by_filenamestem(old_filestem, new_name, entry);
-    biblioModel->add_entry(entry);
-    //biblioModel->dataChanged(entry,entry);
-    entry->set_filename_item_bottom(new_name);
+    //qDebug() << 1000 << old_filestem;
+    QString full_old_name = entry_onboard->get_filenamefull();
+    QString full_new_name = entry_onboard->get_folder() + "/" + new_name;
+    //QFileInfo   fileinfo (full_old_name);
+    //QFile file(full_old_name);
+    //if (fileinfo.exists()){
+    //    bool value = file.rename(full_new_name);
+    //    if (value) {qDebug() << "Success! changed name";} else{qDebug() << "Failure to change.";}
+    //}else{
+    //    qDebug() << 889 << "Hmm, couldnt find that file.";
+    //}
+    //qDebug() << 823 << full_old_name << full_new_name<< "\n" ;
+    Entry * new_entry = new Entry();
+    new_entry->set_filenameStem(new_name);
+    new_entry->set_filenameFull(full_new_name);
+    new_entry->set_author(author);
+    new_entry->set_title(title);
+    new_entry->set_year(year);
+    new_entry->set_key(new_name);
+    new_entry->set_keywords(new_keywords);
+    new_entry->set_size(entry_onboard->get_size());
+    new_entry->add_to_onboard_entries(entry_onboard);
+    update_data_by_fullfilename(full_old_name, full_new_name,entry_onboard);
+    update_files_onboard_by_fullfilename(full_old_name, full_new_name, entry_onboard);
+    update_files_onboard_by_filenamestem(old_filestem, new_name, entry_onboard);
+
+    biblioModel->insertRows(0,1);
+    biblioModel->replace_entry(0,new_entry);
+    topTableView->showRow(0);
+    new_entry->add_to_onboard_entries(entry_onboard);
     m_files_onboard_by_filenamestem.remove(old_filestem);
-    m_files_onboard_by_filenamestem.insert(new_name, entry);
-    m_files_onboard_by_filenamefull[full_new_name] = entry;
-    qDebug() << 899 << entry->display();
+    m_files_onboard_by_filenamestem.insert(new_name, new_entry);
+    m_files_onboard_by_filenamefull[full_new_name] = new_entry;
+    //qDebug() << 899 << entry->display();
 }
 void Entry::set_filename_item_bottom(QString filename){
     m_bottom_view_filename_item->setText(filename);
@@ -1571,7 +1597,7 @@ void Widget::put_file_info_on_middle_table_widget(int bottom_widget_row){
 }
 void Widget::on_middle_widget_item_changed(int row, int column ){
     if (  ( bottomTableWidget->hasFocus() || middleTableWidget->hasFocus())  &&
-          (row == 3 || row == 1 || row == 2)  )
+          (row == 1 || row == 2 || row == 3)  )
     {
         generate_new_title();
     }
@@ -1619,10 +1645,13 @@ void Widget::register_biblioentry_by_key(Entry* entry){
 }
 
 void Widget::generate_new_title(){
-    QString author_surname, title, new_title, year, new_filename;
+    QString author_surname;
+    QString  title, new_title, year, new_filename, new_biblio_key;
+    int row_for_biblio_key = 3;
     if (middleTableWidget->item(0,1)) {
         author_surname = find_surname(get_first_author(middleTableWidget->item(0,1)->text()));
     }
+    new_biblio_key = author_surname;
     int max_title_length = 50;
     if (middleTableWidget->item(1,1)){
         title = middleTableWidget->item(1,1)->text();
@@ -1640,6 +1669,7 @@ void Widget::generate_new_title(){
     }
     if (middleTableWidget->item(2,1)){
         year = middleTableWidget->item(2,1)->text();
+        new_biblio_key += "_" + year;
     }
     if (filePrefixTableWidget->selectedItems().count() > 0){
         int row = filePrefixTableWidget->selectedItems().at(0)->row();
@@ -1648,8 +1678,12 @@ void Widget::generate_new_title(){
     if (year.length() > 0) { new_filename = year + "_";}
     if (author_surname.length() > 0) { new_filename += author_surname; }
     new_filename +=  new_title;
-    new_filename += ".pdf";
-    m_proposed_new_title_widget->setText(new_filename);
+    m_proposed_new_title_widget->setText(new_filename + ".pdf");
+    if (m_data_by_key.contains(new_biblio_key)){
+        new_biblio_key += title;
+    }
+    QTableWidgetItem * item = new QTableWidgetItem(new_biblio_key);
+    middleTableWidget->setItem(row_for_biblio_key,1,item);
 }
 
 void Widget::on_listWidget_doubleClicked(QListWidgetItem* item){
