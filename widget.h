@@ -34,6 +34,10 @@ QString find_surname(QString name);
 QString prepose_surname_if_necessary(QString name);
 QString invert_first_author_if_necessary(QString authors);
 
+class MySortFilterProxyModel : public QSortFilterProxyModel{
+    Q_OBJECT
+};
+
 class TableModel : public QAbstractTableModel
 {
     Q_OBJECT
@@ -41,7 +45,7 @@ class TableModel : public QAbstractTableModel
 public:
     TableModel(QObject * parent = nullptr);
     TableModel(QList<Entry*> entries, QObject *parent = 0);
-     QSortFilterProxyModel * m_proxyModel;
+     MySortFilterProxyModel * m_proxyModel;
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
@@ -85,12 +89,14 @@ private:
     // Models and views
     TableModel            * biblioModel;
     QTableView            * topTableView;
-    QSortFilterProxyModel * proxyModel_for_topTableView;
+    MySortFilterProxyModel * proxyModel_for_topTableView;
     QFileSystemModel      * file_system_model;
 
     // Mouse events
     // QInputEvent  modifiers gives Qt::KeyboardModifiers one of which is Qt::ControlModifier there is also enum Qt::Modifier Qt::CTRL
     //void mousePressEvent(QMouseEvent);
+
+
 
     // GUI
     QSplitter    * leftSplitter;
@@ -99,6 +105,9 @@ private:
     QTableWidget * bottomTableWidget;
     QTableWidget * bottomTableWidget2;
     QTableWidget * filePrefixTableWidget;
+    //enum widgetFunction bottomTableWidgetFunction;
+    //typedef enum {undefined, sameSizeFiles, allOnboardFiles } bottomTableWidgetFunction;
+
     QTreeView    * m_directoryView;
     QFileSystemModel * m_file_system_model;
     QListWidget * listWidget;
@@ -142,6 +151,7 @@ private:
     QMultiMap<QString, Entry*> m_data_key_collisions;
     QMultiMap<QString, Entry*> m_filename_collisions;
 
+
     /*   Lists         */
     QString              m_lists_complete_filename;
     List *               m_current_list;
@@ -150,6 +160,7 @@ private:
 
     QShortcut *  m_keyCtrlA; // show files of same size
     QShortcut *  m_keyCtrlF;
+    QShortcut *  m_keyCtrlG; // open with default JSON file
     QShortcut *  m_keyCtrlH; // read old fileformat
     QShortcut *  m_keyCtrlJ; // change location of lists
     QShortcut *  m_keyCtrlK;
@@ -176,7 +187,7 @@ private slots:
     //void keyPressEvent(QKeyEvent * event);
     //void mousePressEvent(QMouseEvent * event);
     void read_JSON_file_old();
-    void read_JSON_file_new();
+    void read_JSON_file_new(QString filename = QString());
     //void read_JSON_file();
     void add_entry_to_top_view(Entry*);
     void delete_selected_files();
@@ -235,7 +246,7 @@ class Entry {
     QString key;
     int size;
     bool m_selected_for_deletion;
-    QDateTime m_creation_time;
+    //QDateTime m_creation_time;
     QStringList m_multiple_filenamefulls;
     QStandardItem * m_top_view_size_item;
     QStandardItem * m_top_view_filename_item;
@@ -261,6 +272,7 @@ public:
     QString get_keywords() {if (info.contains("keywords")) {return info["keywords"];} else{ return QString();}}
     QStringList* get_multiple_filenamefulls() {return &m_multiple_filenamefulls;}
     QString get_filenamestem() {if (info.contains("filenamestem")) {return info["filenamestem"];} else{return QString();}}
+    //QDateTime get_creation_time() {return m_creation_time;}
     void write_bibentry_to_bibtex( QTextStream & ,QStringList &);
 
     //QTableWidgetItem * get_bottom_view_filename_item() {return m_bottom_view_filename_item;}

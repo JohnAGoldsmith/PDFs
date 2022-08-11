@@ -19,8 +19,9 @@
 #include <QMessageBox>
 #include <QList>
 #include <QSortFilterProxyModel>
-
-
+#include <QScrollBar>
+#include<QAbstractScrollArea>
+#include <EGL/egl.h>
 class List;
 
 TableModel::TableModel(QObject *parent)
@@ -32,6 +33,7 @@ TableModel::TableModel(QList< Entry* > entrylist, QObject *parent)
     : QAbstractTableModel(parent)
 {
     m_entries  = entrylist;
+
 }
 int TableModel::rowCount(const QModelIndex &parent) const
 {
@@ -41,7 +43,7 @@ int TableModel::rowCount(const QModelIndex &parent) const
 int TableModel::columnCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
-    return 9;
+    return 12;
 }
 void TableModel::replace_entry(int row, Entry * entry){
     if (row < 0 || row >= m_entries.count()){
@@ -59,28 +61,33 @@ QVariant TableModel::data(const QModelIndex &index, int role) const
 
      if (index.row() >= m_entries.size() || index.row() < 0)
          return QVariant();
-     //qDebug() << 54 << "data index"<< index << "row" << index.row() << "author" << m_entries.at(index.row())->get_author();
      if (role == Qt::DisplayRole) {
-
-         if (index.column() == 0){
-             //return entry->get_author();}  // testing ***
-             return invert_first_author_if_necessary(entry->get_author());}  // testing ***
-         if (index.column() == 1) {
-              return entry->get_title();}
-         if (index.column() == 2){
-             return entry->get_year(); }
-         if (index.column() == 3){
-             return entry->get_key(); }
-         if (index.column() == 4){
-             return entry->get_keywords(); }
-         if (index.column() == 5){
-             return entry->get_size(); }
-         if (index.column() == 6){
-             return entry->get_on_board_entries().count(); }
-         if (index.column() == 7){
-             return entry->get_folder(); }
-         if (index.column() == 8){
-             return entry->get_filenamestem(); }
+         switch (index.column()){
+            case 0:
+                 return invert_first_author_if_necessary(entry->get_author());  // testing ***
+            case 1:
+                  return entry->get_title();
+            case 2:
+                  return entry->get_year();
+            case 3:
+                 return entry->get_key();
+            case 4:
+                 return entry->get_keywords();
+            case 5:
+                 return entry->get_size();
+            case  6:
+                 return entry->get_on_board_entries().count();
+            case 7:
+                 return entry->get_folder();
+            case 8:
+                 return entry->get_filenamestem();
+            case 9:
+                 return entry->get_info("date");
+            case 10:
+                 return entry->get_info("lastread");
+            case 11:
+                 return entry->get_info("date_entry_created");
+         }
      }
      if (role == Qt::FontRole && entry->get_on_board_entries().size() > 0){
          QFont font;
@@ -128,6 +135,12 @@ QVariant TableModel::headerData(int section, Qt::Orientation orientation, int ro
                 return tr("Folder");
             case 8:
                 return tr("Filename");
+            case 9:
+                return tr("Date");
+            case 10:
+                return tr("Last read");
+            case 11:
+                return tr("Date entry created");
             default:
                     return QVariant();
         }
@@ -197,9 +210,13 @@ Widget::Widget(QWidget *parent)
 
     setFocusPolicy(Qt::FocusPolicy::StrongFocus);
     setFocus();
-    m_bibliography_labels  <<  "filenamestem" <<  "folder"<< "size"<< "author" << "title" << "year" << "key" << "fillnamefull" << "type"<< "booktitle"<< "month" << "organization" << "series" << "number" << "volume" << "doi" << "file (not found)"
-            << "issn"<< "isbn" <<  "url" << "pages" << "abstract" <<  "address" << "annote" << "mendeley-tags" << "publisher" << "journal"  << "editor" << "school" << "type" << "archiveprefix"
-            << "arxivid" << "pmid" << "eprint" << "possible file" << "pmid" << "edition" << "primaryclass" << "chapter" << "institution" << "howpublished" << "candidates" << "file" << "translator";
+    m_bibliography_labels  <<  "filenamestem" <<  "folder"<< "size"<< "author" << "title" << "year" << "key" << "fillnamefull" <<
+                               "type"<< "booktitle"<< "month" << "organization" << "series" << "number" << "volume" << "doi" <<
+                               "file (not found)" << "issn"<< "isbn" <<  "url" << "pages" << "abstract" <<  "address" <<
+                               "annote" << "mendeley-tags" << "publisher" << "journal"  << "editor" << "school" << "type" <<
+                               "archiveprefix" << "arxivid" << "pmid" << "eprint" << "possible file" << "pmid" << "edition" <<
+                               "primaryclass" << "chapter" << "institution" << "howpublished" << "candidates" << "file" << "translator" <<
+                               "date_entry_created";
     m_bibliography_short_labels  << "author" << "title" << "year" << "key" << "filenamestem" << "size" << "folder" << "keywords";
     m_prefered_location = "Dropbox/library/";
 
@@ -313,7 +330,6 @@ Widget::Widget(QWidget *parent)
     small_grid_layout->addWidget(m_change_filename_button,1,0);
     small_grid_layout->addWidget(m_proposed_new_title_widget,1,1);
     small_grid_layout->addWidget(m_generate_new_filename_button,2,0);
-
     small_grid_layout->addWidget(m_delete_size_on_selected_biblio_entries,3,0);
     small_grid_layout->addWidget(m_change_root_directory,4,0);
     small_grid_layout->addWidget(m_save_biblio_file_button,5,0);
@@ -326,8 +342,6 @@ Widget::Widget(QWidget *parent)
     m_current_list = nullptr;
 
     rightSplitter->addWidget(m_directoryView);
-
-
 
     connect(topTableView,SIGNAL(clicked(QModelIndex)) ,
             this , SLOT(on_top_table_view_clicked(QModelIndex)));
@@ -377,6 +391,10 @@ Widget::Widget(QWidget *parent)
     m_keyCtrlF = new QShortcut(this);
     m_keyCtrlF->setKey(Qt::CTRL + Qt::Key_F);
     connect(m_keyCtrlF, SIGNAL(activated()), this, SLOT(search_folders_for_pdf()));
+
+    //m_keyCtrlG = new QShortcut(this);
+    //m_keyCtrlG->setKey(Qt::CTRL + Qt::Key_G);
+    //connect(m_keyCtrlF, SIGNAL(activated()), this, SLOT(read_JSON_file_new("~/Dropbox/bibliography/bibliography.json")));
 
     m_keyCtrlH = new QShortcut(this);
     m_keyCtrlH->setKey(Qt::CTRL + Qt::Key_H);
@@ -460,7 +478,12 @@ void Widget::load_file_prefixes(QTableWidget* table){
     table->setColumnCount(3);
     table->setColumnWidth(0,6);
     table->setColumnWidth(1,6);
-    table->setColumnWidth(2,600);
+    table->setColumnWidth(2,200);
+    // Disable scroll bar of the table
+    table->horizontalScrollBar()->setDisabled(true);
+    //table->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    //table->setHorizontalScrollBarPolicy(AdjustIgnored);
+
 
     table->setRowCount(ROWCOUNT);
     QStringList Column1, Column2, Column3;
@@ -612,20 +635,20 @@ void Entry::read_json(QJsonObject & json){
         qDebug() << 354 << key << info[key] << get_size();
     }
 }
-void Widget::read_JSON_file_new(){
+void Widget::read_JSON_file_new(QString filename){
     QJsonObject json_bibliography;
-    QString filename= QFileDialog::getOpenFileName(this, "Choose File", m_json_folder, "JSON files (*.json)");
-    if(filename.isEmpty())
-        return;
+    QString foldername;
+    if (filename.isEmpty()){
+        filename= QFileDialog::getOpenFileName(this, "Choose File", m_json_folder, "JSON files (*.json)");
+        if(filename.isEmpty())
+            return;
+    }
     QFile fileIn(filename);
-    int slash_loc = filename.lastIndexOf("/") + 1;
-    QString foldername = filename.left(slash_loc);
-    m_json_folder= foldername;
-
-
-
     if (!fileIn.open(QIODevice::ReadWrite | QIODevice::Text))
         return;
+    int slash_loc = filename.lastIndexOf("/") + 1;
+    foldername = filename.left(slash_loc);
+    m_json_folder= foldername;
     QByteArray bytearray = fileIn.readAll();
     QJsonParseError parseError;
     QJsonDocument json_doc =  QJsonDocument::fromJson(bytearray, &parseError);
@@ -679,7 +702,7 @@ void Widget::read_JSON_file_new(){
         }
     }
 
-    biblioModel->m_proxyModel = new QSortFilterProxyModel () ;
+    biblioModel->m_proxyModel = new MySortFilterProxyModel () ;
     biblioModel->m_proxyModel->setSourceModel( biblioModel );
     topTableView->setModel( biblioModel->m_proxyModel );
     topTableView->setColumnWidth(0,300);
@@ -933,60 +956,78 @@ void Widget::write_bibliography_to_bibtex(){
 }
 
 void Entry::write_bibentry_to_bibtex( QTextStream & stream, QStringList & bibliography_labels){
+
+    QStringList labels, values;
+    QString mytype, author, title, year, key, size;
+
     stream << QString("@");
-    QString mytype, author, title, year, key;
+
     if (info["type"].length() == 0) {
         mytype = "article";
     } else {
         mytype = info["type"];
     }
     stream << mytype << "{" << info["key"] << "{ \n";
+
     if (info["author"].length() == 0) {
         author = "author_unknown";
     } else {
         author = get_author();
     }
-    stream << "   " << "author = \"" << author << "\",\n" ;
+    labels << "author";
+    values << author;
 
     if (info["title"].length() == 0) {
-        title = "no title";
+        title = "no title";  
     } else {
         title = get_title();
     }
-    stream << "   " << "title  = \"" << title << "\",\n" ;
+    labels << "title";
+    values << title;
 
     if (info["year"].length() == 0) {
         year = "no year";
     } else {
         year = get_year();
     }
-    stream << "   " << "year   = \"" << year << "\",\n" ;
+    labels << "year";
+    values << year;
 
     if (info["key"].length() == 0) {
         key = "no key";
     } else {
         key = get_key();
     }
-    stream << "   " << "key    = \"" << key << "\",\n" ;
+    labels << "key";
+    values << key;
 
     if (get_size() > 0) {
-        stream << "   " << "size    = \"" << get_size() << "\"" ;
+        size = QString::number(get_size());
+    } else{
+        size =  "0";
     }
+    labels << "size";
+    values << size;
 
     QStringList first_labels;
     first_labels << "type" << "author" << "title" << "year" << "key" << "size";
 
-    foreach (QString label, bibliography_labels){
+    for (int i = 0; i < bibliography_labels.length(); i++){
+        QString label = bibliography_labels[i];
         if (first_labels.contains(label)){continue;}
         if (get_info(label).length() > 0){
-            stream << ",\n";
-            stream << "   "<< label <<  get_info(label);
+            labels <<  label ;
+            values <<  get_info(label)  ;
         }
     }
-
-    //int fileno = 0;
-    stream << "\n}\n";
-
+    for (int i = 0; i < labels.length(); i++){
+        stream << "    " <<  "\"" + labels[i] + "\""    <<    " =  \"" +  values[i] + "\"";
+        if (i < labels.length() - 1){
+            stream << ",";
+        }
+        stream << "\n";
+    }
+    stream << "}\n";
 }
 
 void Widget::write_bibentry_to_json(Entry * entry, QJsonObject & total_json_object)
@@ -996,6 +1037,11 @@ void Widget::write_bibentry_to_json(Entry * entry, QJsonObject & total_json_obje
         this_json_entry["size"] = entry->get_size();
     }
     foreach (QString label, m_bibliography_labels){
+        if (label == "date_entry_created" && entry->get_info(label).isEmpty()){\
+            QDateTime datetime = datetime.currentDateTime();
+            QString format = "ddd MMMM d yyyy hh:mm";
+            entry->set_info(label, datetime.toString(format));
+        }
         if (entry->get_info(label).length() > 0){
             this_json_entry[label] = entry->get_info(label);
         }
@@ -1137,9 +1183,7 @@ void Widget::on_top_table_view_clicked(const QModelIndex &index){
     biblioModel->dataChanged(underlying_index, underlying_index);
 
     put_bibitem_info_on_middle_table_widget(index);
-    if (QApplication::keyboardModifiers() ){
-        int i = 5;
-    }
+
 
 
 }
@@ -1198,7 +1242,7 @@ void Widget::search_folders_for_pdf()
         //qDebug() << 836 << key;
         m_data_by_key[key]->remove_bottom_view_links();
     }
-
+    //bottomTableWidgetFunction = allOnboardFiles;
     bottomTableWidget->clear();
     bottomTableWidget->setColumnWidth(0,40);
     bottomTableWidget->setColumnWidth(1,500);
@@ -1222,6 +1266,7 @@ void Widget::search_folders_for_pdf()
                 continue;
             }
             if (file.fileName().endsWith(targetStr, Qt::CaseInsensitive)) {
+                if (file.size()== 0){continue;}
                 hitList.append(file);
             }
         }
@@ -1274,7 +1319,7 @@ void Widget::search_folders_for_pdf()
         bottomTableWidget->setItem(rowno,2,item2);
         bottomTableWidget->setItem(rowno,3,item3);
         bottomTableWidget->setItem(rowno,4,item4);
-        bottomTableWidget->setItem(rowno, 5, item5);
+        bottomTableWidget->setItem(rowno,5, item5);
         rowno++;
     }
     //bottomTableWidget->setSortingEnabled(true);
@@ -1283,15 +1328,24 @@ void Widget::search_folders_for_pdf()
     //show_files_with_same_size();
 }
 void Widget::delete_selected_files(){
-    for(int row = 0; row < bottomTableWidget->rowCount(); row++){
+    // TODO why the rowcount -1 ? Check for presence of entries in the widget.
+    for(int row = 0; row < bottomTableWidget->rowCount()-1; row++){
+        //qDebug() << 1287 << "row" << row;
         if (bottomTableWidget->item(row,0)->checkState()==Qt::Checked){
+            //qDebug() << 1289;
             QString filename = bottomTableWidget->item(row,2)->text() + "/" + bottomTableWidget->item(row,1)->text();
             QFile file(filename);
+            //qDebug() << 1292;
             file.remove();
         }
+        //qDebug() << 1293 << "row" << row;
     }
+    bottomTableWidget->clear();
+    search_folders_for_pdf();
+
 }
 void Widget::show_files_with_same_size(){
+    //bottomTableWidgetFunction = sameSizeFiles;
     bottomTableWidget->clear();    
     QList<int> sizes = m_files_onboard_by_size.uniqueKeys();
     int row = 0;
@@ -1369,7 +1423,9 @@ void Widget::link_top_and_bottom_entries_from_size( ){
                     entry_bottom->color_bottom_view_item_for_size();
                     entry_top->set_filenameFull(entry_bottom->get_filenamefull());
                     entry_top->set_filenameStem(entry_bottom->get_filenamestem());
-                    entry_top->set_folder(entry_bottom->get_folder());                    
+                    entry_top->set_folder(entry_bottom->get_folder());
+                    entry_top->set_info("date", entry_bottom->get_info("date"));
+                    entry_top->set_info("lastread", entry_bottom->get_info("lastread"));
                 }
             }
         }
@@ -1468,6 +1524,8 @@ void Widget::link_top_and_bottom_entries(){
    m_entry_in_top_table->set_folder(m_entry_in_bottom_table->get_folder());
    m_entry_in_top_table->set_filenameFull(m_entry_in_bottom_table->get_filenamefull());
    m_entry_in_top_table->add_keywords(middleTableWidget);
+   m_entry_in_top_table->set_info("date", m_entry_in_bottom_table->get_info("date"));
+   m_entry_in_top_table->set_info("lastread", m_entry_in_bottom_table->get_info("lastread"));
 
 
 }
@@ -1478,6 +1536,7 @@ void Widget::link_top_and_bottom_entries(){
 
 
 void Widget::set_new_filename(){
+
     QString new_name = m_proposed_new_title_widget->text();
     if (new_name.length() == 0) {return;}
     Entry* entry_onboard = m_entry_in_middle_table;
@@ -1486,18 +1545,10 @@ void Widget::set_new_filename(){
     QString year =  middleTableWidget->item(2,1)->text();
     QString old_filestem = middleTableWidget->item(4,1)->text();
     QString new_keywords = middleTableWidget->item(7,1)->text();
-    //qDebug() << 1000 << old_filestem;
+
     QString full_old_name = entry_onboard->get_filenamefull();
     QString full_new_name = entry_onboard->get_folder() + "/" + new_name;
-    //QFileInfo   fileinfo (full_old_name);
-    //QFile file(full_old_name);
-    //if (fileinfo.exists()){
-    //    bool value = file.rename(full_new_name);
-    //    if (value) {qDebug() << "Success! changed name";} else{qDebug() << "Failure to change.";}
-    //}else{
-    //    qDebug() << 889 << "Hmm, couldnt find that file.";
-    //}
-    //qDebug() << 823 << full_old_name << full_new_name<< "\n" ;
+
     Entry * new_entry = new Entry();
     new_entry->set_filenameStem(new_name);
     new_entry->set_filenameFull(full_new_name);
@@ -1645,6 +1696,14 @@ void Widget::register_biblioentry_by_key(Entry* entry){
 }
 
 void Widget::generate_new_title(){
+    QString prefix;
+    int prefix_row;
+    if (filePrefixTableWidget->selectedItems().count() > 0){
+        prefix_row = filePrefixTableWidget->selectedItems().first()->row();
+        prefix = filePrefixTableWidget->item(prefix_row,0)->text() + " " +
+                 filePrefixTableWidget->item(prefix_row,1)->text() + " ";
+    }
+
     QString author_surname;
     QString  title, new_title, year, new_filename, new_biblio_key;
     int row_for_biblio_key = 3;
@@ -1669,6 +1728,7 @@ void Widget::generate_new_title(){
     }
     if (middleTableWidget->item(2,1)){
         year = middleTableWidget->item(2,1)->text();
+        if (year.length() == 0) {year = QString("9999");}
         new_biblio_key += "_" + year;
     }
     if (filePrefixTableWidget->selectedItems().count() > 0){
@@ -1678,6 +1738,7 @@ void Widget::generate_new_title(){
     if (year.length() > 0) { new_filename = year + "_";}
     if (author_surname.length() > 0) { new_filename += author_surname; }
     new_filename +=  new_title;
+    new_filename = prefix + new_filename;
     m_proposed_new_title_widget->setText(new_filename + ".pdf");
     if (m_data_by_key.contains(new_biblio_key)){
         new_biblio_key += title;
@@ -1711,7 +1772,7 @@ Entry::Entry(){
     m_top_view_filename_item = NULL;
     m_bottom_view_size_item = NULL;
     m_bottom_view_filename_item = NULL;
-    m_creation_time = QDateTime(QDate::currentDate(), QTime::currentTime());
+    //m_creation_time = QDateTime(QDate::currentDate(), QTime::currentTime());
      m_selected_for_deletion = false;
 }
 Entry::~Entry(){
@@ -1728,7 +1789,7 @@ Entry::Entry(QString stem, QString folder, qint64 a_size)
     m_top_view_filename_item = NULL;
     m_bottom_view_size_item = NULL;
     m_bottom_view_filename_item = NULL;
-    m_creation_time = QDateTime(QDate::currentDate(), QTime::currentTime());
+    //m_creation_time = QDateTime(QDate::currentDate(), QTime::currentTime());
      m_selected_for_deletion = false;
 }
 Entry::Entry(QString stem, QString folder, int this_size)
@@ -1742,7 +1803,7 @@ Entry::Entry(QString stem, QString folder, int this_size)
   m_top_view_filename_item = NULL;
   m_bottom_view_size_item = NULL;
   m_bottom_view_filename_item = NULL;
-  m_creation_time = QDateTime(QDate::currentDate(), QTime::currentTime());
+  //m_creation_time = QDateTime(QDate::currentDate(), QTime::currentTime());
    m_selected_for_deletion = false;
 }
 void Entry::set_info(QString this_key,QString this_value)
