@@ -28,6 +28,8 @@
 struct bibentry;
 class List;
 class Entry;
+class PopUp;
+class EntryModel;
 
 QString get_first_author(QString names);
 QString find_surname(QString name);
@@ -38,23 +40,23 @@ class MySortFilterProxyModel : public QSortFilterProxyModel{
     Q_OBJECT
 };
 
-class TableModel : public QAbstractTableModel
+class BiblioTableModel : public QAbstractTableModel
 {
     Q_OBJECT
 
 public:
-    TableModel(QObject * parent = nullptr);
-    TableModel(QList<Entry*> entries, QObject *parent = 0);
+    BiblioTableModel(QObject * parent = nullptr);
+    BiblioTableModel(QList<Entry*> entries, QObject *parent = 0);
      MySortFilterProxyModel * m_proxyModel;
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
     QVariant headerData(int section, Qt::Orientation  value, int role) const override;
-    bool insertRows(int position, int rows, const QModelIndex &index=QModelIndex());
-    bool removeRows(int position, int rows, const QModelIndex &index);
-    bool setData(const QModelIndex &index, const QVariant &value, int role=Qt::EditRole);
-    Qt::ItemFlags flags(const QModelIndex &index) const;
+    bool insertRows(int position, int rows, const QModelIndex &index=QModelIndex()) override ;
+    bool removeRows(int position, int rows, const QModelIndex &index) override;
+    bool setData(const QModelIndex &index, const QVariant &value, int role=Qt::EditRole) override;
+    Qt::ItemFlags flags(const QModelIndex &index) const override;
     QList< Entry* > get_entries() {return m_entries;}
     void add_entry(Entry* entry){ m_entries.append(entry); }
     void replace_entry(int row, Entry*);
@@ -78,7 +80,7 @@ public:
 class Widget : public QWidget
 {
     Q_OBJECT
-
+    friend class EntryModel;
 public:
     Widget(QWidget *parent = nullptr);
     ~Widget();
@@ -87,10 +89,11 @@ public:
 private:
 
     // Models and views
-    TableModel            * biblioModel;
-    QTableView            * topTableView;
+    BiblioTableModel       * biblioModel;
+    QTableView             * topTableView;
     MySortFilterProxyModel * proxyModel_for_topTableView;
-    QFileSystemModel      * file_system_model;
+    QFileSystemModel       * file_system_model;
+    EntryModel             * onboard_pdf_model;
 
     // Mouse events
     // QInputEvent  modifiers gives Qt::KeyboardModifiers one of which is Qt::ControlModifier there is also enum Qt::Modifier Qt::CTRL
@@ -105,8 +108,7 @@ private:
     QTableWidget * bottomTableWidget;
     QTableWidget * bottomTableWidget2;
     QTableWidget * filePrefixTableWidget;
-    //enum widgetFunction bottomTableWidgetFunction;
-    //typedef enum {undefined, sameSizeFiles, allOnboardFiles } bottomTableWidgetFunction;
+    PopUp        * myPopUp;
 
     QTreeView    * m_directoryView;
     QFileSystemModel * m_file_system_model;
@@ -115,7 +117,7 @@ private:
     QLabel      * m_proposed_new_title_label;
     QLineEdit   * m_proposed_new_title_widget;
     QPushButton * m_create_new_list_button;
-    QPushButton * m_change_filename_button;
+    QPushButton * m_create_new_bibentry_button;
     QPushButton * m_generate_new_filename_button;
     QPushButton * m_delete_size_on_selected_biblio_entries;
     QPushButton * m_change_root_directory;
@@ -139,6 +141,7 @@ private:
     Entry* m_entry_in_top_table;
     Entry* m_entry_in_middle_table;
     Entry* m_entry_in_bottom_table;
+    int m_selected_row_in_bottom_table;
 
 
     QMap<QString, Entry*>      m_data_by_key;
@@ -159,21 +162,25 @@ private:
     QMap<QString, List*> m_Lists_map;
 
     QShortcut *  m_keyCtrlA; // show files of same size
+    QShortcut *  m_keyCtrlC; // change filename
     QShortcut *  m_keyCtrlF;
-    QShortcut *  m_keyCtrlG; // open with default JSON file
     QShortcut *  m_keyCtrlH; // read old fileformat
     QShortcut *  m_keyCtrlJ; // change location of lists
     QShortcut *  m_keyCtrlK;
     QShortcut *  m_keyCtrlL;
     QShortcut *  m_keyCtrlN;
     QShortcut *  m_keyCtrlO;
+    QShortcut *  m_keyCtrlP; // PopUp
     QShortcut *  m_keyCtrlQ; // Quit
     QShortcut *  m_keyCtrlR;
     QShortcut *  m_keyCtrlS;
     QShortcut *  m_keyCtrlU;
     QShortcut *  m_keyCtrlZ; // link top and bottom entries;
+    QShortcut *  m_keyCtrlLeftBracket; // [ open popUp
+    QShortcut *  m_keyCtrlRightBracket; // ] close popUp
 
     void display_entry_on_middle_table();
+    void display_entry_on_tableview(QTableView*, Entry*);
     QList<Entry*>  get_entries_by_size(int);
 
     void update_data_by_fullfilename (QString, QString, Entry*);
@@ -190,9 +197,14 @@ private slots:
     void read_JSON_file_new(QString filename = QString());
     //void read_JSON_file();
     void add_entry_to_top_view(Entry*);
+    void change_filename(QString old_name, QString new_fullname);
+    void change_selected_filename();
+    void create_new_bibentry();
+    void change_onboard_filename(QString new_name);
     void delete_selected_files();
     void delete_size_on_selected_biblio_entries();
     void generate_new_title();
+    QStringList get_bibliography_labels() {return m_bibliography_labels;}
     void link_top_and_bottom_entries_from_size();
     void link_top_and_bottom_entries_from_filename();
     void link_top_and_bottom_entries();
@@ -203,6 +215,9 @@ private slots:
     void on_bottom_table_widget_clicked(const QModelIndex & );
     void on_bottom_table_widget_doubleClicked(int row, int column);
     void on_middle_widget_item_changed(int row, int column);
+    void open_popUp();
+    void hide_popUp();
+    void close_popUp();
     void place_entries_with_shared_keys_on_table();
     void place_entries_with_shared_filename_on_table();
     void place_entries_with_shared_size_on_table();
@@ -215,7 +230,8 @@ private slots:
     void register_biblioentry_by_filenamestem(Entry*);
     void search_folders_for_pdf();
     void set_new_root_folder();
-    void set_new_filename();
+    void set_filename_item_bottom_widget(int row, QString new_name);
+    //void set_new_filename();
     void show_files_with_same_size();
     QString test_key_for_uniqueness(QString key);
     void write_bibliography();
@@ -242,47 +258,54 @@ private slots:
 // ------------------------------------------------------------------------------------------------------ //
 
 class Entry {
+    //friend class EntryModel;
+
     QMap<QString,QString> info;
-    QString key;
-    int size;
-    bool m_selected_for_deletion;
+    QString            key;
+    int                size;
+    bool               m_selected_for_deletion;
     //QDateTime m_creation_time;
-    QStringList m_multiple_filenamefulls;
-    QStandardItem * m_top_view_size_item;
-    QStandardItem * m_top_view_filename_item;
+    QStringList        m_multiple_filenamefulls;
+    QStandardItem *    m_top_view_size_item;
+    QStandardItem *    m_top_view_filename_item;
     QTableWidgetItem * m_bottom_view_size_item;
     QTableWidgetItem * m_bottom_view_filename_item;
-    QList<Entry*> m_links_to_on_board_entries;
-    QList<Entry*> m_links_to_bib_entries;
+    QList<Entry*>      m_links_to_on_board_entries;
+    QList<Entry*>      m_links_to_bib_entries;
 public:
     Entry();
     Entry(QString this_key) {key = this_key; }
     Entry(QString filename, QString path, qint64 size);
     Entry(QString filename, QString path, int size) ;
     ~Entry();
-
-    void    add_keywords(QTableWidget *);
-    int     get_size() {return size;}
-    QString get_key() {if (info.contains("key")) {return info["key"];} else{return QString();}}
-    QString get_title() {if (info.contains("title")) {return info["title"];} else{return QString();}}
-    QString get_author() {if (info.contains("author")) {return info["author"];} else{return QString();}}
-    QString get_year() {if (info.contains("year")) {return info["year"];} else{return QString();}}
-    QString get_folder()  {if (info.contains("folder")) {return info["folder"];} else{return QString();}}
-    QString get_filenamefull();
-    QString get_keywords() {if (info.contains("keywords")) {return info["keywords"];} else{ return QString();}}
-    QStringList* get_multiple_filenamefulls() {return &m_multiple_filenamefulls;}
-    QString get_filenamestem() {if (info.contains("filenamestem")) {return info["filenamestem"];} else{return QString();}}
-    //QDateTime get_creation_time() {return m_creation_time;}
-    void write_bibentry_to_bibtex( QTextStream & ,QStringList &);
-
-    //QTableWidgetItem * get_bottom_view_filename_item() {return m_bottom_view_filename_item;}
-    QList<Entry*> get_on_board_entries(){return m_links_to_on_board_entries;}
-    QList<Entry*> get_links_to_bib_entries() {return m_links_to_bib_entries;}
-    void mark_bottom_view_entry_as_matched_to_biblio();
+    void append_keywords(QString k){info["keywords"] = get_keywords() + " " + k;}
+    void add_to_bib_entries(Entry* entry){m_links_to_bib_entries.append(entry);}
+    void add_to_onboard_entries(Entry* entry);
+    void add_keywords(QTableWidget *);
     void color_bottom_view_item_for_size();
     void color_bottom_view_item_for_filename();
     void color_top_view_item_for_size();
     void color_top_view_item_for_filename();
+    bool contains_info(QString key){return info.contains(key);}
+    QString get_info(QString);
+    int     get_size()         {return size;}
+    QString get_key()          {if (info.contains("key")) {return info["key"];} else{return QString();}}
+    QString get_title()        {if (info.contains("title")) {return info["title"];} else{return QString();}}
+    QString get_author()       {if (info.contains("author")) {return info["author"];} else{return QString();}}
+    QString get_year()         {if (info.contains("year")) {return info["year"];} else{return QString();}}
+    QString get_folder()       {if (info.contains("folder")) {return info["folder"];} else{return QString();}}
+    QString get_filenamefull();
+    QString get_keywords()     {if (info.contains("keywords")) {return info["keywords"];} else{ return QString();}}
+    QStringList* get_multiple_filenamefulls() {return &m_multiple_filenamefulls;}
+    QString get_filenamestem() {if (info.contains("filenamestem")) {return info["filenamestem"];} else{return QString();}}
+    //QDateTime get_creation_time() {return m_creation_time;}
+    void write_bibentry_to_bibtex( QTextStream & ,QStringList &);
+    //QTableWidgetItem * get_bottom_view_filename_item() {return m_bottom_view_filename_item;}
+    QList<Entry*> get_on_board_entries(){return m_links_to_on_board_entries;}
+    QList<Entry*> get_links_to_bib_entries() {return m_links_to_bib_entries;}
+    void mark_bottom_view_entry_as_matched_to_biblio();
+    void remove_bottom_view_links();
+    void read_json(QJsonObject &);
     void set_key(QString s) {info["key"] = s;}
     void set_keywords(QString s) {info["keywords"] = s;}
     void set_title(QString s)  {info["title"] = s;}
@@ -292,28 +315,18 @@ public:
     void set_filenameStem(QString s) {info["filenamestem"] = s;}
     void set_folder(QString folder) {info["folder"] = folder;}
     void set_size(int s) {size = s;}
-    void append_keywords(QString k){info["keywords"] = get_keywords() + " " + k;}
-    void add_to_bib_entries(Entry* entry){m_links_to_bib_entries.append(entry);}
-    void add_to_onboard_entries(Entry* entry);
     bool selected_for_deletion() {return m_selected_for_deletion;}
     void set_selected_for_deletion(bool value) {m_selected_for_deletion = value;}
     void set_top_view_size_item (QStandardItem* item ){m_top_view_size_item = item;}
     void set_bottom_view_size_item(QTableWidgetItem* item ) {m_bottom_view_size_item = item;}
     void set_top_view_filename_item (QStandardItem* item ){m_top_view_filename_item = item;}
     void set_bottom_view_filename_item(QTableWidgetItem* item ) {m_bottom_view_filename_item = item;}
-    void remove_bottom_view_links();
-    void read_json(QJsonObject &);
     void set_info(QString key,QString value); //{info[key] = value;}
     void set_info(QString key, int this_size) {size = this_size;}
     void set_size_item(int);
     void set_filename_item_bottom(QString);
-    bool contains_info(QString key){return info.contains(key);}   
-    QString get_info(QString);
     // keys: key, title, author, year, filenameFull, filenameStem
     QString display();
-    //QStandardItem    * get_top_view_filename_item() {return m_top_view_filename_item;}
-    //QTableWidgetItem * get_bottom_view_size_item() {return m_bottom_view_size_item;}
-    //QStandardItem    * get_top_view_size_item() {return m_top_view_size_item;}
 
 
 };
@@ -336,4 +349,34 @@ public:
 
 };
 
+class PopUp: public QTableView               // QTableWidget
+{
+    Q_OBJECT
+
+public:
+    PopUp(QWidget* parent = nullptr);
+    void hide();
+    void close();
+};
+
+class EntryModel : public QAbstractTableModel{
+    //friend class Widget;
+
+    Q_OBJECT
+    Widget *        m_parent;
+    Entry*          m_entry;
+    QList<Entry*>   m_entries;
+public:
+    EntryModel ( Widget *parent );
+    ~EntryModel();
+    int rowCount(const QModelIndex &parent = QModelIndex()) const override;
+    int columnCount(const QModelIndex &parent = QModelIndex()) const override;
+    QVariant data(const QModelIndex & index, int role = Qt::DisplayRole) const override;
+    QStringList get_bibliography_labels() const  { return   m_parent->get_bibliography_labels();}
+    bool setData(const QModelIndex &index, const QVariant & value, int role) override;
+};
+
+
+
 #endif // WIDGET_H
+
