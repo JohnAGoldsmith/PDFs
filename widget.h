@@ -30,6 +30,7 @@ class List;
 class Entry;
 class PopUp;
 class EntryModel;
+class EntriesModel;
 
 QString get_first_author(QString names);
 QString find_surname(QString name);
@@ -81,6 +82,8 @@ class Widget : public QWidget
 {
     Q_OBJECT
     friend class EntryModel;
+    friend class EntriesModel;
+    friend class PopUp;
 public:
     Widget(QWidget *parent = nullptr);
     ~Widget();
@@ -93,7 +96,7 @@ private:
     QTableView             * topTableView;
     MySortFilterProxyModel * proxyModel_for_topTableView;
     QFileSystemModel       * file_system_model;
-    EntryModel             * onboard_pdf_model;
+    EntriesModel             * onboard_pdf_model;
 
     // Mouse events
     // QInputEvent  modifiers gives Qt::KeyboardModifiers one of which is Qt::ControlModifier there is also enum Qt::Modifier Qt::CTRL
@@ -322,7 +325,7 @@ public:
     void set_top_view_filename_item (QStandardItem* item ){m_top_view_filename_item = item;}
     void set_bottom_view_filename_item(QTableWidgetItem* item ) {m_bottom_view_filename_item = item;}
     void set_info(QString key,QString value); //{info[key] = value;}
-    void set_info(QString key, int this_size) {size = this_size;}
+    void set_info(QString key, int this_size) {size = this_size; }
     void set_size_item(int);
     void set_filename_item_bottom(QString);
     // keys: key, title, author, year, filenameFull, filenameStem
@@ -339,24 +342,56 @@ public:
     List();
     List(QString);
     ~List();
-    QString get_name() {return name;}
+    QString         get_name() {return name;}
     QList<Entry*> * get_entries() {return & entries;}
-    Entry* get_entry(int n) {return entries[n];}
-    int get_count_of_entries(){return entries.count();}
-    void add_entry(Entry * entry) {entries.append(entry);}
-    void read_json(QJsonObject & );
-    void read_json(QJsonArray & );
+    Entry*          get_entry(int n) {return entries[n];}
+    int             get_count_of_entries(){return entries.count();}
+    void            add_entry(Entry * entry) {entries.append(entry);}
+    void            read_json(QJsonObject & );
+    void            read_json(QJsonArray & );
 
 };
+class SingleEntryView: public QTableView{
+    Q_OBJECT
 
-class PopUp: public QTableView               // QTableWidget
+
+
+};
+class PopUp: public   QTableView
 {
     Q_OBJECT
 
+    Entry      * m_entry;
+    EntryModel * m_entryModel;
+
 public:
-    PopUp(QWidget* parent = nullptr);
+    PopUp(Entry* , Widget* parent = nullptr);
+    void setEntry(Entry*);
     void hide();
     void close();
+
+};
+
+class EntriesView: public QTableView{
+    Q_OBJECT
+
+};
+
+class EntriesModel: public QAbstractTableModel{
+    Q_OBJECT
+    Widget *        m_parent;
+    Entry*          m_entry;
+    Entry*          m_selected_entry; // ?? is this needed?
+    QList<Entry*>   m_entries;
+public:
+    EntriesModel ( Widget *parent );
+    ~EntriesModel();
+    int            rowCount(const QModelIndex &parent = QModelIndex()) const override;
+    int            columnCount(const QModelIndex &parent = QModelIndex()) const override;
+    QVariant       data(const QModelIndex & index, int role = Qt::DisplayRole) const override;
+    QStringList    get_bibliography_labels() const  { return   m_parent->get_bibliography_labels();}
+    bool           setData(const QModelIndex &index, const QVariant & value, int role) override;
+    void           addEntry(Entry*);
 };
 
 class EntryModel : public QAbstractTableModel{
@@ -365,15 +400,17 @@ class EntryModel : public QAbstractTableModel{
     Q_OBJECT
     Widget *        m_parent;
     Entry*          m_entry;
-    QList<Entry*>   m_entries;
+    //QList<Entry*>   m_entries;
 public:
-    EntryModel ( Widget *parent );
+    EntryModel (Entry* entry, Widget *parent);
     ~EntryModel();
-    int rowCount(const QModelIndex &parent = QModelIndex()) const override;
-    int columnCount(const QModelIndex &parent = QModelIndex()) const override;
-    QVariant data(const QModelIndex & index, int role = Qt::DisplayRole) const override;
-    QStringList get_bibliography_labels() const  { return   m_parent->get_bibliography_labels();}
-    bool setData(const QModelIndex &index, const QVariant & value, int role) override;
+    int            rowCount(const QModelIndex &parent = QModelIndex()) const override;
+    int            columnCount(const QModelIndex &parent = QModelIndex()) const override;
+    QVariant       data(const QModelIndex & index, int role = Qt::DisplayRole) const override;
+    QStringList    get_bibliography_labels() const  { return   m_parent->get_bibliography_labels();}
+    bool           setData(const QModelIndex &index, const QVariant & value, int role) override;
+    //void           addEntry(Entry*);
+    Qt::ItemFlags  flags(const QModelIndex &index) const;
 };
 
 

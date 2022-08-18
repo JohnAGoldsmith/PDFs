@@ -152,7 +152,7 @@ void Widget::search_folders_for_pdf()
         bottomTableWidget->setItem(rowno,4,item4);
         bottomTableWidget->setItem(rowno,5,item5);
 
-
+        onboard_pdf_model->addEntry(entry);  // this should replace a huge amount of other code above!
 
         rowno++;
     }

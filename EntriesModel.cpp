@@ -26,57 +26,45 @@
 #include <EGL/egl.h>
 class List;
 
-EntryModel::EntryModel(Entry* entry, Widget * main_widget){
+
+
+
+
+
+EntriesModel::EntriesModel(Widget * main_widget){
     m_parent = main_widget;
-    m_entry = entry;
+    m_entry = main_widget->m_entry_in_bottom_table;
 
 }
-EntryModel::~EntryModel(){
+EntriesModel::~EntriesModel(){
 
 }
-
-int EntryModel::rowCount(const QModelIndex &index ) const
+void EntriesModel::addEntry(Entry * entry){
+    m_entries.append(entry);
+}
+int EntriesModel::rowCount(const QModelIndex &index ) const
 {
    Q_UNUSED(index);
    return  m_parent->m_bibliography_labels.count();
 }
 
-int EntryModel::columnCount(const QModelIndex &index) const
+int EntriesModel::columnCount(const QModelIndex &index) const
 {
     Q_UNUSED(index);
     return 2;
 }
-bool EntryModel::setData(const QModelIndex &index, const QVariant & value, int role)
+bool EntriesModel::setData(const QModelIndex &index, const QVariant & value, int role)
 {
     if (index.isValid() && role == Qt::EditRole) {
-        if (index.column() == 1){
-            int row = index.row();
-            QString label = get_bibliography_labels().at(row);
-            if (label == "size"){
-                m_entry->set_size(value.toInt());
-                qDebug() << "size" << value.toInt();
-            } else{
-                qDebug() << "label" << label;
-                qDebug() << "value.string" << value.String;
-                //m_entry->set_info(label, value.String);
-                m_entry->set_info(label, value.toString());
-                emit dataChanged(index,index);
-                return true;
-            }
-        }
-        else{
-            return false;
-        }
         //stringList.replace(index.row(), value.toString());
         //emit dataChanged(index, index, {role});
-        //qDebug() << "entry model" << value;
         return true;
     }
     return false;
 }
 
 
-QVariant EntryModel::data(const QModelIndex & index, int role )const
+QVariant EntriesModel::data(const QModelIndex & index, int role )const
 {
     if (!index.isValid())
         return QVariant();
@@ -84,8 +72,7 @@ QVariant EntryModel::data(const QModelIndex & index, int role )const
         return QVariant();
     }
     int row = index.row();
-
-    if (role == Qt::DisplayRole || role == Qt::EditRole) {
+    if (role == 0) {
          if ( index.column() == 1) {
             if (! m_entry ) { return QVariant(); }
             if (get_bibliography_labels().at(row) == "size"){
@@ -100,9 +87,3 @@ QVariant EntryModel::data(const QModelIndex & index, int role )const
 
     return QVariant();
 }
-
-Qt::ItemFlags EntryModel::flags(const QModelIndex &index) const {
-         return Qt::ItemIsEditable | Qt::ItemIsSelectable |
-                 Qt::ItemIsEnabled  |   QAbstractTableModel::flags(index);
-}
-

@@ -10,6 +10,7 @@ CONFIG += c++11
 
 SOURCES += \
     Bottom.cpp \
+    EntriesModel.cpp \
     Entry.cpp \
     EntryModel.cpp \
     ReadFile.cpp \

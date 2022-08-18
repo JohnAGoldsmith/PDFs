@@ -70,6 +70,9 @@ Widget::Widget(QWidget *parent)
     m_entry_in_bottom_table = nullptr;
     m_entry_in_middle_table = nullptr;
 
+    onboard_pdf_model = new EntriesModel(this);
+
+
     topTableView->setSelectionMode(QAbstractItemView::SingleSelection);
     topTableView->setSortingEnabled(true);
 
@@ -201,8 +204,8 @@ Widget::Widget(QWidget *parent)
                 this,SLOT(set_new_root_folder()));
     //connect(m_change_filename_button,SIGNAL(clicked()),
     //            this,SLOT(change_filename()));
-    connect(m_create_new_bibentry_button,SIGNAL(clicked),
-            this,SLOT(create_new_bibentry));
+    connect(m_create_new_bibentry_button,SIGNAL(clicked()),
+            this,SLOT(create_new_bibentry()));
     connect(listNamesWidget,SIGNAL(itemClicked(QListWidgetItem*)),
                 this,SLOT(select_new_list(QListWidgetItem*)));
     connect(m_create_new_list_button,SIGNAL(clicked()),
