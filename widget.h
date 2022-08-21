@@ -31,6 +31,7 @@ class Entry;
 class PopUp;
 class EntryModel;
 class EntriesModel;
+class EntriesView; // tableView
 
 QString get_first_author(QString names);
 QString find_surname(QString name);
@@ -69,7 +70,7 @@ class TableView : public QTableView{
     Q_OBJECT
 public:
     TableView(QObject * parent = 0);
-
+    //void currentChanged(const QModelIndex &current, const QModelIndex &previous) override;
 };
 class NewStandardItemModel : public QStandardItemModel
 {
@@ -87,16 +88,17 @@ class Widget : public QWidget
 public:
     Widget(QWidget *parent = nullptr);
     ~Widget();
-    void put_bibitem_info_on_middle_table_widget (const QModelIndex & index);
+    void bibitem_info_on_middle_table_widget (const QModelIndex & index);
 
 private:
 
     // Models and views
     BiblioTableModel       * biblioModel;
     QTableView             * topTableView;
-    MySortFilterProxyModel * proxyModel_for_topTableView;
+    //MySortFilterProxyModel * proxyModel_for_topTableView;
     QFileSystemModel       * file_system_model;
     EntriesModel             * onboard_pdf_model;
+    //EntriesModel            * entries_model;
 
     // Mouse events
     // QInputEvent  modifiers gives Qt::KeyboardModifiers one of which is Qt::ControlModifier there is also enum Qt::Modifier Qt::CTRL
@@ -110,6 +112,7 @@ private:
     QTableWidget * middleTableWidget;
     QTableWidget * bottomTableWidget;
     QTableWidget * bottomTableWidget2;
+    EntriesView  * bottomTableView;
     QTableWidget * filePrefixTableWidget;
     PopUp        * myPopUp;
 
@@ -145,7 +148,7 @@ private:
     Entry* m_entry_in_middle_table;
     Entry* m_entry_in_bottom_table;
     int m_selected_row_in_bottom_table;
-
+    int m_selected_row_in_bottom_view;
 
     QMap<QString, Entry*>      m_data_by_key;
     QMap<QString, Entry*>      m_data_by_fullfilename;
@@ -191,6 +194,9 @@ private:
     void update_files_onboard_by_filenamestem(QString, QString, Entry*);
     void load_file_prefixes(QTableWidget*);
 
+    void put_bibitem_info_on_middle_table_widget(const Entry* entry);
+
+
 private slots:
 
     void quit_now() {QApplication::quit();}
@@ -211,12 +217,13 @@ private slots:
     void link_top_and_bottom_entries_from_size();
     void link_top_and_bottom_entries_from_filename();
     void link_top_and_bottom_entries();
-    void mark_file_as_indexed(QString);
+    //void mark_file_as_indexed(QString);
     void on_top_table_view_clicked(const QModelIndex &  );
     void on_top_table_view_doubleClicked(const QModelIndex &);
     void on_middle_table_widget_doubleClicked(int,int);
-    void on_bottom_table_widget_clicked(const QModelIndex & );
+    //void on_bottom_table_widget_clicked(const QModelIndex&);
     void on_bottom_table_widget_doubleClicked(int row, int column);
+    void on_bottom_table_view_clicked(const QModelIndex&);
     void on_middle_widget_item_changed(int row, int column);
     void open_popUp();
     void hide_popUp();
@@ -225,7 +232,11 @@ private slots:
     void place_entries_with_shared_filename_on_table();
     void place_entries_with_shared_size_on_table();
     void promote_file_from_preferred_location(Entry*);
+    void put_bibitem_info_on_middle_table_widget(const QModelIndex & index);
     void put_file_info_on_middle_table_widget(int bottom_widget_row);
+    void put_file_info_on_middle_table_widget(Entry*);
+    void put_file_info_on_popup_widget(Entry*);
+    void put_file_info_on_entry_view(QModelIndex & current_model_index);
     void register_biblioentry_by_key_name_and_size(Entry *);
     void register_biblioentry_by_fullfilename(Entry*);
     void register_biblioentry_by_key(Entry*);
@@ -374,15 +385,20 @@ public:
 
 class EntriesView: public QTableView{
     Q_OBJECT
+public:
+    void set_proxy_model(MySortFilterProxyModel *);
 
 };
 
 class EntriesModel: public QAbstractTableModel{
     Q_OBJECT
     Widget *        m_parent;
-    Entry*          m_entry;
+    //Entry*          m_entry;
     Entry*          m_selected_entry; // ?? is this needed?
     QList<Entry*>   m_entries;
+    MySortFilterProxyModel * m_proxyModel;
+
+
 public:
     EntriesModel ( Widget *parent );
     ~EntriesModel();
@@ -392,6 +408,10 @@ public:
     QStringList    get_bibliography_labels() const  { return   m_parent->get_bibliography_labels();}
     bool           setData(const QModelIndex &index, const QVariant & value, int role) override;
     void           addEntry(Entry*);
+    QVariant       headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const;
+    void           setSeletedEntry(Entry* entry) {m_selected_entry = entry;}
+    MySortFilterProxyModel* getProxyModel() {return m_proxyModel;}
+    int            number_of_entries(){return m_entries.count();}
 };
 
 class EntryModel : public QAbstractTableModel{
@@ -409,10 +429,9 @@ public:
     QVariant       data(const QModelIndex & index, int role = Qt::DisplayRole) const override;
     QStringList    get_bibliography_labels() const  { return   m_parent->get_bibliography_labels();}
     bool           setData(const QModelIndex &index, const QVariant & value, int role) override;
-    //void           addEntry(Entry*);
-    Qt::ItemFlags  flags(const QModelIndex &index) const;
+    Qt::ItemFlags  flags(const QModelIndex &index) const override;
+    void           display(Entry* entry);
 };
-
 
 
 #endif // WIDGET_H

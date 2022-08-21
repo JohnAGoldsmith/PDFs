@@ -30,11 +30,14 @@ EntryModel::EntryModel(Entry* entry, Widget * main_widget){
     m_parent = main_widget;
     m_entry = entry;
 
+
 }
 EntryModel::~EntryModel(){
 
 }
-
+void EntryModel::display(Entry* entry){
+    m_entry = entry;
+}
 int EntryModel::rowCount(const QModelIndex &index ) const
 {
    Q_UNUSED(index);

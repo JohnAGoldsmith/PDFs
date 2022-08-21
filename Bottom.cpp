@@ -21,6 +21,7 @@
 #include <QSortFilterProxyModel>
 #include <QScrollBar>
 #include<QAbstractScrollArea>
+#include <QHeaderView>
 #include <EGL/egl.h>
 class List;
 
@@ -30,6 +31,7 @@ class List;
 /*              BOTTOM VIEW                 */
 // This should really be a function of the lower widget, if I subclass it.
 // Currently this is only used by a function no longer used, one that reads the old format. It should be removed.
+/*
 void::Widget::mark_file_as_indexed(QString filename){
     if (! filename.endsWith(".pdf")){
         filename += ".pdf";
@@ -43,12 +45,31 @@ void::Widget::mark_file_as_indexed(QString filename){
         }
     }
 }
+*/
 
-void Widget::on_bottom_table_widget_clicked(const QModelIndex & index ){
-    m_selected_row_in_bottom_table = index.row();
-    put_file_info_on_middle_table_widget(m_selected_row_in_bottom_table); // this should send the entry, not the row, no?
+/*
+void Widget::on_bottom_table_widget_clicked(const QModelIndex& index){
+    //convert to Entry*, then pass a signal
+    int row = index.row();
+    QString  stem =   bottomTableWidget->item(row,1)->text();
+    QString filename = bottomTableWidget->item(row,2)->text() + "/" + stem;
+    Entry * entry = m_files_onboard_by_filenamefull[filename];
+    //m_selected_row_in_bottom_table = index.row();
+    //put_file_info_on_middle_table_widget(m_selected_row_in_bottom_table); // this should send the entry, not the row, no?
+    put_file_info_on_middle_table_widget(entry);
 }
-
+*/
+void Widget::on_bottom_table_view_clicked(const QModelIndex& index){
+    if (onboard_pdf_model->number_of_entries() < 1) {return;}
+    int row =  onboard_pdf_model->getProxyModel()->mapToSource( index  ).row() ;
+    if (row < 0) {return;}
+    QString  stem =   bottomTableWidget->item(row,1)->text();
+    QString filename = bottomTableWidget->item(row,2)->text() + "/" + stem;
+    qDebug() << filename;
+    Entry * entry = m_files_onboard_by_filenamefull[filename];
+    put_file_info_on_middle_table_widget(entry);
+    put_file_info_on_popup_widget(entry);
+}
 void Widget::on_bottom_table_widget_doubleClicked(int row, int column){
     Q_UNUSED(column);
     QTableWidgetItem  * itemfolder =  bottomTableWidget->item(row,2);
@@ -106,7 +127,10 @@ void Widget::search_folders_for_pdf()
     int rowno = 0;
     int count = 0;
     QTableWidgetItem * item0, *item1,*item2,*item3, *item4, *item5;
+    int count1(0);
+    int count2(0);
     foreach (QFileInfo hit, hitList) {
+        //qDebug() << count1++;
         filenameStem = hit.fileName();
         folder = hit.dir().absolutePath();
         size = hit.size();
@@ -114,7 +138,14 @@ void Widget::search_folders_for_pdf()
             continue;
         }
         filenameFull = folder + "/" + filenameStem;
+
         Entry * entry = new Entry();
+
+        QString date (hit.lastModified().date().toString("yyyy MM dd"));
+        QString lastread (hit.lastRead().date().toString("yyyy MM dd"));
+        // Entry * entry = new Entry(hit.filename, hit.dir().absolutePath(),
+        //                 folder + "/" + filenameStem, date, lastread, size);
+        // we will get rid of:
         entry->set_folder(folder);
         entry->set_filenameStem(filenameStem);
         entry->set_filenameFull(filenameFull);
@@ -123,16 +154,15 @@ void Widget::search_folders_for_pdf()
         //qDebug() << 1046 << hit.birthTime().toString("yyyy MM dd") << hit.absoluteFilePath() << hit.lastModified().date().toString();
         //qDebug() << 880 << entry->get_filenamefull();
         entry->set_size(size);
-        if (entry->get_size() == 0){
-            qDebug() << 882 << "size zero";
-            continue;
-        }
         m_files_onboard_by_filenamefull[filenameFull] = entry;
         m_files_onboard_by_filenamestem.insert(filenameStem, entry);
         if (m_files_onboard_by_size.contains(size)){
             count++;
         }
         m_files_onboard_by_size.insert(size, entry);
+
+        //..........................................................
+        // this will be removed:
         item0 = new QTableWidgetItem();
         item0->setCheckState(Qt::Unchecked);
         item1 = new QTableWidgetItem(filenameStem);
@@ -143,19 +173,23 @@ void Widget::search_folders_for_pdf()
         item4->setData(Qt::DisplayRole, entry->get_info("date"));
         item5 = new QTableWidgetItem();
         item5->setData(Qt::DisplayRole, entry->get_info("lastread"));
-        entry->set_bottom_view_filename_item(item1);
-        entry->set_bottom_view_size_item(item3);
+        entry->set_bottom_view_filename_item(item1);                          // is this needed?
+        entry->set_bottom_view_size_item(item3);                              // ditto?
         bottomTableWidget->setItem(rowno,0,item0);
         bottomTableWidget->setItem(rowno,1,item1);
         bottomTableWidget->setItem(rowno,2,item2);
         bottomTableWidget->setItem(rowno,3,item3);
         bottomTableWidget->setItem(rowno,4,item4);
         bottomTableWidget->setItem(rowno,5,item5);
+        //...............................................................
+
 
         onboard_pdf_model->addEntry(entry);  // this should replace a huge amount of other code above!
-
         rowno++;
     }
+    bottomTableView->resizeColumnsToContents();
+    bottomTableView->sortByColumn(1);
+    //qDebug() << 164 << "Size of bottom view/rows" << bottomTableView->row
     link_top_and_bottom_entries_from_size(); // TODO: clear out any previous linkings before doing this;
     link_top_and_bottom_entries_from_filename(); // TODO: clear out any previous linkings before doing this;
 }

@@ -50,8 +50,10 @@ void Widget::on_top_table_view_clicked(const QModelIndex &index){
     }
     biblioModel->dataChanged(underlying_index, underlying_index);
 
-    put_bibitem_info_on_middle_table_widget(index);
+    //put_bibitem_info_on_middle_table_widget(index);
 
+
+    put_bibitem_info_on_middle_table_widget(entry);
 
 
 }

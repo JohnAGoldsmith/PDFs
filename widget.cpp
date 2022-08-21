@@ -71,18 +71,21 @@ Widget::Widget(QWidget *parent)
     m_entry_in_middle_table = nullptr;
 
     onboard_pdf_model = new EntriesModel(this);
-
+    //entries_model = new EntriesModel(this);
 
     topTableView->setSelectionMode(QAbstractItemView::SingleSelection);
     topTableView->setSortingEnabled(true);
 
+    bottomTableView = new EntriesView();
+    bottomTableView->setModel(onboard_pdf_model->getProxyModel());
+    bottomTableView->setSortingEnabled(true);
+
+    /*
     bottomTableWidget->setColumnCount(5);
     bottomTableWidget->setColumnWidth(0,600);
     bottomTableWidget->setColumnWidth(1,250);
     bottomTableWidget->setSortingEnabled(true);
-    bottomTableWidget->setColumnCount(3);
-    bottomTableWidget->setColumnWidth(0,600);
-    bottomTableWidget->setColumnWidth(1,250);
+    */
     bottomTableWidget2->setColumnWidth(0,1000);
     bottomTableWidget2->setColumnWidth(1,1000);
     bottomTableWidget2->setColumnWidth(3,800);
@@ -129,8 +132,9 @@ Widget::Widget(QWidget *parent)
     mainSplitter->addWidget(rightSplitter);
     leftSplitter->addWidget(topTableView);
     leftSplitter->addWidget(middleTableWidget);
-    leftSplitter->addWidget(bottomTableWidget);
+    //leftSplitter->addWidget(bottomTableWidget);
     leftSplitter->addWidget(bottomTableWidget2);
+    leftSplitter->addWidget(bottomTableView);
     rightSplitter->addWidget(listNamesWidget);
     rightSplitter->addWidget(listWidget);
 
@@ -189,15 +193,34 @@ Widget::Widget(QWidget *parent)
             this , SLOT(on_middle_table_widget_doubleClicked(int,int)));
     connect(m_delete_size_on_selected_biblio_entries,SIGNAL(clicked()) ,
             this , SLOT(delete_size_on_selected_biblio_entries())  );
-    //connect(middleTableWidget,SIGNAL(cellChanged(int,int)) ,
-    //        this , SLOT(on_middle_widget_item_changed(int,int)));
     connect(m_generate_new_filename_button,SIGNAL(clicked()) ,
             this , SLOT(generate_new_title())  );
 
-    connect(bottomTableWidget,SIGNAL(clicked(QModelIndex)) ,
-            this , SLOT(on_bottom_table_widget_clicked(QModelIndex)));
-    connect(bottomTableWidget,SIGNAL(cellDoubleClicked(int,int)) ,
-            this , SLOT(on_bottom_table_widget_doubleClicked(int,int)));
+
+
+// old, remove:
+//    connect(bottomTableWidget,SIGNAL(clicked(const QModelIndex&)) ,
+//            this , SLOT(on_bottom_table_widget_clicked(const QModelIndex&)));
+//    connect(bottomTableWidget, &QTableWidget::clicked,
+//            this, &Widget::on_bottom_table_widget_clicked);
+
+//    connect(bottomTableWidget,SIGNAL(cellDoubleClicked(int,int)) ,
+//            this , SLOT(on_bottom_table_widget_doubleClicked(int,int)));
+//    connect(bottomTableView,SIGNAL(clicked(QModelIndex&)) ,
+//            this , SLOT(on_bottom_table_view_clicked(QModelIndex&)));
+    connect(bottomTableView,SIGNAL(cellDoubleClicked(int,int)) ,
+            this , SLOT(on_bottom_table_view_doubleClicked(int,int)));
+
+    connect(bottomTableView, &EntriesView::clicked,
+            this, &Widget::on_bottom_table_view_clicked );
+
+
+
+/*
+    bool success = connect(bottomTableView, &TableView::currentChanged,
+            this, &Widget::put_file_info_on_entry_view );
+    Q_ASSERT(bool);
+*/
     connect(listWidget,SIGNAL(itemDoubleClicked(QListWidgetItem*)) ,
             this , SLOT(on_listWidget_doubleClicked(QListWidgetItem*)));
     connect(m_change_root_directory,SIGNAL(clicked()),
@@ -767,16 +790,30 @@ void Widget::put_bibitem_info_on_middle_table_widget(const QModelIndex & index){
     display_entry_on_middle_table();
     m_proposed_new_title_widget->clear();
 }
+
 void Widget::put_file_info_on_middle_table_widget(int bottom_widget_row){
     QString filename(bottomTableWidget->item(bottom_widget_row,1)->text());
     QString foldername(bottomTableWidget->item(bottom_widget_row,2)->text());
     QString fullname = foldername + "/" + filename;
-    //qDebug() << 1067 << fullname;
     Entry* entry = m_files_onboard_by_filenamefull[fullname];
     m_entry_in_bottom_table = entry;
+}
+void Widget::put_file_info_on_middle_table_widget(Entry* entry){
     m_entry_in_middle_table = entry;
     display_entry_on_middle_table();
     m_proposed_new_title_widget->clear();
+}
+void Widget::put_file_info_on_popup_widget(Entry* entry){
+    if (myPopUp)
+        delete myPopUp;
+    myPopUp = new PopUp(entry, this);
+}
+void Widget::put_file_info_on_entry_view(QModelIndex & current_model_index){
+
+
+}
+void Widget::put_bibitem_info_on_middle_table_widget(const Entry* entry){
+
 }
 void Widget::on_middle_widget_item_changed(int row, int column ){
     if (  ( bottomTableWidget->hasFocus() || middleTableWidget->hasFocus())  &&
