@@ -34,6 +34,7 @@ Entry::Entry(){
     m_bottom_view_filename_item = NULL;
     //m_creation_time = QDateTime(QDate::currentDate(), QTime::currentTime());
      m_selected_for_deletion = false;
+     m_temporary_color = QColorConstants::Black;
 }
 Entry::~Entry(){
 
@@ -51,6 +52,7 @@ Entry::Entry(QString stem, QString folder, qint64 a_size)
     m_bottom_view_filename_item = NULL;
     //m_creation_time = QDateTime(QDate::currentDate(), QTime::currentTime());
      m_selected_for_deletion = false;
+     m_temporary_color = nullptr;
 }
 Entry::Entry(QString stem, QString folder, int this_size)
 {

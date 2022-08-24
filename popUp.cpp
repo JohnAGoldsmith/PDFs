@@ -1,6 +1,7 @@
 #include <QTableWidget>
 #include <QShortcut>
 #include <QHeaderView>
+#include <QMessageBox>
 #include "widget.h"
 
 //extern void display_entry_on_tablewidget(QTableWidget* table_widget, Entry* entry, QStringList & my_labels);
@@ -21,6 +22,13 @@ PopUp::PopUp(Entry* entry, Widget* parent){resizeColumnToContents(0);
 
 void Widget::open_popUp(){
     if (myPopUp== nullptr){
+        if (!m_entry_in_bottom_table){
+            QMessageBox box;
+
+            box.setText( "Select an item first.");
+            box.exec();
+            return;
+        }
         myPopUp = new PopUp(m_entry_in_bottom_table, this );
         m_keyCtrlRightBracket = new QShortcut(this);
         m_keyCtrlRightBracket->setKey(Qt::CTRL  + Qt::Key_BracketRight);

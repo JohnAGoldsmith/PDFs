@@ -27,8 +27,7 @@ class List;
 
 
 
-void Widget::on_top_table_view_clicked(const QModelIndex &index){
-
+void Widget::on_top_table_view_clicked(const QModelIndex&index){
 
     QModelIndex underlying_index = biblioModel->m_proxyModel->mapToSource(index);
     int model_row = underlying_index.row();
@@ -58,6 +57,13 @@ void Widget::on_top_table_view_clicked(const QModelIndex &index){
 
 }
 
-void Widget::on_top_table_view_doubleClicked(const QModelIndex &index){
+void Widget::on_top_table_view_doubleClicked(const QModelIndex&index){
+    QModelIndex underlying_index = biblioModel->m_proxyModel->mapToSource(index);
+    int model_row = underlying_index.row();
+ qDebug() <<63   <<  index << "index row"<<index.row() << "model row" <<model_row ;
+    Entry * entry = biblioModel->get_entries().at(model_row);
+
+    QString filename =  entry->get_filenamefull();
+    QDesktopServices::openUrl(QUrl::fromLocalFile(filename));
 
 }

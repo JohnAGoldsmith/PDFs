@@ -29,11 +29,92 @@ BiblioTableModel::BiblioTableModel(QObject *parent)
     : QAbstractTableModel(parent)
 {
 }
-
 BiblioTableModel::BiblioTableModel(QList< Entry* > entrylist, QObject *parent)
-    : QAbstractTableModel(parent)
+    : QAbstractTableModel(parent){
+
+}
+
+void BiblioTableModel::register_all_entries()
 {
-    m_entries  = entrylist;
+     foreach (Entry* entry, m_entries){
+         register_biblioentry_by_key(entry);
+         register_biblioentry_by_size(entry);
+         register_biblioentry_by_filenamestem(entry);
+         register_biblioentry_by_fullfilename(entry);
+     }
+}
+/*
+void BiblioTableModel::register_entry(Entry * entry){
+    register_biblioentry_by_key(entry);
+    register_biblioentry_by_filenamestem(entry);
+    register_biblioentry_by_fullfilename(entry);
+    register_biblioentry_by_size(entry);
+}
+*/
+void BiblioTableModel::register_biblioentry_by_key(Entry* entry){
+    if (m_data_by_key_multiple.contains(entry->get_key())){
+        m_data_by_key_multiple.insert(entry->get_key(), entry);
+    } else {
+        if (m_data_by_key.contains(entry->get_key() ) ) {
+              m_data_by_key_multiple.insert(entry->get_key(), m_data_by_filenamestem[entry->get_filenamestem()]);
+              m_data_by_key_multiple.insert(entry->get_key(), entry);
+            }
+           else {
+            m_data_by_key.insert(entry->get_key(), entry);
+           }
+    }
+
+}
+void BiblioTableModel::register_biblioentry_by_size(Entry * entry ){
+    if (m_data_by_size_multiple.contains(entry->get_size())){
+        m_data_by_size_multiple.insert(entry->get_size(), entry);
+    } else {
+        if (m_data_by_size.contains(entry->get_size() ) ) {
+              m_data_by_size_multiple.insert(entry->get_size(), m_data_by_size[entry->get_size()]);
+              m_data_by_size_multiple.insert(entry->get_size(), entry);
+            }
+           else {
+              m_data_by_size.insert(entry->get_size(), entry);
+           }
+    }
+}
+void BiblioTableModel::register_biblioentry_by_fullfilename(Entry* entry){
+    if (m_data_by_fullfilename_multiple.contains(entry->get_filenamefull())){
+        m_data_by_fullfilename_multiple.insert(entry->get_filenamefull(), entry);
+    } else {
+        if (m_data_by_fullfilename_multiple.contains(entry->get_filenamefull() ) ) {
+              m_data_by_fullfilename_multiple.insert(entry->get_filenamefull(), m_data_by_fullfilename[entry->get_filenamefull()]);
+              m_data_by_fullfilename_multiple.insert(entry->get_filenamefull(), entry);
+            }
+         else {
+              m_data_by_fullfilename.insert(entry->get_filenamefull(), entry);
+         }
+    }
+}
+void BiblioTableModel::register_biblioentry_by_filenamestem(Entry* entry){
+    if (m_data_by_filenamestem_multiple.contains(entry->get_filenamestem())){
+        m_data_by_filenamestem_multiple.insert(entry->get_filenamestem(), entry);
+    } else {
+        if (m_data_by_filenamestem.contains(entry->get_filenamestem() ) ) {
+              m_data_by_filenamestem_multiple.insert(entry->get_filenamestem(), m_data_by_filenamestem[entry->get_filenamestem()]);
+              m_data_by_filenamestem_multiple.insert(entry->get_filenamestem(), entry);
+            }
+         else {
+              m_data_by_filenamestem.insert(entry->get_filenamestem(), entry);
+         }
+    }
+}
+QList<Entry*> BiblioTableModel::contains_filenamestem(QString stem){
+    if (m_data_by_filenamestem.contains(stem)){
+        return m_data_by_filenamestem.values(stem);
+    } else{
+        return QList<Entry*>();
+    }
+}
+
+void BiblioTableModel::add_entry(Entry *entry){
+    m_entries.append(entry);
+
 
 }
 int BiblioTableModel::rowCount(const QModelIndex &parent) const

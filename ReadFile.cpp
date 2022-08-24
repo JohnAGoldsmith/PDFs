@@ -132,12 +132,12 @@ void Widget::read_JSON_file_new(QString filename){
                 }
                 promote_file_from_preferred_location(entry);
                 biblioModel->add_entry(entry);
-                register_biblioentry_by_key_name_and_size(entry);
         }
     }
-
+    biblioModel->register_all_entries();
     biblioModel->m_proxyModel = new MySortFilterProxyModel () ;
     biblioModel->m_proxyModel->setSourceModel( biblioModel );
+
     topTableView->setModel( biblioModel->m_proxyModel );
     topTableView->setColumnWidth(0,300);
     topTableView->setColumnWidth(1,400);
@@ -150,7 +150,7 @@ void Widget::read_JSON_file_new(QString filename){
     topTableView->setColumnWidth(8,400);
 
     // What follows has to be done *after* the entries have been loaded: this is the List information.
-   if (NewFormatFlag){
+   if (false && NewFormatFlag){
        QJsonArray json_lists_array;
        json_lists_array = json_doc[1].toArray();
 
@@ -162,7 +162,7 @@ void Widget::read_JSON_file_new(QString filename){
            if (m_Lists_map.contains(list_name)){
                list = m_Lists_map[list_name];
            } else{
-               List * list = new List (json_list_object["list_name"].toString());
+               list = new List (json_list_object["list_name"].toString());
            }
            QJsonArray json_entries;
            json_entries = json_list_object["entries"].toArray();
@@ -172,6 +172,8 @@ void Widget::read_JSON_file_new(QString filename){
                {
                    QJsonObject list_entry;
                    list_entry = json_entries[n].toObject();
+                   //entry = biblioModel->contains_by_size(list_entry["size"].toInt())->first() ;
+
                    QList<Entry*> entries = get_entries_by_size(list_entry["size"].toInt());
                    entry = entries.first();
                    add_entry_to_list(list, entry);

@@ -70,14 +70,14 @@ void Widget::new_list(QString list_name = QString() ){
     listNamesWidget->addItem(list_name);
 
 }
-void Widget::add_entry_to_list( ){
+void Widget::add_entry_to_list(){
     // This is from middle widget
     List* list = m_current_list;
     if (!list) {return;}
     list->add_entry(m_entry_in_middle_table);
     qDebug() << 294 << "author" << m_entry_in_middle_table->get_author();
     display_list(list);
-    register_biblioentry_by_key_name_and_size(m_entry_in_middle_table);
+    //register_biblioentry_by_key_name_and_size(m_entry_in_middle_table);
 }
 void Widget::add_entry_to_list(List* list, Entry* entry ){
     // This is from middle widget

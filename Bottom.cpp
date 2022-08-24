@@ -70,6 +70,7 @@ void Widget::on_bottom_table_view_clicked(const QModelIndex& index){
     put_file_info_on_middle_table_widget(entry);
     put_file_info_on_popup_widget(entry);
 }
+/*
 void Widget::on_bottom_table_widget_doubleClicked(int row, int column){
     Q_UNUSED(column);
     QTableWidgetItem  * itemfolder =  bottomTableWidget->item(row,2);
@@ -82,6 +83,7 @@ void Widget::on_bottom_table_widget_doubleClicked(int row, int column){
     m_entry_in_bottom_table = entry;
 
 }
+*/
 void Entry::remove_bottom_view_links(){
     m_bottom_view_size_item = nullptr;
     m_bottom_view_filename_item = nullptr;
@@ -90,9 +92,10 @@ void Widget::search_folders_for_pdf()
 {
     // For each entry in the top model, remove the link to items in the bottom widget:
 
-    foreach (QString key, m_data_by_key.keys()){
-        //qDebug() << 836 << key;
-        m_data_by_key[key]->remove_bottom_view_links();
+    foreach (QString key, biblioModel->get_keys() ) {
+        biblioModel->get_entry_by_key(key)->remove_bottom_view_links();
+        // replaces this:
+        //m_data_by_key[key]->remove_bottom_view_links();
     }
     //bottomTableWidgetFunction = allOnboardFiles;
     bottomTableWidget->clear();
@@ -127,8 +130,8 @@ void Widget::search_folders_for_pdf()
     int rowno = 0;
     int count = 0;
     QTableWidgetItem * item0, *item1,*item2,*item3, *item4, *item5;
-    int count1(0);
-    int count2(0);
+    //int count1(0);
+    //int count2(0);
     foreach (QFileInfo hit, hitList) {
         //qDebug() << count1++;
         filenameStem = hit.fileName();
@@ -216,8 +219,16 @@ void Widget::delete_selected_files(){
 }
 void Widget::show_files_with_same_size(){
     //bottomTableWidgetFunction = sameSizeFiles;
-    bottomTableWidget->clear();
+    //bottomTableWidget->clear();
+
+    QStringList horizontal_headers;
+    horizontal_headers << "Filename " << "Folder" << "Size";
     QList<int> sizes = m_files_onboard_by_size.uniqueKeys();
+    if (same_size_files_model) { delete same_size_files_model;}
+    same_size_files_model = new EntriesModel(this);
+    bottomTableView->setModel(same_size_files_model);
+
+
     int row = 0;
     int start_row = 0;
     int stop_row = 0;
@@ -229,6 +240,7 @@ void Widget::show_files_with_same_size(){
             QTableWidgetItem * item1, * item2, * item3, *item0;
             start_row = row;
             foreach(Entry* entry, m_files_onboard_by_size.values(size)){
+                // --------------------------------------
                 item0 = new QTableWidgetItem();
                 item0->setCheckState(Qt::Unchecked);
                 item1 = new QTableWidgetItem(entry->get_filenamestem());
@@ -241,28 +253,34 @@ void Widget::show_files_with_same_size(){
                 item5->setData(Qt::DisplayRole, entry->get_info("lastread"));
                 entry->set_bottom_view_filename_item(item1);
                 entry->set_bottom_view_size_item(item3);
+                //---------------------------------------
                 if (row == start_row ){
                    if (color == 0){
                        color = 1;}
                    else{ color = 0;}
                 }
                 if (color == 0){
-                    item1->setForeground(QColorConstants::Red);}
-                else{
+                    item1->setForeground(QColorConstants::Red);
+                    entry->set_temporary_color(QColorConstants::Red);
+                }else{
                     item1->setForeground(QColorConstants::Blue);
+                    entry->set_temporary_color(QColorConstants::Blue);
                 }
+                //----------------------------------------
                 bottomTableWidget->setItem(row,0,item0);
                 bottomTableWidget->setItem(row,1,item1);
                 bottomTableWidget->setItem(row,2,item2);
                 bottomTableWidget->setItem(row,3,item3);
                 bottomTableWidget->setItem(row,4,item4);
                 bottomTableWidget->setItem(row, 5, item5);
+                //----------------------------------------
                 stop_row = row;
                 row++;
+                same_size_files_model->addEntry(entry);
             }
-
         }
     }
+    //-------------------------------------------
     bottomTableWidget->setRowCount(row);
     bottomTableWidget->setColumnWidth(0,40);
     bottomTableWidget->setColumnWidth(1,500);
@@ -270,4 +288,7 @@ void Widget::show_files_with_same_size(){
     bottomTableWidget->setColumnWidth(3,100);
     bottomTableWidget->setColumnWidth(4,100);
     bottomTableWidget->setColumnWidth(5,100);
+    //----------------------------------------------
+
+
 }

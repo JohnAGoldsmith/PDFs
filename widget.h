@@ -23,7 +23,7 @@
 #include <QSortFilterProxyModel>
 #include <QSplitter>
 #include <QFileSystemModel>
-
+#include <QVBoxLayout>
 
 struct bibentry;
 class List;
@@ -32,6 +32,7 @@ class PopUp;
 class EntryModel;
 class EntriesModel;
 class EntriesView; // tableView
+enum view_function {onboardEntries, biblioEntries, sameSizeEntries};
 
 QString get_first_author(QString names);
 QString find_surname(QString name);
@@ -46,6 +47,16 @@ class BiblioTableModel : public QAbstractTableModel
 {
     Q_OBJECT
 
+    QList<Entry*>                   m_entries;
+    QMap<QString, Entry*>           m_data_by_key;
+    QMultiMap<QString, Entry*>      m_data_by_key_multiple;
+    QMap<QString, Entry*>           m_data_by_fullfilename;
+    QMultiMap<QString, Entry*>      m_data_by_fullfilename_multiple;
+    QMap<QString, Entry*>           m_data_by_filenamestem;
+    QMultiMap<QString, Entry*>      m_data_by_filenamestem_multiple;
+    QMap<int,Entry*>                m_data_by_size;
+    QMultiMap<int,Entry*>           m_data_by_size_multiple;
+
 public:
     BiblioTableModel(QObject * parent = nullptr);
     BiblioTableModel(QList<Entry*> entries, QObject *parent = 0);
@@ -58,19 +69,43 @@ public:
     bool insertRows(int position, int rows, const QModelIndex &index=QModelIndex()) override ;
     bool removeRows(int position, int rows, const QModelIndex &index) override;
     bool setData(const QModelIndex &index, const QVariant &value, int role=Qt::EditRole) override;
-    Qt::ItemFlags flags(const QModelIndex &index) const override;
-    QList< Entry* > get_entries() {return m_entries;}
-    void add_entry(Entry* entry){ m_entries.append(entry); }
+    Qt::ItemFlags   flags(const QModelIndex &index) const override;
+
+
+    QList< Entry* >  get_entries() {return m_entries;}
+    QList<QString>   get_keys() {return m_data_by_key.keys(); }
+    Entry*           get_entry_by_key(QString key) {return m_data_by_key[key]; }
+    QList<Entry*>    get_multiple_entries_by_key(QString key) {return m_data_by_key_multiple.values(key);}
+    void add_entry(Entry* entry);
     void replace_entry(int row, Entry*);
-private:
-    QList<Entry*> m_entries;
+
+    //void register_entry(Entry*);
+    void            register_all_entries();// assumes the entries have been entered into m_entries;
+    void            register_biblioentry_by_key(Entry * entry );
+    void            register_biblioentry_by_size(Entry * entry );
+    void            register_biblioentry_by_fullfilename(Entry* entry);
+    void            register_biblioentry_by_filenamestem(Entry* entry);
+
+    QList<Entry*>   contains_filenamestem(QString);
+    Entry*          contains_fullfilename(QString);
+    bool            contains_key(QString key) { return m_data_by_key.contains(key);}
+
+    int             get_count_of_multiply_used_keys(){ return m_data_by_key_multiple.count();}
+    QList<QString>  get_keys_used_multiply() {return m_data_by_key_multiple.keys();}
+    QList<Entry*>   get_multiple_entries_from_one_key(QString key) { return m_data_by_key_multiple.values(key); }
+
+    int             get_count_of_multiply_used_filenames(){ return m_data_by_filenamestem_multiple.count();}
+    QList<QString>  get_filenames_used_multiply() {return m_data_by_filenamestem_multiple.keys();}
+    QList<Entry*>   get_multiple_entries_from_one_filename(QString filename) { return m_data_by_filenamestem_multiple.values(filename); }
+
 };
+
 
 class TableView : public QTableView{
     Q_OBJECT
 public:
     TableView(QObject * parent = 0);
-    //void currentChanged(const QModelIndex &current, const QModelIndex &previous) override;
+    //void currentChanged(const QM  odelIndex &current, const QModelIndex &previous) override;
 };
 class NewStandardItemModel : public QStandardItemModel
 {
@@ -78,7 +113,8 @@ class NewStandardItemModel : public QStandardItemModel
 public:
     NewStandardItemModel(QObject * parent = 0);
 };
-
+//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------
 class Widget : public QWidget
 {
     Q_OBJECT
@@ -98,6 +134,7 @@ private:
     //MySortFilterProxyModel * proxyModel_for_topTableView;
     QFileSystemModel       * file_system_model;
     EntriesModel             * onboard_pdf_model;
+    EntriesModel            * same_size_files_model;
     //EntriesModel            * entries_model;
 
     // Mouse events
@@ -105,10 +142,16 @@ private:
     //void mousePressEvent(QMouseEvent);
 
 
+    enum ScreenState { initial,TwoViews };
+
 
     // GUI
-    QSplitter    * leftSplitter;
-    QSplitter    * rightSplitter;
+    ScreenState  m_screen_state;// ( initial );
+
+    QVBoxLayout  * m_layout;
+    QSplitter    * m_mainSplitter;
+    QSplitter    * m_leftSplitter;
+    QSplitter    * m_rightSplitter;
     QTableWidget * middleTableWidget;
     QTableWidget * bottomTableWidget;
     QTableWidget * bottomTableWidget2;
@@ -150,7 +193,7 @@ private:
     int m_selected_row_in_bottom_table;
     int m_selected_row_in_bottom_view;
 
-    QMap<QString, Entry*>      m_data_by_key;
+//    QMap<QString, Entry*>      m_data_by_key;
     QMap<QString, Entry*>      m_data_by_fullfilename;
     QMultiMap<QString, Entry*> m_data_by_filenamestem;
     QMultiMap<int,Entry*>      m_data_by_size;
@@ -182,6 +225,7 @@ private:
     QShortcut *  m_keyCtrlS;
     QShortcut *  m_keyCtrlU;
     QShortcut *  m_keyCtrlZ; // link top and bottom entries;
+    QShortcut *  m_keyCtrlSlash;
     QShortcut *  m_keyCtrlLeftBracket; // [ open popUp
     QShortcut *  m_keyCtrlRightBracket; // ] close popUp
 
@@ -199,6 +243,7 @@ private:
 
 private slots:
 
+    void set_widget_layout();
     void quit_now() {QApplication::quit();}
     //void keyPressEvent(QKeyEvent * event);
     //void mousePressEvent(QMouseEvent * event);
@@ -218,11 +263,11 @@ private slots:
     void link_top_and_bottom_entries_from_filename();
     void link_top_and_bottom_entries();
     //void mark_file_as_indexed(QString);
-    void on_top_table_view_clicked(const QModelIndex &  );
+    void on_top_table_view_clicked(const QModelIndex&);
     void on_top_table_view_doubleClicked(const QModelIndex &);
     void on_middle_table_widget_doubleClicked(int,int);
     //void on_bottom_table_widget_clicked(const QModelIndex&);
-    void on_bottom_table_widget_doubleClicked(int row, int column);
+    //void on_bottom_table_widget_doubleClicked(int row, int column);
     void on_bottom_table_view_clicked(const QModelIndex&);
     void on_middle_widget_item_changed(int row, int column);
     void open_popUp();
@@ -237,9 +282,9 @@ private slots:
     void put_file_info_on_middle_table_widget(Entry*);
     void put_file_info_on_popup_widget(Entry*);
     void put_file_info_on_entry_view(QModelIndex & current_model_index);
-    void register_biblioentry_by_key_name_and_size(Entry *);
+    //void register_biblioentry_by_key_name_and_size(Entry *);
     void register_biblioentry_by_fullfilename(Entry*);
-    void register_biblioentry_by_key(Entry*);
+    //void register_biblioentry_by_key(Entry*);
     void register_biblioentry_by_size(Entry*);
     void register_biblioentry_by_filenamestem(Entry*);
     void search_folders_for_pdf();
@@ -247,7 +292,8 @@ private slots:
     void set_filename_item_bottom_widget(int row, QString new_name);
     //void set_new_filename();
     void show_files_with_same_size();
-    QString test_key_for_uniqueness(QString key);
+    //QString test_key_for_uniqueness(QString key);
+    void toggle_screens();
     void write_bibliography();
     void write_bibliography_to_json();
     void write_bibliography_to_bibtex();
@@ -278,7 +324,7 @@ class Entry {
     QString            key;
     int                size;
     bool               m_selected_for_deletion;
-    //QDateTime m_creation_time;
+    //QDateTime m_creation_time;`
     QStringList        m_multiple_filenamefulls;
     QStandardItem *    m_top_view_size_item;
     QStandardItem *    m_top_view_filename_item;
@@ -286,6 +332,7 @@ class Entry {
     QTableWidgetItem * m_bottom_view_filename_item;
     QList<Entry*>      m_links_to_on_board_entries;
     QList<Entry*>      m_links_to_bib_entries;
+    QColor             m_temporary_color;
 public:
     Entry();
     Entry(QString this_key) {key = this_key; }
@@ -313,6 +360,7 @@ public:
     QStringList* get_multiple_filenamefulls() {return &m_multiple_filenamefulls;}
     QString get_filenamestem() {if (info.contains("filenamestem")) {return info["filenamestem"];} else{return QString();}}
     //QDateTime get_creation_time() {return m_creation_time;}
+    QColor get_temporary_color() {return m_temporary_color;}
     void write_bibentry_to_bibtex( QTextStream & ,QStringList &);
     //QTableWidgetItem * get_bottom_view_filename_item() {return m_bottom_view_filename_item;}
     QList<Entry*> get_on_board_entries(){return m_links_to_on_board_entries;}
@@ -338,6 +386,7 @@ public:
     void set_info(QString key,QString value); //{info[key] = value;}
     void set_info(QString key, int this_size) {size = this_size; }
     void set_size_item(int);
+    void set_temporary_color(QColor color) {m_temporary_color = color;}
     void set_filename_item_bottom(QString);
     // keys: key, title, author, year, filenameFull, filenameStem
     QString display();
@@ -389,6 +438,25 @@ public:
     void set_proxy_model(MySortFilterProxyModel *);
 
 };
+class EntryMatchModel: public QAbstractTableModel{
+    Q_OBJECT
+
+    BiblioTableModel * biblio_model;
+    EntriesModel * file_model;
+
+public:
+    void match_filestems();
+
+public:
+    EntryMatchModel(BiblioTableModel*, EntriesModel*);
+};
+
+class EntryMatchView: public QTableView{
+    Q_OBJECT
+
+public:
+    EntryMatchView(EntryModel&,EntryModel&);
+};
 
 class EntriesModel: public QAbstractTableModel{
     Q_OBJECT
@@ -408,10 +476,11 @@ public:
     QStringList    get_bibliography_labels() const  { return   m_parent->get_bibliography_labels();}
     bool           setData(const QModelIndex &index, const QVariant & value, int role) override;
     void           addEntry(Entry*);
-    QVariant       headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const;
+    QVariant       headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
     void           setSeletedEntry(Entry* entry) {m_selected_entry = entry;}
     MySortFilterProxyModel* getProxyModel() {return m_proxyModel;}
     int            number_of_entries(){return m_entries.count();}
+    QList<Entry*> * get_entries();
 };
 
 class EntryModel : public QAbstractTableModel{
