@@ -276,3 +276,7 @@ bool BiblioTableModel::setData(const QModelIndex &index, const QVariant &value, 
         }
         return false;
 }
+void BiblioTableModel::update_data_by_fullfilename(QString full_old_name, QString full_new_name, Entry* entry){
+    m_data_by_fullfilename.remove(full_old_name);
+    m_data_by_fullfilename[full_new_name] = entry;
+}

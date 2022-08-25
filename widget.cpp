@@ -35,11 +35,99 @@ Qt::ItemFlags BiblioTableModel::flags(const QModelIndex &index) const
 NewStandardItemModel::NewStandardItemModel (QObject * myparent) {
     //parent = myparent;
 }
-void Widget::set_widget_layout(){
 
+void Widget::set_screen_layout(){
+    if (m_layout) delete m_layout;
+    m_layout = new QVBoxLayout(this);
 
+    switch (m_screen_state) {
+        case 0:{
+            if (m_mainSplitter) delete m_mainSplitter;
+            m_mainSplitter = new QSplitter (Qt::Horizontal,this);
+            m_layout->addWidget(m_mainSplitter);
+            m_mainSplitter->setSizes(QList<int>({4000, 4000}));
+            m_leftSplitter = new QSplitter(Qt::Vertical, m_mainSplitter);
+            m_rightSplitter = new QSplitter(Qt::Vertical,m_mainSplitter);
+
+            m_mainSplitter->addWidget(m_leftSplitter);
+            m_mainSplitter->addWidget(m_rightSplitter);
+
+            m_leftSplitter->addWidget(m_topTableView);
+            m_leftSplitter->addWidget(middleTableWidget);
+            m_leftSplitter->addWidget(bottomTableWidget2);
+            m_leftSplitter->addWidget(bottomTableView);
+
+            m_rightSplitter->addWidget(m_listNamesWidget);
+            m_rightSplitter->addWidget(listWidget);
+
+            load_file_prefixes(filePrefixTableWidget);
+            m_rightSplitter->addWidget(filePrefixTableWidget);
+            filePrefixTableWidget->setSelectionMode( QAbstractItemView::SingleSelection );
+
+            QWidget * middle_right_widget = new QWidget(this);
+            QGridLayout * small_grid_layout = new QGridLayout;
+            middle_right_widget->setLayout(small_grid_layout);
+            m_rightSplitter->addWidget(middle_right_widget);
+
+            m_proposed_new_title_label = new QLabel("Proposed new title") ;
+            m_proposed_new_title_widget = new QLineEdit();
+            m_new_list_name_widget = new QLineEdit("(enter name of new list here)");
+            m_generate_new_filename_button = new QPushButton("Generate new filename and key");
+            //m_change_filename_button = new QPushButton("Change file name to (^K):");
+            m_create_new_bibentry_button = new QPushButton("Create new biblio entry (^K):");
+            m_change_root_directory = new QPushButton("Change root directory");
+            m_create_new_list_button = new QPushButton("Create new list (^N):");
+            m_save_biblio_file_button = new QPushButton("Save biblio file (^S)");
+            m_add_to_list_button = new QPushButton("Add entry to selected list (^U)");
+            m_link_two_entries = new QPushButton("Link top and bottom entries (^Z)");
+
+            m_delete_selected_files_button = new QPushButton("Delete selected files");
+            m_delete_size_on_selected_biblio_entries = new QPushButton("Delete size on selected biblio entries");
+            m_check_biblio_for_shared_key_button = new QPushButton("Check biblio for shared keys");
+            m_check_biblio_for_shared_size_button = new QPushButton("Check biblio for shared sizes");
+            m_check_biblio_for_shared_filename_button = new QPushButton("Check biblio for shared filenames");
+
+            small_grid_layout->addWidget(m_create_new_list_button,0,0);
+            small_grid_layout->addWidget(m_new_list_name_widget,0,1);
+            //small_grid_layout->addWidget(m_change_filename_button,1,0);
+            small_grid_layout->addWidget(m_create_new_bibentry_button,1,0);
+            small_grid_layout->addWidget(m_proposed_new_title_widget,1,1);
+            small_grid_layout->addWidget(m_generate_new_filename_button,2,0);
+            small_grid_layout->addWidget(m_delete_size_on_selected_biblio_entries,3,0);
+            small_grid_layout->addWidget(m_change_root_directory,4,0);
+            small_grid_layout->addWidget(m_save_biblio_file_button,5,0);
+            small_grid_layout->addWidget(m_add_to_list_button,6,0);
+            small_grid_layout->addWidget(m_link_two_entries,7,0);
+            small_grid_layout->addWidget(m_delete_selected_files_button,8,0);
+            small_grid_layout->addWidget(m_check_biblio_for_shared_key_button,9,0);
+            small_grid_layout->addWidget(m_check_biblio_for_shared_size_button,10,0);
+            small_grid_layout->addWidget(m_check_biblio_for_shared_filename_button,11,0);
+
+            m_current_list = nullptr;
+            m_rightSplitter->addWidget(m_directoryView);
+
+            break;
+            }
+    case 1:{
+        m_mainSplitter = new QSplitter (Qt::Horizontal,this);
+        m_layout->addWidget(m_mainSplitter);
+        m_mainSplitter->setSizes(QList<int>({4000, 4000}));
+        m_leftSplitter = new QSplitter(Qt::Vertical, m_mainSplitter);
+        m_rightSplitter = new QSplitter(Qt::Vertical,m_mainSplitter);
+        m_mainSplitter->addWidget(m_leftSplitter);
+        m_mainSplitter->addWidget(m_rightSplitter);
+        m_leftSplitter->addWidget(m_topTableView);
+           break;
+        }
+    case 2:{
+        break;
+        }
+    case 3:{
+
+        break;
+        }
+    }
 }
-
 Widget::Widget(QWidget *parent)
     : QWidget(parent)
 {
@@ -66,9 +154,12 @@ Widget::Widget(QWidget *parent)
     palette.setColor(QPalette::Window,QColor(0,0,200,250));
     setPalette(palette);
 
-    topTableView = new QTableView(this);
+
+
+    m_mainSplitter = nullptr;
+    m_topTableView = new QTableView(this);
     middleTableWidget = new QTableWidget;
-    bottomTableWidget = new QTableWidget;
+    //bottomTableWidget = new QTableWidget;
     bottomTableWidget2 = new QTableWidget;
     filePrefixTableWidget = new QTableWidget(this);
     m_directoryView = new QTreeView;
@@ -80,8 +171,8 @@ Widget::Widget(QWidget *parent)
     same_size_files_model = new EntriesModel(this);
 
 
-    topTableView->setSelectionMode(QAbstractItemView::SingleSelection);
-    topTableView->setSortingEnabled(true);
+    m_topTableView->setSelectionMode(QAbstractItemView::SingleSelection);
+    m_topTableView->setSortingEnabled(true);
 
     bottomTableView = new EntriesView();
     bottomTableView->setModel(onboard_pdf_model->getProxyModel());
@@ -91,7 +182,7 @@ Widget::Widget(QWidget *parent)
     bottomTableWidget->setColumnCount(5);
     bottomTableWidget->setColumnWidth(0,600);
     bottomTableWidget->setColumnWidth(1,250);
-    bottomTableWidget->setSortingEnabled(true);
+    bo`ttomTableWidget->setSortingEnabled(true);
     */
     bottomTableWidget2->setColumnWidth(0,1000);
     bottomTableWidget2->setColumnWidth(1,1000);
@@ -106,11 +197,11 @@ Widget::Widget(QWidget *parent)
     listWidget->setDragDropMode(QAbstractItemView::InternalMove);
     listWidget->setDefaultDropAction(Qt::TargetMoveAction);
     listWidget->setMovement(QListView::Free);
-    listNamesWidget = new QListWidget(this);
-    listNamesWidget->dragEnabled();
-    listNamesWidget->setDragDropMode(QAbstractItemView::InternalMove);
-    listNamesWidget->setDefaultDropAction(Qt::TargetMoveAction);
-    listNamesWidget->setMovement(QListView::Free);
+    m_listNamesWidget = new QListWidget(this);
+    m_listNamesWidget->dragEnabled();
+    m_listNamesWidget->setDragDropMode(QAbstractItemView::InternalMove);
+    m_listNamesWidget->setDefaultDropAction(Qt::TargetMoveAction);
+    m_listNamesWidget->setMovement(QListView::Free);
     new_list("General");
     new_list("Math");
     new_list("Zellig to Noam");
@@ -128,116 +219,26 @@ Widget::Widget(QWidget *parent)
     m_directoryView->setColumnWidth(2,400);
     m_directoryView->setSortingEnabled(true);
 
-    m_layout = new QVBoxLayout(this);
-    m_screen_state = initial;
-    switch (m_screen_state) {
-        case initial:{
-            m_mainSplitter = new QSplitter (Qt::Horizontal,this);
-            m_layout->addWidget(m_mainSplitter);
-            m_mainSplitter->setSizes(QList<int>({4000, 4000}));
-            m_leftSplitter = new QSplitter(Qt::Vertical, m_mainSplitter);
-            m_rightSplitter = new QSplitter(Qt::Vertical,m_mainSplitter);
-            m_mainSplitter->addWidget(m_leftSplitter);
-            m_mainSplitter->addWidget(m_rightSplitter);
-            m_leftSplitter->addWidget(topTableView);
-            m_leftSplitter->addWidget(middleTableWidget);
-            m_leftSplitter->addWidget(bottomTableWidget2);
-            m_leftSplitter->addWidget(bottomTableView);
-            m_rightSplitter->addWidget(listNamesWidget);
-            m_rightSplitter->addWidget(listWidget);
-            load_file_prefixes(filePrefixTableWidget);
-            m_rightSplitter->addWidget(filePrefixTableWidget);
-            filePrefixTableWidget->setSelectionMode( QAbstractItemView::SingleSelection );
-            QWidget * middle_right_widget = new QWidget(this);
-            QGridLayout * small_grid_layout = new QGridLayout;
-            middle_right_widget->setLayout(small_grid_layout);
-            m_rightSplitter->addWidget(middle_right_widget);
-            m_proposed_new_title_label = new QLabel("Proposed new title") ;
-            m_proposed_new_title_widget = new QLineEdit();
-            m_new_list_name_widget = new QLineEdit("(enter name of new list here)");
-            m_generate_new_filename_button = new QPushButton("Generate new filename and key");
-            //m_change_filename_button = new QPushButton("Change file name to (^K):");
-            m_create_new_bibentry_button = new QPushButton("Create new biblio entry (^K):");
-            m_change_root_directory = new QPushButton("Change root directory");
-            m_create_new_list_button = new QPushButton("Create new list (^N):");
-            m_save_biblio_file_button = new QPushButton("Save biblio file (^S)");
-            m_add_to_list_button = new QPushButton("Add entry to selected list (^U)");
-            m_link_two_entries = new QPushButton("Link top and bottom entries (^Z)");
-            m_delete_selected_files_button = new QPushButton("Delete selected files");
-            m_delete_size_on_selected_biblio_entries = new QPushButton("Delete size on selected biblio entries");
-            m_check_biblio_for_shared_key_button = new QPushButton("Check biblio for shared keys");
-            m_check_biblio_for_shared_size_button = new QPushButton("Check biblio for shared sizes");
-            m_check_biblio_for_shared_filename_button = new QPushButton("Check biblio for shared filenames");
-            small_grid_layout->addWidget(m_create_new_list_button,0,0);
-            small_grid_layout->addWidget(m_new_list_name_widget,0,1);
-            //small_grid_layout->addWidget(m_change_filename_button,1,0);
-            small_grid_layout->addWidget(m_create_new_bibentry_button,1,0);
-            small_grid_layout->addWidget(m_proposed_new_title_widget,1,1);
-            small_grid_layout->addWidget(m_generate_new_filename_button,2,0);
-            small_grid_layout->addWidget(m_delete_size_on_selected_biblio_entries,3,0);
-            small_grid_layout->addWidget(m_change_root_directory,4,0);
-            small_grid_layout->addWidget(m_save_biblio_file_button,5,0);
-            small_grid_layout->addWidget(m_add_to_list_button,6,0);
-            small_grid_layout->addWidget(m_link_two_entries,7,0);
-            small_grid_layout->addWidget(m_delete_selected_files_button,8,0);
-            small_grid_layout->addWidget(m_check_biblio_for_shared_key_button,9,0);
-            small_grid_layout->addWidget(m_check_biblio_for_shared_size_button,10,0);
-            small_grid_layout->addWidget(m_check_biblio_for_shared_filename_button,11,0);
-            m_current_list = nullptr;
-            m_rightSplitter->addWidget(m_directoryView);
-            break;
-            }
-    case TwoViews:{
-        m_mainSplitter = new QSplitter (Qt::Horizontal,this);
-        m_layout->addWidget(m_mainSplitter);
-        m_mainSplitter->setSizes(QList<int>({4000, 4000}));
-        m_leftSplitter = new QSplitter(Qt::Vertical, m_mainSplitter);
-        m_rightSplitter = new QSplitter(Qt::Vertical,m_mainSplitter);
-        m_mainSplitter->addWidget(m_leftSplitter);
-        m_mainSplitter->addWidget(m_rightSplitter);
-        m_leftSplitter->addWidget(topTableView);
-
-           break;
-    }
-}
+    m_layout = nullptr;
+    m_screen_state = 0;
+    set_screen_layout();
 
 
 
-
-
-
-
-
-
-
-
-    connect(topTableView, &TableView::clicked,
+    connect(m_topTableView, &TableView::clicked,
              this , &Widget::on_top_table_view_clicked);
-    connect(topTableView, &TableView::doubleClicked,
+    connect(m_topTableView, &TableView::doubleClicked,
              this , &Widget::on_top_table_view_doubleClicked);
-
-//    connect(topTableView,SIGNAL(clicked(QModelIndex)) ,
-//            this , SLOT(on_top_table_view_clicked(QModelIndex&)));
-//    connect(topTableView,SIGNAL(doubleClicked(QModelIndex)) ,
-//            this , SLOT(on_top_table_view_doubleClicked(QModelIndex&)));
-
     connect(middleTableWidget,SIGNAL(cellDoubleClicked(int,int)) ,
             this , SLOT(on_middle_table_widget_doubleClicked(int,int)));
     connect(m_delete_size_on_selected_biblio_entries,SIGNAL(clicked()) ,
             this , SLOT(delete_size_on_selected_biblio_entries())  );
-//    connect(m_generate_new_filename_button,SIGNAL(clicked()) ,
-//            this , SLOT(generate_new_title())  );
       connect(m_generate_new_filename_button, &QPushButton::clicked,
             this, &Widget::generate_new_title);
-
-
-
-
     connect(bottomTableView,SIGNAL(cellDoubleClicked(int,int)) ,
             this , SLOT(on_bottom_table_view_doubleClicked(int,int)));
     connect(bottomTableView, &EntriesView::clicked,
             this, &Widget::on_bottom_table_view_clicked );
-
 /*
     bool success = connect(bottomTableView, &TableView::currentChanged,
             this, &Widget::put_file_info_on_entry_view );
@@ -251,7 +252,7 @@ Widget::Widget(QWidget *parent)
     //            this,SLOT(change_filename()));
     connect(m_create_new_bibentry_button,SIGNAL(clicked()),
             this,SLOT(create_new_bibentry()));
-    connect(listNamesWidget,SIGNAL(itemClicked(QListWidgetItem*)),
+    connect(m_listNamesWidget,SIGNAL(itemClicked(QListWidgetItem*)),
                 this,SLOT(select_new_list(QListWidgetItem*)));
     connect(m_create_new_list_button,SIGNAL(clicked()),
                 this,SLOT(new_list()));
@@ -340,6 +341,13 @@ Widget::Widget(QWidget *parent)
     m_keyCtrlSlash = new QShortcut(this);
     m_keyCtrlSlash->setKey(Qt::CTRL + Qt::Key_Slash);
     connect(m_keyCtrlSlash, SIGNAL(activated()), this, SLOT(toggle_screens()));
+
+    //m_keyCtrl1 = new QShortcut(this);
+    //m_keyCtrl1->setKey(Qt::CTRL + Qt::Key_1);
+    //connect(m_keyCtrl1, SIGNAL(activated()), this, SLOT(toggle_right_side()));
+
+
+
 }
 
 void Widget::on_middle_table_widget_doubleClicked(int row,int column){
@@ -353,7 +361,7 @@ void Widget::on_middle_table_widget_doubleClicked(int row,int column){
 
 
 
-/*                WIDGETS             */
+/*               WIDGETS             */
 Widget::~Widget()
 {
    delete biblioModel;
@@ -363,15 +371,60 @@ Widget::~Widget()
    //   delete entry;
    // }
 }
+/*
+void Widget::toggle_right_side(){
+    if (bottomTableView->isVisible()) {
+    }
+    else {
+        bottomTableView->setVisible(true);
+        m_rightSplitter->setVisible(true);
+    }
+    qDebug() << 377 << bottomTableView->isVisible();
+    //bottomTableView->update();
+}
+*/
 void Widget::toggle_screens(){
+    m_number_of_sceen_states = 4;
+    if (m_screen_state == m_number_of_sceen_states - 1){
+        m_screen_state = 0;
+    } else{
+        m_screen_state += 1;
+    }
     switch ( m_screen_state ) {
-        case initial:
-            m_screen_state = TwoViews;
+        case 0:{
+            m_topTableView->setVisible(true);
+            bottomTableView->setVisible(true);
+            middleTableWidget->setVisible(true);
+            m_rightSplitter->setVisible(true);
             break;
-        case TwoViews:
-            m_screen_state = initial;
+        }
+        case 1:{
+            bottomTableView->setVisible(false);
+            middleTableWidget->setVisible(false);
+            m_rightSplitter->setVisible(false);
             break;
+        }
+        case 2:
+        {   bottomTableView->setVisible(true);
+            m_topTableView->setVisible(false);
+            middleTableWidget->setVisible(false);
+            m_rightSplitter->setVisible(false);
+            break;
+        }
+        case 3:{
+            m_topTableView->setVisible(true);
+            bottomTableView->setVisible(true);
+            middleTableWidget->setVisible(false);
 
+            m_rightSplitter->setVisible(false);
+            break;
+        }
+        default:{
+            bottomTableView->setVisible(true);
+            m_topTableView->setVisible(true);
+            middleTableWidget->setVisible(true);
+            m_rightSplitter->setVisible(true);
+        }
     }
 
 }
@@ -672,13 +725,14 @@ void Widget::create_new_bibentry(){
     new_entry->set_keywords(new_keywords);
     new_entry->set_size(entry_onboard->get_size());
     new_entry->add_to_onboard_entries(entry_onboard);
-    update_data_by_fullfilename(full_old_name, full_new_name,entry_onboard);
+    //update_data_by_fullfilename(full_old_name, full_new_name,entry_onboard);
+    biblioModel->update_data_by_fullfilename(full_old_name, full_new_name,entry_onboard);
     update_files_onboard_by_fullfilename(full_old_name, full_new_name, entry_onboard);
     update_files_onboard_by_filenamestem(old_filestem, new_name, entry_onboard);
 
     biblioModel->insertRows(0,1);
     biblioModel->replace_entry(0,new_entry);
-    topTableView->showRow(0);
+    m_topTableView->showRow(0);
     new_entry->add_to_onboard_entries(entry_onboard);
     m_files_onboard_by_filenamestem.remove(old_filestem);
     m_files_onboard_by_filenamestem.insert(new_name, new_entry);
@@ -736,11 +790,12 @@ void Widget::change_selected_filename(){
 }
 
 
-
+/*
 void Widget::update_data_by_fullfilename(QString full_old_name, QString full_new_name, Entry* entry){
     m_data_by_fullfilename.remove(full_old_name);
     m_data_by_fullfilename[full_new_name] = entry;
 }
+*/
 void Widget::update_files_onboard_by_fullfilename(QString full_old_name, QString full_new_name, Entry* entry){
     m_files_onboard_by_filenamefull.remove(full_old_name);
     m_files_onboard_by_filenamefull[full_new_name] = entry;
@@ -818,6 +873,7 @@ void Widget::put_bibitem_info_on_middle_table_widget(const QModelIndex & index){
     m_proposed_new_title_widget->clear();
 }
 
+/*
 void Widget::put_file_info_on_middle_table_widget(int bottom_widget_row){
     QString filename(bottomTableWidget->item(bottom_widget_row,1)->text());
     QString foldername(bottomTableWidget->item(bottom_widget_row,2)->text());
@@ -825,6 +881,7 @@ void Widget::put_file_info_on_middle_table_widget(int bottom_widget_row){
     Entry* entry = m_files_onboard_by_filenamefull[fullname];
     m_entry_in_bottom_table = entry;
 }
+*/
 void Widget::put_file_info_on_middle_table_widget(Entry* entry){
     m_entry_in_middle_table = entry;
     display_entry_on_middle_table();
@@ -865,19 +922,21 @@ void Widget::register_biblioentry_by_key_name_and_size(Entry* entry){
 }
 */
 // remove:
+/*
 void Widget::register_biblioentry_by_size(Entry * entry ){
     int this_size = entry->get_size();
     if (m_data_by_size.contains(this_size)){
         //qDebug() << 1310 << entry->get_author() << entry->get_filenamestem();
     }
     m_data_by_size.insert(this_size, entry);
-
 }
-
+*/
 //remove:
+/*
 void Widget::register_biblioentry_by_fullfilename(Entry* entry){
     m_data_by_fullfilename[entry->get_filenamefull()] = entry;
 }
+*
 //remove:
 void Widget::register_biblioentry_by_filenamestem(Entry* entry){
     m_data_by_filenamestem.insert(entry->get_filenamestem(), entry);

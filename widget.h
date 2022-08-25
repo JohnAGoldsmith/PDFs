@@ -98,6 +98,7 @@ public:
     QList<QString>  get_filenames_used_multiply() {return m_data_by_filenamestem_multiple.keys();}
     QList<Entry*>   get_multiple_entries_from_one_filename(QString filename) { return m_data_by_filenamestem_multiple.values(filename); }
 
+    void            update_data_by_fullfilename(QString full_old_name, QString full_new_name, Entry* entry_onboard);
 };
 
 
@@ -129,8 +130,6 @@ public:
 private:
 
     // Models and views
-    BiblioTableModel       * biblioModel;
-    QTableView             * topTableView;
     //MySortFilterProxyModel * proxyModel_for_topTableView;
     QFileSystemModel       * file_system_model;
     EntriesModel             * onboard_pdf_model;
@@ -142,11 +141,16 @@ private:
     //void mousePressEvent(QMouseEvent);
 
 
-    enum ScreenState { initial,TwoViews };
+    //enum ScreenState { initial,TwoViews, biblio_entries, onboard_entries };
 
 
     // GUI
-    ScreenState  m_screen_state;// ( initial );
+    int                    m_screen_state;
+    int                     m_number_of_sceen_states;
+
+    BiblioTableModel       * biblioModel;
+    QTableView             * m_topTableView;
+    QTableView             * m_topTableView2;
 
     QVBoxLayout  * m_layout;
     QSplitter    * m_mainSplitter;
@@ -162,7 +166,7 @@ private:
     QTreeView    * m_directoryView;
     QFileSystemModel * m_file_system_model;
     QListWidget * listWidget;
-    QListWidget * listNamesWidget;
+    QListWidget * m_listNamesWidget;
     QLabel      * m_proposed_new_title_label;
     QLineEdit   * m_proposed_new_title_widget;
     QPushButton * m_create_new_list_button;
@@ -194,7 +198,7 @@ private:
     int m_selected_row_in_bottom_view;
 
 //    QMap<QString, Entry*>      m_data_by_key;
-    QMap<QString, Entry*>      m_data_by_fullfilename;
+//    QMap<QString, Entry*>      m_data_by_fullfilename;
     QMultiMap<QString, Entry*> m_data_by_filenamestem;
     QMultiMap<int,Entry*>      m_data_by_size;
     QMap<QString, Entry*>      m_files_onboard_by_filenamefull;
@@ -228,6 +232,8 @@ private:
     QShortcut *  m_keyCtrlSlash;
     QShortcut *  m_keyCtrlLeftBracket; // [ open popUp
     QShortcut *  m_keyCtrlRightBracket; // ] close popUp
+    QShortcut *  m_keyCtrl1; // 1
+
 
     void display_entry_on_middle_table();
     void display_entry_on_tableview(QTableView*, Entry*);
@@ -239,11 +245,11 @@ private:
     void load_file_prefixes(QTableWidget*);
 
     void put_bibitem_info_on_middle_table_widget(const Entry* entry);
-
+    void establish_screen_layout();
 
 private slots:
 
-    void set_widget_layout();
+    void set_screen_layout();
     void quit_now() {QApplication::quit();}
     //void keyPressEvent(QKeyEvent * event);
     //void mousePressEvent(QMouseEvent * event);
@@ -259,6 +265,7 @@ private slots:
     void delete_size_on_selected_biblio_entries();
     void generate_new_title();
     QStringList get_bibliography_labels() {return m_bibliography_labels;}
+    //void toggle_right_side();
     void link_top_and_bottom_entries_from_size();
     void link_top_and_bottom_entries_from_filename();
     void link_top_and_bottom_entries();
@@ -278,15 +285,15 @@ private slots:
     void place_entries_with_shared_size_on_table();
     void promote_file_from_preferred_location(Entry*);
     void put_bibitem_info_on_middle_table_widget(const QModelIndex & index);
-    void put_file_info_on_middle_table_widget(int bottom_widget_row);
+    //void put_file_info_on_middle_table_widget(int bottom_widget_row);
     void put_file_info_on_middle_table_widget(Entry*);
     void put_file_info_on_popup_widget(Entry*);
     void put_file_info_on_entry_view(QModelIndex & current_model_index);
     //void register_biblioentry_by_key_name_and_size(Entry *);
-    void register_biblioentry_by_fullfilename(Entry*);
+    //void register_biblioentry_by_fullfilename(Entry*);
     //void register_biblioentry_by_key(Entry*);
-    void register_biblioentry_by_size(Entry*);
-    void register_biblioentry_by_filenamestem(Entry*);
+    //void register_biblioentry_by_size(Entry*);
+    //void register_biblioentry_by_filenamestem(Entry*);
     void search_folders_for_pdf();
     void set_new_root_folder();
     void set_filename_item_bottom_widget(int row, QString new_name);

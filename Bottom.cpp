@@ -63,27 +63,14 @@ void Widget::on_bottom_table_view_clicked(const QModelIndex& index){
     if (onboard_pdf_model->number_of_entries() < 1) {return;}
     int row =  onboard_pdf_model->getProxyModel()->mapToSource( index  ).row() ;
     if (row < 0) {return;}
-    QString  stem =   bottomTableWidget->item(row,1)->text();
-    QString filename = bottomTableWidget->item(row,2)->text() + "/" + stem;
+    QString  stem =   onboard_pdf_model->index(row,1).data().toString();
+    QString filename = onboard_pdf_model->index(row,2).data().toString() + "/" + stem;
     qDebug() << filename;
     Entry * entry = m_files_onboard_by_filenamefull[filename];
     put_file_info_on_middle_table_widget(entry);
     put_file_info_on_popup_widget(entry);
 }
-/*
-void Widget::on_bottom_table_widget_doubleClicked(int row, int column){
-    Q_UNUSED(column);
-    QTableWidgetItem  * itemfolder =  bottomTableWidget->item(row,2);
-    QString foldername = itemfolder->data(Qt::DisplayRole).toString();
-    QTableWidgetItem* itemfilename = bottomTableWidget->item(row,1);
-    QString filename = itemfilename->data(Qt::DisplayRole).toString();
-    QString completename = foldername + "/" +  filename;
-    QDesktopServices::openUrl(QUrl::fromLocalFile(completename));
-    Entry* entry = m_files_onboard_by_filenamefull[completename];
-    m_entry_in_bottom_table = entry;
 
-}
-*/
 void Entry::remove_bottom_view_links(){
     m_bottom_view_size_item = nullptr;
     m_bottom_view_filename_item = nullptr;
@@ -97,18 +84,10 @@ void Widget::search_folders_for_pdf()
         // replaces this:
         //m_data_by_key[key]->remove_bottom_view_links();
     }
-    //bottomTableWidgetFunction = allOnboardFiles;
-    bottomTableWidget->clear();
-    bottomTableWidget->setColumnWidth(0,40);
-    bottomTableWidget->setColumnWidth(1,500);
-    bottomTableWidget->setColumnWidth(2,500);
-    bottomTableWidget->setColumnWidth(3,100);
-    bottomTableWidget->setColumnWidth(4,100);
-    bottomTableWidget->setColumnWidth(5,100);
+
     m_files_onboard_by_filenamefull.clear();
     m_files_onboard_by_filenamestem.clear();
     m_files_onboard_by_size.clear();
-    bottomTableWidget->clear();
     QString targetStr = ".pdf"; // What we search for
     QString filenameStem, filenameFull, folder;
     int size;
@@ -125,13 +104,9 @@ void Widget::search_folders_for_pdf()
                 hitList.append(file);
             }
         }
-    bottomTableWidget->setRowCount(hitList.count());
-    bottomTableWidget->setColumnCount(6);
+
     int rowno = 0;
     int count = 0;
-    QTableWidgetItem * item0, *item1,*item2,*item3, *item4, *item5;
-    //int count1(0);
-    //int count2(0);
     foreach (QFileInfo hit, hitList) {
         //qDebug() << count1++;
         filenameStem = hit.fileName();
@@ -166,6 +141,7 @@ void Widget::search_folders_for_pdf()
 
         //..........................................................
         // this will be removed:
+        QTableWidgetItem * item0, *item1,*item2,*item3, *item4, *item5;
         item0 = new QTableWidgetItem();
         item0->setCheckState(Qt::Unchecked);
         item1 = new QTableWidgetItem(filenameStem);
@@ -178,12 +154,15 @@ void Widget::search_folders_for_pdf()
         item5->setData(Qt::DisplayRole, entry->get_info("lastread"));
         entry->set_bottom_view_filename_item(item1);                          // is this needed?
         entry->set_bottom_view_size_item(item3);                              // ditto?
+
+        /*
         bottomTableWidget->setItem(rowno,0,item0);
         bottomTableWidget->setItem(rowno,1,item1);
         bottomTableWidget->setItem(rowno,2,item2);
         bottomTableWidget->setItem(rowno,3,item3);
         bottomTableWidget->setItem(rowno,4,item4);
         bottomTableWidget->setItem(rowno,5,item5);
+        */
         //...............................................................
 
 

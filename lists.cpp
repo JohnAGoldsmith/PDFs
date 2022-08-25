@@ -58,7 +58,7 @@ void Widget::new_list( ){
     }
     m_Lists.append(list);
     m_Lists_map[list_name] = list;
-    listNamesWidget->addItem(list_name);
+    m_listNamesWidget->addItem(list_name);
 }
 void Widget::new_list(QString list_name = QString() ){
     List* list = new List(list_name);
@@ -67,7 +67,7 @@ void Widget::new_list(QString list_name = QString() ){
     }
     m_Lists.append(list);
     m_Lists_map[list_name] = list;
-    listNamesWidget->addItem(list_name);
+    m_listNamesWidget->addItem(list_name);
 
 }
 void Widget::add_entry_to_list(){

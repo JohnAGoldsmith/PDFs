@@ -138,16 +138,16 @@ void Widget::read_JSON_file_new(QString filename){
     biblioModel->m_proxyModel = new MySortFilterProxyModel () ;
     biblioModel->m_proxyModel->setSourceModel( biblioModel );
 
-    topTableView->setModel( biblioModel->m_proxyModel );
-    topTableView->setColumnWidth(0,300);
-    topTableView->setColumnWidth(1,400);
-    topTableView->setColumnWidth(2,100);
-    topTableView->setColumnWidth(3,400);
-    topTableView->setColumnWidth(4,300);
-    topTableView->setColumnWidth(5,150);
-    topTableView->setColumnWidth(6,100);
-    topTableView->setColumnWidth(7,400);
-    topTableView->setColumnWidth(8,400);
+    m_topTableView->setModel( biblioModel->m_proxyModel );
+    m_topTableView->setColumnWidth(0,300);
+    m_topTableView->setColumnWidth(1,400);
+    m_topTableView->setColumnWidth(2,100);
+    m_topTableView->setColumnWidth(3,400);
+    m_topTableView->setColumnWidth(4,300);
+    m_topTableView->setColumnWidth(5,150);
+    m_topTableView->setColumnWidth(6,100);
+    m_topTableView->setColumnWidth(7,400);
+    m_topTableView->setColumnWidth(8,400);
 
     // What follows has to be done *after* the entries have been loaded: this is the List information.
    if (false && NewFormatFlag){
