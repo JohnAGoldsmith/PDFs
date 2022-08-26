@@ -39,8 +39,8 @@ EntriesModel::EntriesModel(Widget * main_widget){
 EntriesModel::~EntriesModel(){
 
 }
-QVariant EntriesModel::headerData(int section, Qt::Orientation orientation, int role) const{
 
+ QVariant EntriesModel::headerData(int section, Qt::Orientation orientation, int role) const{
   QStringList horizontal_headers;
   horizontal_headers << " " << "File name" << "Folder" << "Size" << "Date created" << "Date accessed";
   if (role == Qt::DisplayRole)

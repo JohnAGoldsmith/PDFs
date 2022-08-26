@@ -119,8 +119,10 @@ void Widget::read_JSON_file_new(QString filename){
         if (j_this_entry.count() > 0){
                 Entry* entry = new Entry();
                 foreach (QString entry_internal_key, j_this_entry.keys()){
-                    if (entry_internal_key == "filenamestem" ||
-                        entry_internal_key == "folder"){
+                    if (entry_internal_key == "filenamestem") {
+
+                    }
+                    if (entry_internal_key == "folder"){
                         continue;
                     }
                     if (entry_internal_key == "size"){

@@ -167,10 +167,11 @@ void Widget::search_folders_for_pdf()
 
 
         onboard_pdf_model->addEntry(entry);  // this should replace a huge amount of other code above!
+
         rowno++;
     }
-    bottomTableView->resizeColumnsToContents();
-    bottomTableView->sortByColumn(1);
+    m_bottomTableView->resizeColumnsToContents();
+    m_bottomTableView->sortByColumn(1);
     //qDebug() << 164 << "Size of bottom view/rows" << bottomTableView->row
     link_top_and_bottom_entries_from_size(); // TODO: clear out any previous linkings before doing this;
     link_top_and_bottom_entries_from_filename(); // TODO: clear out any previous linkings before doing this;
@@ -205,7 +206,7 @@ void Widget::show_files_with_same_size(){
     QList<int> sizes = m_files_onboard_by_size.uniqueKeys();
     if (same_size_files_model) { delete same_size_files_model;}
     same_size_files_model = new EntriesModel(this);
-    bottomTableView->setModel(same_size_files_model);
+    m_bottomTableView->setModel(same_size_files_model);
 
 
     int row = 0;

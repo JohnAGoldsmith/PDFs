@@ -14,6 +14,7 @@ SOURCES += \
     EntriesModel.cpp \
     Entry.cpp \
     EntryMatchModel.cpp \
+    EntryMatchView.cpp \
     EntryModel.cpp \
     ReadFile.cpp \
     TopView.cpp \

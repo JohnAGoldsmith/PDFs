@@ -39,15 +39,15 @@ void Widget::select_new_list(QListWidgetItem * item){
 void Widget::save_current_list(){
     if (!m_current_list) {return;}
     qDebug() << 136 << "I will try to save the old list";
-    for (int row = 0; row < listWidget->count(); row++){
-        QString string = listWidget->item(row)->text();
+    for (int row = 0; row < m_listWidget->count(); row++){
+        QString string = m_listWidget->item(row)->text();
         qDebug() << 127 << string << "Saving current list. Not implemented, though !!!";
     }
 }
 void Widget::display_list(List* list){
-    listWidget->clear();
+    m_listWidget->clear();
     foreach (Entry * entry, *list->get_entries()){
-        listWidget->addItem(entry->get_author());
+        m_listWidget->addItem(entry->get_author());
     }
 }
 void Widget::new_list( ){
