@@ -40,7 +40,7 @@ EntriesModel::~EntriesModel(){
 
 }
 
- QVariant EntriesModel::headerData(int section, Qt::Orientation orientation, int role) const{
+QVariant EntriesModel::headerData(int section, Qt::Orientation orientation, int role) const{
   QStringList horizontal_headers;
   horizontal_headers << " " << "File name" << "Folder" << "Size" << "Date created" << "Date accessed";
   if (role == Qt::DisplayRole)
@@ -63,6 +63,7 @@ void EntriesModel::addEntry(Entry * entry){
  }
 int EntriesModel::rowCount(const QModelIndex &index ) const
 {
+//   qDebug() << 66 << m_entries.count();
    Q_UNUSED(index);
    return  m_entries.count();
 }
@@ -115,4 +116,11 @@ QVariant EntriesModel::data(const QModelIndex & index, int role )const
      // end of role 0, which is displayed material
 
     return QVariant();
+}
+
+EntriesView_onboard_files::EntriesView_onboard_files(){
+    setSortingEnabled(true);
+    setSelectionMode(QAbstractItemView::SingleSelection);
+
+    //m_bottomTableView->horizontalHeader()->setMaximumSectionSize(int);
 }

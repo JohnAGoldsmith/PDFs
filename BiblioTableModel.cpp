@@ -24,33 +24,35 @@
 #include <EGL/egl.h>
 class List;
 
-
+/*
 BiblioTableModel::BiblioTableModel(QObject *parent)
     : QAbstractTableModel(parent)
 {
 }
+*/
 BiblioTableModel::BiblioTableModel(QList< Entry* > entrylist, QObject *parent)
     : QAbstractTableModel(parent){
 
 }
-
+Entry*  BiblioTableModel::get_entry_by_size(int size) {
+    if ( m_data_by_size.contains(size)){
+         return m_data_by_size.value(size);
+    } else{
+        return nullptr;
+    }
+}
 void BiblioTableModel::register_all_entries()
 {
      foreach (Entry* entry, m_entries){
-         register_biblioentry_by_key(entry);
-         register_biblioentry_by_size(entry);
-         register_biblioentry_by_filenamestem(entry);
-         register_biblioentry_by_fullfilename(entry);
-     }
+        register_entry(entry);
+    }
 }
-/*
-void BiblioTableModel::register_entry(Entry * entry){
+void BiblioTableModel::register_entry(Entry* entry){
     register_biblioentry_by_key(entry);
+    register_biblioentry_by_size(entry);
     register_biblioentry_by_filenamestem(entry);
     register_biblioentry_by_fullfilename(entry);
-    register_biblioentry_by_size(entry);
-}
-*/
+};
 void BiblioTableModel::register_biblioentry_by_key(Entry* entry){
     if (m_data_by_key_multiple.contains(entry->get_key())){
         m_data_by_key_multiple.insert(entry->get_key(), entry);
@@ -63,7 +65,6 @@ void BiblioTableModel::register_biblioentry_by_key(Entry* entry){
             m_data_by_key.insert(entry->get_key(), entry);
            }
     }
-
 }
 void BiblioTableModel::register_biblioentry_by_size(Entry * entry ){
     if (m_data_by_size_multiple.contains(entry->get_size())){
@@ -114,17 +115,18 @@ QList<Entry*> BiblioTableModel::contains_filenamestem(QString stem){
 
 void BiblioTableModel::add_entry(Entry *entry){
     m_entries.append(entry);
+    // also add to all the QMaps;
 
 
 }
 int BiblioTableModel::rowCount(const QModelIndex &parent) const
 {
-    Q_UNUSED(parent);
+    if (parent.isValid()) {return 0;}
     return m_entries.size();
 }
 int BiblioTableModel::columnCount(const QModelIndex &parent) const
 {
-    Q_UNUSED(parent);
+    if (parent.isValid()) {return 0;}
     return 12;
 }
 void BiblioTableModel::replace_entry(int row, Entry * entry){
@@ -136,8 +138,8 @@ void BiblioTableModel::replace_entry(int row, Entry * entry){
 }
 QVariant BiblioTableModel::data(const QModelIndex &index, int role) const
  {
-     if (!index.isValid())
-         return QVariant();
+     if (!index.isValid()) { return QVariant(); }
+     if (role != Qt::DisplayRole) {return QVariant();}
      if (index.row() >= m_entries.size() || index.row() < 0)
          return QVariant();
      Entry* entry   = m_entries.at(index.row());
@@ -196,53 +198,29 @@ QVariant BiblioTableModel::headerData(int section, Qt::Orientation orientation, 
 {
     if (role != Qt::DisplayRole)
         return QVariant();
-
+    QStringList labels;
+    labels << "Author" << "Title" << "Year" << "Item key" << "Key words" << "Size" << "File count" << "Folder" <<
+              "Filename" << "Date" << "Last read" << "Date entry created";
     if (orientation == Qt::Horizontal) {
-        switch (section) {
-            case 0:
-                return tr("Author");
-            case 1:
-                return tr("Title");
-            case 2:
-                return tr("Year");
-            case 3:
-                return tr("Item key");
-            case 4:
-                return tr("Key words");
-            case 5:
-                return tr("Size");
-            case 6:
-                return tr("File count");
-            case 7:
-                return tr("Folder");
-            case 8:
-                return tr("Filename");
-            case 9:
-                return tr("Date");
-            case 10:
-                return tr("Last read");
-            case 11:
-                return tr("Date entry created");
-            default:
-                    return QVariant();
+        if (section < 0 || section > 11) { return QVariant(); }
+        else {
+            return labels[section];
         }
     }
     return QVariant();
 }
 bool BiblioTableModel::insertRows(int position, int how_many_rows, const QModelIndex &index)
 {
-
     Q_UNUSED(index);
     beginInsertRows(QModelIndex(), position, position + how_many_rows - 1);
-
     for (int row=0; row < how_many_rows; row++) {
         Entry * entry = new Entry();
         m_entries.insert(position, entry);
     }
     endInsertRows();
     return true;
-
 }
+
 bool BiblioTableModel::removeRows(int position, int rows, const QModelIndex &index)
 {
     Q_UNUSED(index);
@@ -258,23 +236,33 @@ bool BiblioTableModel::removeRows(int position, int rows, const QModelIndex &ind
     return true;
 }
 bool BiblioTableModel::setData(const QModelIndex &index, const QVariant &value, int role)
-{
-        if (index.isValid() && role == Qt::EditRole) {
-                int row = index.row();
-                Entry * p = m_entries.value(row);
-                if (index.column() == 0)
-                    {p->set_author( value.toString());}
-                    else {
-                        if (index.column() == 2) {
-                            p->set_title( value.toString() );}
-                        else {
-                            return false;}
+{    if (index.isValid() && role == Qt::EditRole) {
+                int row =  m_proxyModel->mapToSource(index).row();
+                Entry * entry = m_entries.value(row);
+                if (index.column() == 1){
+                    switch (index.row()) {
+                        case 3:{
+                            entry->set_author(value.toString());
+                            break;
+                        }
+                        case 4:{
+                            entry->set_title(value.toString());
+                            break;
+                        }
+                        case 5:{
+                            entry->set_info("date",value.toInt());
+                            break;
+                        }
+                        default:{
+
+                        }
                     }
-                m_entries.replace(row, p);
-                emit(dataChanged(index, index));
+                }
+                emit dataChanged(index, index);
+                qDebug() << entry->display();
                 return true;
-        }
-        return false;
+     }
+     return false;
 }
 void BiblioTableModel::update_data_by_fullfilename(QString full_old_name, QString full_new_name, Entry* entry){
     m_data_by_fullfilename.remove(full_old_name);

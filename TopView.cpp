@@ -28,12 +28,20 @@ class List;
 
 
 void Widget::on_top_table_view_clicked(const QModelIndex&index){
-
-    QModelIndex underlying_index = biblioModel->m_proxyModel->mapToSource(index);
-    int model_row = underlying_index.row();
-    qDebug() <<1035 <<  index << "index row"<<index.row() << "model row" <<model_row ;
-    Entry * entry = biblioModel->get_entries().at(model_row);
+    qDebug() << "top table clicked";
+    if (m_biblioModel->get_entries().count()== 0) return;
+    QModelIndex basic_index = m_biblioModel->m_proxyModel->mapToSource(index);
+    int model_row = basic_index.row();
+    qDebug() <<1035  << "model row" <<model_row ;
+    Entry * entry = m_biblioModel->get_entries().at(model_row);
     m_entry_in_top_table  = entry;
+
+    if (!m_selected_entry_model){
+        m_selected_entry_model = new EntryModel(entry, m_bibliography_labels);
+    } else {
+        m_selected_entry_model->change_entry(entry);
+    }
+
 
     int column_for_size(5);
     if (index.column() == column_for_size){
@@ -47,21 +55,22 @@ void Widget::on_top_table_view_clicked(const QModelIndex&index){
              qDebug() << 1061 << "this box is now not checked";
         }
     }
-    biblioModel->dataChanged(underlying_index, underlying_index);
+    m_biblioModel->dataChanged(basic_index, basic_index);
+
 
     //put_bibitem_info_on_middle_table_widget(index);
 
 
-    put_bibitem_info_on_middle_table_widget(entry);
+    //put_bibitem_info_on_middle_table_widget(entry);
 
 
 }
 
 void Widget::on_top_table_view_doubleClicked(const QModelIndex&index){
-    QModelIndex underlying_index = biblioModel->m_proxyModel->mapToSource(index);
+    QModelIndex underlying_index = m_biblioModel->m_proxyModel->mapToSource(index);
     int model_row = underlying_index.row();
  qDebug() <<63   <<  index << "index row"<<index.row() << "model row" <<model_row ;
-    Entry * entry = biblioModel->get_entries().at(model_row);
+    Entry * entry = m_biblioModel->get_entries().at(model_row);
 
     QString filename =  entry->get_filenamefull();
     QDesktopServices::openUrl(QUrl::fromLocalFile(filename));

@@ -72,7 +72,7 @@ void Widget::write_bibliography_to_json( ){
     json_top.append(json_array_for_lists);
 
     QJsonObject json_object_for_biblio;
-    foreach (Entry* entry, biblioModel->get_entries()){
+    foreach (Entry* entry, m_biblioModel->get_entries()){
         write_bibentry_to_json(entry, json_object_for_biblio ); //TODO  HERE IS WHERE I stopped. have to iterate over the right key.
     }
     json_top.append(json_object_for_biblio);
@@ -101,7 +101,7 @@ void Widget::write_bibliography_to_bibtex(){
          return;
     }
     QTextStream stream(&file);
-    foreach (Entry* entry, biblioModel->get_entries()){
+    foreach (Entry* entry, m_biblioModel->get_entries()){
         entry -> write_bibentry_to_bibtex(  stream , m_bibliography_labels); //TODO  HERE IS WHERE I stopped. have to iterate over the right key.
     }
     qDebug() << 770 << filename;

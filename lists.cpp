@@ -25,6 +25,25 @@
 class List;
 
 
+void Widget::list_functionality(){
+    m_listWidget->dragEnabled();
+    m_listWidget->setDragDropMode(QAbstractItemView::InternalMove);
+    m_listWidget->setDefaultDropAction(Qt::TargetMoveAction);
+    m_listWidget->setMovement(QListView::Free);
+    m_listNamesWidget = new QListWidget(this);
+    m_listNamesWidget->dragEnabled();
+    m_listNamesWidget->setDragDropMode(QAbstractItemView::InternalMove);
+    m_listNamesWidget->setDefaultDropAction(Qt::TargetMoveAction);
+    m_listNamesWidget->setMovement(QListView::Free);
+    new_list("General");
+    new_list("Math");
+    new_list("Zellig to Noam");
+    new_list("Battle");
+    new_list("Bantu tone");
+    new_list("Linguistica");
+    new_list("Phonology");
+}
+
 
 void Widget::select_new_list(QListWidgetItem * item){
     save_current_list();

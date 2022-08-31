@@ -133,14 +133,14 @@ void Widget::read_JSON_file_new(QString filename){
                     }
                 }
                 promote_file_from_preferred_location(entry);
-                biblioModel->add_entry(entry);
+                m_biblioModel->add_entry(entry);
         }
     }
-    biblioModel->register_all_entries();
-    biblioModel->m_proxyModel = new MySortFilterProxyModel () ;
-    biblioModel->m_proxyModel->setSourceModel( biblioModel );
+    m_biblioModel->register_all_entries();
+    m_biblioModel->m_proxyModel = new MySortFilterProxyModel () ;
+    m_biblioModel->m_proxyModel->setSourceModel( m_biblioModel );
 
-    m_topTableView->setModel( biblioModel->m_proxyModel );
+    m_topTableView->setModel( m_biblioModel->m_proxyModel );
     m_topTableView->setColumnWidth(0,300);
     m_topTableView->setColumnWidth(1,400);
     m_topTableView->setColumnWidth(2,100);
@@ -174,17 +174,17 @@ void Widget::read_JSON_file_new(QString filename){
                {
                    QJsonObject list_entry;
                    list_entry = json_entries[n].toObject();
-                   //entry = biblioModel->contains_by_size(list_entry["size"].toInt())->first() ;
+                   entry = m_biblioModel->get_entry_by_size(list_entry["size"].toInt());
 
-                   QList<Entry*> entries = get_entries_by_size(list_entry["size"].toInt());
-                   entry = entries.first();
                    add_entry_to_list(list, entry);
                }
             }
        }
     }
    link_top_and_bottom_entries_from_size();
-   link_top_and_bottom_entries_from_filename();
+//   link_top_and_bottom_entries_from_filename();
+
+
    //bottomTableWidget2->setVisible(true);
    //place_entries_with_shared_filename_on_table();
    //place_entries_with_shared_keys_on_table();
