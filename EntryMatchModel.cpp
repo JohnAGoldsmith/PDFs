@@ -26,10 +26,10 @@
 #include "widget.h"
 
 
-EntryMatchModel::  EntryMatchModel(BiblioTableModel* biblio_model, EntriesModel* file_model, QWidget* parent){
+EntryMatchModel::EntryMatchModel(BiblioTableModel* biblio_model, EntriesModel* file_model, QWidget* parent){
    m_biblio_model = biblio_model;
    m_file_model = file_model;
-}
+};
 
 
 void EntryMatchModel::match_filestems(){

@@ -39,14 +39,11 @@ EntryModel::~EntryModel(){
 
 }
 
-// This should not be necessary : go through setData instead
 void EntryModel::change_entry(Entry * entry){
     m_entry = entry;
     QModelIndex topLeft = createIndex(0,0);
     QModelIndex bottomRight = createIndex(m_bibliography_labels.count(),1);
-    //emit dataChanged( topLeft, bottomRight );
     emit dataChanged(topLeft, bottomRight);
-    //qDebug() << 48 << m_entry->display();
 }
 void EntryModel::display(Entry* entry){
     m_entry = entry;

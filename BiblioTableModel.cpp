@@ -259,7 +259,7 @@ bool BiblioTableModel::setData(const QModelIndex &index, const QVariant &value, 
                     }
                 }
                 emit dataChanged(index, index);
-                qDebug() << entry->display();
+                qDebug() << 262 << "inside setData"<< entry->display();
                 return true;
      }
      return false;

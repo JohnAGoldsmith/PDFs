@@ -211,6 +211,10 @@ Widget::Widget(QWidget *parent)
 
     m_entry_match_model = new EntryMatchModel(m_biblioModel, onboard_pdf_model, this);
 
+    // Selection changed signal
+    //connect(m_bottomTableView, &QAbstractItemView::selectionChanged,
+    //        this, &Widget::on_top_table_view_clicked);
+
     // Single clicks
     connect(m_topTableView, &QTableView::clicked,
              this , &Widget::on_top_table_view_clicked);
@@ -247,8 +251,8 @@ Widget::Widget(QWidget *parent)
     // Double clicks
     connect(m_topTableView, &QTableView::doubleClicked,
              this , &Widget::on_top_table_view_doubleClicked);
-    connect(m_middle_table_wdget,SIGNAL(cellDoubleClicked(int,int)) ,
-            this , SLOT(on_middle_table_widget_doubleClicked(int,int)));
+    //connect(m_middle_table_wdget,SIGNAL(cellDoubleClicked(int,int)) ,
+    //        this , SLOT(on_middle_table_widget_doubleClicked(int,int)));
     //    connect(m_bottomTableView,SIGNAL(cellDoubleClicked(int,int)) ,
     //            this , SLOT(on_bottom_table_view_doubleClicked(int,int)));
     connect(m_bottomTableView, &QAbstractItemView::doubleClicked,
@@ -380,7 +384,7 @@ void Widget::on_middle_table_widget_doubleClicked(int row,int column){
 }
 
 void Widget::Control_S(){
-    if (m_screen_state == 2) {            // the user is updating the onboard-entry to make a biblio entry...
+    if (m_screen_state == 1) {            // the user is updating the onboard-entry to make a biblio entry...
             create_or_update_biblio_entry();
     } else{
         write_bibliography();
@@ -398,10 +402,6 @@ Widget::~Widget()
 {
    delete m_biblioModel;
    delete onboard_pdf_model;
-
-   //foreach(Entry * entry,    m_data_by_key){
-   //   delete entry;
-   // }
 }
 
 void Widget::create_or_update_biblio_entry(){
@@ -412,8 +412,9 @@ void Widget::create_or_update_biblio_entry(){
 }
 
 void Widget::create_new_bibentry(){
-
+ // TODO change this to biblio_entry...
 }
+
 // this creates a new database Entry.
 void Widget::create_new_biblio_entry(){
     if (!m_selected_entry) {return;}
@@ -561,6 +562,7 @@ void Widget::set_screen_state(){
         }
         case 1:{
 
+            m_topTableView->setVisible(true);
             m_bottomTableView->setVisible(false);
             m_middle_table_wdget->setVisible(false);
             m_entry_match_view->setVisible(false);
@@ -575,7 +577,7 @@ void Widget::set_screen_state(){
                 m_middle_table_wdget->setVisible(false);
                 m_entry_match_view->setVisible(false);
                 m_rightSplitter->setVisible(false);
-            m_mainSplitter->setSizes(QList<int>({1000, 100, 100}));
+            m_mainSplitter->setSizes(QList<int>({1000, 10, 00}));
             break;
         }
         case 3:{
@@ -584,7 +586,7 @@ void Widget::set_screen_state(){
                 m_middle_table_wdget->setVisible(false);
                 m_entry_match_view->setVisible(false);
                 m_rightSplitter->setVisible(false);
-            m_mainSplitter->setSizes(QList<int>({100, 100, 100}));
+            m_mainSplitter->setSizes(QList<int>({1000, 10, 0}));
 
             break;
         }
@@ -594,7 +596,7 @@ void Widget::set_screen_state(){
                 m_bottomTableView->setVisible(false);
                 m_middle_table_wdget->setVisible(false);
                 m_rightSplitter->setVisible(false);
-            m_mainSplitter->setSizes(QList<int>({100, 100, 100}));
+            m_mainSplitter->setSizes(QList<int>({1000, 100, 100}));
             break;
         }
         case 5:{
@@ -954,18 +956,18 @@ void display_entry_on_tableview(QTableView* table_view, Entry* entry, QStringLis
     }
 }
 */
-void Widget::display_entry_on_middle_table(){
-    Entry * entry = m_entry_in_middle_table;
-    display_entry_on_tablewidget(m_middle_table_wdget, entry, m_bibliography_labels);
-}
+//void Widget::display_entry_on_middle_table(){
+//    Entry * entry = m_entry_in_middle_table;
+//    display_entry_on_tablewidget(m_middle_table_wdget, entry, m_bibliography_labels);/
+//}
+/*
 void Widget::put_bibitem_info_on_middle_table_widget(const QModelIndex & index){
     Q_UNUSED(index);
-
     m_entry_in_middle_table = m_entry_in_top_table;
     display_entry_on_middle_table();
     m_proposed_new_title_widget->clear();
 }
-
+*/
 /*
 void Widget::put_file_info_on_middle_table_widget(int bottom_widget_row){
     QString filename(bottomTableWidget->item(bottom_widget_row,1)->text());
@@ -989,9 +991,8 @@ void Widget::put_file_info_on_entry_view(QModelIndex & current_model_index){
 
 
 }
-void Widget::put_bibitem_info_on_middle_table_widget(const Entry* entry){
-
-}
+//void Widget::put_bibitem_info_on_middle_table_widget(const Entry* entry){
+//}
 void Widget::on_middle_widget_item_changed(int row, int column ){
     Q_UNUSED(column);
     if (  ( m_bottom_table_widget->hasFocus() || m_middle_table_wdget->hasFocus())  &&

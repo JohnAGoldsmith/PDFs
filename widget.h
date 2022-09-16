@@ -257,7 +257,7 @@ private:
     bool biblio_model_contains(Entry* entry) {return m_biblioModel->contains(entry);}
     void list_functionality();
 
-    void display_entry_on_middle_table();  // this will be deleted
+    //void display_entry_on_middle_table();  // this will be deleted
     void display_entry_on_entry_model(EntryModel*, Entry*);
     QList<Entry*>  get_entries_by_size(int);              // this should be removed, changed to biblio model
 
@@ -267,7 +267,7 @@ private:
     void update_selected_biblio_entry();
     void load_file_prefixes(QTableWidget*);
 
-    void put_bibitem_info_on_middle_table_widget(const Entry* entry);
+    //void put_bibitem_info_on_middle_table_widget(const Entry* entry);
     void establish_screen_layout();
     Entry* get_selected_entry() {return m_selected_entry;}
 
@@ -306,7 +306,7 @@ private slots:
     void place_entries_with_shared_filename_on_table();
     void place_entries_with_shared_size_on_table();
     void promote_file_from_preferred_location(Entry*);
-    void put_bibitem_info_on_middle_table_widget(const QModelIndex & index);
+    //void put_bibitem_info_on_middle_table_widget(const QModelIndex & index);
     void put_file_info_on_entry_view(QModelIndex & current_model_index);
     void search_folders_for_pdf();
     void set_new_root_folder();
@@ -476,6 +476,7 @@ class EntriesView: public QTableView{
     Q_OBJECT
 public:
     void set_proxy_model(MySortFilterProxyModel *);
+    //void selectionChanged(const QItemSelection &selected, const QItemSelection &deselected); // from AbstractItemView
 
 };
 class EntriesView_onboard_files: public QTableView{

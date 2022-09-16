@@ -36,6 +36,12 @@ Entry::Entry(){
      m_selected_for_deletion = false;
      m_temporary_color = QColorConstants::Black;
 }
+Entry::Entry(const Entry& entry){
+    size = entry.size;
+    foreach (QString label, entry.info.keys()){
+        info[label] = entry.info[label];
+    }
+}
 Entry::~Entry(){
 
 }
@@ -43,13 +49,15 @@ Entry::Entry(QString stem, QString folder, qint64 a_size)
 {
     int this_size = static_cast<int>(a_size);
     info["folder"] = folder;
-    info["filenamestem"] = folder;
+    info["filenamestem"] = stem;
     info["filenamefull"] = folder + "/" + stem;
     size = this_size;
+    /*
     m_top_view_size_item = NULL;
     m_top_view_filename_item = NULL;
     m_bottom_view_size_item = NULL;
     m_bottom_view_filename_item = NULL;
+    */
     //m_creation_time = QDateTime(QDate::currentDate(), QTime::currentTime());
      m_selected_for_deletion = false;
      m_temporary_color = nullptr;
@@ -61,13 +69,16 @@ Entry::Entry(QString stem, QString folder, int this_size)
   set_folder(folder);
   set_filenameStem(stem);
   set_filenameFull(filenameFull);
+  /*
   m_top_view_size_item = NULL;
   m_top_view_filename_item = NULL;
   m_bottom_view_size_item = NULL;
   m_bottom_view_filename_item = NULL;
+  */
   //m_creation_time = QDateTime(QDate::currentDate(), QTime::currentTime());
    m_selected_for_deletion = false;
 }
+
 void Entry::set_info(QString this_key,QString this_value)
 {   if (this_key == "size"){
         size = this_value.toInt();

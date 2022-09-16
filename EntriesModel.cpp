@@ -76,6 +76,33 @@ int EntriesModel::columnCount(const QModelIndex &index) const
 bool EntriesModel::setData(const QModelIndex &index, const QVariant & value, int role)
 {
     if (index.isValid() && role == Qt::EditRole) {
+        int row =  m_proxyModel->mapToSource(index).row();
+        Entry * entry = m_entries.value(row);
+        if (index.column() == 1){
+            switch (index.row()) {
+                case 0:{
+                    entry->set_filenameStem(value.toString());
+                    break;
+                }
+                case 1:{
+                    entry->set_folder(value.toString());
+                    break;
+                }
+                case 3:{
+                    entry->set_author(value.toString());
+                    break;
+                }
+                case 4:{
+                    entry->set_title(value.toString());
+                    break;
+                }
+                case 5:{
+                    entry->set_year(value.toString());
+                    break;
+            }
+            }
+
+        }
     }
     return false;
 }
