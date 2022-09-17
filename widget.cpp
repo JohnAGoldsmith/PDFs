@@ -623,7 +623,7 @@ void Widget::set_screen_state(){
 
 }
 void Widget::load_file_prefixes(QTableWidget* table){
-    int ROWCOUNT = 19;
+    int ROWCOUNT = 55;
     table->setColumnCount(3);
     //table->setColumnWidth(0,6);
     //table->setColumnWidth(1,6);
@@ -639,12 +639,44 @@ void Widget::load_file_prefixes(QTableWidget* table){
     Column1 << QString("0") << QString("0") <<  QString("0") << QString("0") ;
     Column2 << QString("0") << QString("1") << QString("2") << QString("3");
     Column3 << QString("Zellig2Noam") << QString("Linguistica and segmentation") << QString("Prime suspect") << QString ("Battle in the Mind Fields");
-    Column1 << QString("1") << QString("1") << QString("1") << QString("1")<< QString("1") << QString("1") << QString("1");
+    Column1 << QString("1") << QString("1") << QString("1") << QString("1")<< QString("1") << QString("1") << QString("1") << QString("1");
     Column2 << QString("") << QString("1") << QString("2")<< QString("3")<< QString("4")<< QString("5")<< QString("6")<< QString("7");
     Column3 << QString("Linguistics") << QString("Phonology") << QString("Morphology") << QString ("Syntax")<< QString ("History of lx")<< QString ("Semantics")<< QString ("ASL")<< QString ("African");
-    Column1 << QString("1") << QString("2") << QString("2") << QString("2")<< QString("2") << QString("2") << QString("2") << QString("2");
-    Column2 << QString("") << QString("1") << QString("2")<< QString("3")<< QString("4")<< QString("5")<< QString("6")<< QString("7");
+    Column1 << QString("2") << QString("2") << QString("2") << QString("2")<< QString("2") << QString("2") << QString("2");
+    Column2 << QString("") << QString("1") << QString("2")<< QString("3")<< QString("4")<< QString("5")<< QString("6");
     Column3 << QString("Philosophy") << QString("Philosophy of science") << QString("Philosophy of mathematics") << QString ("Continental philosophy")<< QString ("Analytic philosophy")<< QString ("Continental vs analytic")<< QString ("other history of philosophy");
+    Column1 << QString("3") << QString("3") << QString("3") ;
+    Column2 << QString("") << QString("1") << QString("2") ;
+    Column3 << QString("Psychology") << QString("cognitive psychology") << QString("history of psychology");
+    Column1 << QString("4") << QString("4") << QString("4") << QString("4") << QString("4") << QString("4") ;
+    Column2 << QString("") << QString("1") << QString("2") << QString("3") << QString("4") << QString("5") ;
+    Column3 << QString("Computer science") << QString("Machine learning") << QString("Data visualization")
+            << QString("Programming") << QString("Comp Lx NLP") << QString("Algorithmic complexity");
+    Column1 << QString("5") << QString("5") << QString("5") << QString("5") << QString("5") << QString("5")
+               << QString("5") << QString("5") << QString("5");
+    Column2 << QString("") << QString("1") << QString("2") << QString("3") << QString("4") << QString("5")<< QString("6") << QString("7") << QString("8") ;
+    Column3 << QString("Mathematics") << QString("History of math") << QString("Algebra")
+            << QString("Category theory") << QString("Statistics") << QString("Graphs")
+            << QString("Number theory") << QString("Topology (algebraic)") << QString("Probability");
+    Column1 << QString("6") << QString("6") << QString("6");
+    Column2 << QString("") << QString("1") << QString("2")  ;
+    Column3 << QString("Enlightenment") << QString("Sufism") << QString("Esotericism");
+    Column1 << QString("7") << QString("7") << QString("7") << QString("7") << QString("7") << QString("7")
+               << QString("7") ;
+    Column2 << QString("") << QString("1") << QString("2") << QString("3") << QString("4") << QString("5")<< QString("6")  ;
+    Column3 << QString("History and politics") << QString("European history") << QString("Drug trafficking")
+            << QString("Afghanistan") << QString("Russia") << QString("Intelligence")
+            << QString("France");
+    Column1 << QString("8") << QString("8") << QString("8") << QString("8") ;
+    Column2 << QString("") << QString("1") << QString("2") << QString("3")  ;
+    Column3 << QString("Science") << QString("History of science") << QString("Physics")
+            << QString("Statistical models");
+
+    Column1 << QString("9") << QString("9") << QString("9") << QString("9") ;
+    Column2 << QString("") << QString("1") << QString("2") << QString("3")  ;
+    Column3 << QString("Social sciences") << QString("Economics") << QString("Anthropology")
+            << QString("Sociology");
+
 
     QTableWidgetItem * item1, *item2, *item3;
     for (int row = 0; row < ROWCOUNT; row++ ){
