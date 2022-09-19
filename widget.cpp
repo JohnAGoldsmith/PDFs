@@ -1086,53 +1086,57 @@ void Widget::`register_biblioentry_by_key(Entry* entry){
 }
 */
 void Widget::generate_new_title(){
+    // change this so that it takes information from the EntryModel associated with the selected item -- not one of the views.
     QString prefix;
-    int prefix_row;
+    QString author, author_surname;
+    QString  title, new_title, year, new_filename, new_biblio_key;
+
     if (m_filePrefixTableWidget->selectedItems().count() > 0){
-        prefix_row = m_filePrefixTableWidget->selectedItems().first()->row();
+        int prefix_row = m_filePrefixTableWidget->selectedItems().first()->row();
         prefix = m_filePrefixTableWidget->item(prefix_row,0)->text() + " " +
                  m_filePrefixTableWidget->item(prefix_row,1)->text() + " ";
     }
-    QString author_surname;
-    QString  title, new_title, year, new_filename, new_biblio_key;
-    int row_for_biblio_key = 3;
-    if (m_middle_table_wdget->item(0,1)) {
-        author_surname = find_surname(get_first_author(m_middle_table_wdget->item(0,1)->text()));
+    new_filename = prefix;
+
+    year =  m_selected_entry->get_year();
+    if (year.length() == 0) {
+        year = QString("9999");
     }
-    new_biblio_key = author_surname;
+    new_filename += " " + year;
+
+    author = get_first_author(m_selected_entry->get_author());
+    author_surname = find_surname(author);
+    new_filename += author_surname;
+
     int max_title_length = 50;
-    if (m_middle_table_wdget->item(1,1)){
-        title = m_middle_table_wdget->item(1,1)->text();
-        if (title.length() == 0) {
-            new_title = "title";}
-        else{
+    title = m_selected_entry->get_title();
+    if (title.length() == 0) {
+            title = "title";
+    } else {
             QStringList titlelist = title.split(" ");
             for (int no = 0; no < titlelist.size(); no++){
-                new_title += " " + titlelist[no];
-                if (new_title.length() >= max_title_length){
+                title += " " + titlelist[no];
+                if (title.length() >= max_title_length){
                     break;
                 }
-            }
-        }
+            }            
     }
-    if (m_middle_table_wdget->item(2,1)){
-        year = m_middle_table_wdget->item(2,1)->text();
-        if (year.length() == 0) {year = QString("9999");}
-        new_biblio_key += "_" + year;
-    }
-    if (m_filePrefixTableWidget->selectedItems().count() > 0){
-        int row = m_filePrefixTableWidget->selectedItems().at(0)->row();
-        qDebug() << 1625 << "selected row number" << row;
-    }
-    if (year.length() > 0) { new_filename = year + "    ";}
-    if (author_surname.length() > 0) { new_filename += author_surname; }
-    new_filename +=  new_title;
-    new_filename = prefix + new_filename;
+    new_filename += title;
+
+
+
+    new_biblio_key += "_" + year;
+    new_biblio_key = author_surname;
+
+
     m_proposed_new_title_widget->setText(new_filename + ".pdf");
     if (m_biblioModel->contains_key(new_biblio_key) ) { //  })  m_data_by_key.contains(new_biblio_key)){
         new_biblio_key += title;
     }
     QTableWidgetItem * item = new QTableWidgetItem(new_biblio_key);
+
+    // PUT THIS IN THE MODEL !!
+    // todo
     m_middle_table_wdget->setItem(row_for_biblio_key,1,item);
 
 }

@@ -148,6 +148,7 @@ QVariant EntriesModel::data(const QModelIndex & index, int role )const
 EntriesView_onboard_files::EntriesView_onboard_files(){
     setSortingEnabled(true);
     setSelectionMode(QAbstractItemView::SingleSelection);
+    setSelectionBehavior(QAbstractItemView::SelectRows);
 
     //m_bottomTableView->horizontalHeader()->setMaximumSectionSize(int);
 }

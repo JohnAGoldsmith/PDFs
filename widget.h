@@ -146,15 +146,15 @@ private:
     bool                    m_isDirty; // true means that BiblioTableModel has changed since last saving of it.
 
     // Models and views
-    //MySortFilterProxyModel * proxyModel_for_topTableView;
+    //MySortFilterProxyModel* proxyModel_for_topTableView;
     BiblioTableModel        * m_biblioModel;
     QFileSystemModel        * file_system_model;
     EntriesModel            * onboard_pdf_model;
     EntriesModel            * same_size_files_model;
     EntryMatchModel         * m_entry_match_model;
     QFileSystemModel        * m_file_system_model;
-    //EntryModel              * m_center_entry_model;
-    QTableView               m_center_entry_model;
+    //EntryModel            * m_center_entry_model;
+    QTableView                m_center_entry_model;
 
 
     Entry                   * m_selected_entry;
@@ -479,6 +479,10 @@ public:
     //void selectionChanged(const QItemSelection &selected, const QItemSelection &deselected); // from AbstractItemView
 
 };
+
+
+
+
 class EntriesView_onboard_files: public QTableView{
     Q_OBJECT
 public:
@@ -486,6 +490,9 @@ public:
     void set_proxy_model(MySortFilterProxyModel *);
 
 };
+
+
+
 //.......................................................................................
 class EntryMatchModel: public QAbstractTableModel{
     Q_OBJECT
