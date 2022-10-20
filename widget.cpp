@@ -1,4 +1,3 @@
-#include "widget.h"
 #include <QGridLayout>
 #include <QFileSystemModel>
 #include <QSettings>
@@ -23,6 +22,8 @@
 #include<QAbstractScrollArea>
 #include <QHeaderView>
 #include <EGL/egl.h>
+#include "BiblioTableModel.h"
+#include "widget.h"
 
 class List;
 
@@ -110,6 +111,7 @@ void Widget::set_screen_layout(){
    m_rightSplitter->addWidget(m_listNamesWidget);
    m_rightSplitter->addWidget(m_listWidget);
    m_rightSplitter->addWidget(m_filePrefixTableWidget);
+   m_rightSplitter->addWidget(m_ToK_view);
    m_rightSplitter->addWidget(m_middle_right_widget);
    m_rightSplitter->addWidget(m_directoryView);
 }
@@ -173,6 +175,7 @@ Widget::Widget(QWidget *parent)
     onboard_pdf_model = new EntriesModel(this);
     same_size_files_model = new EntriesModel(this);
     m_biblioModel = new BiblioTableModel(this);
+    m_ToK_model = new ToK_model(this);
 
     // Views
     m_topTableView = new QTableView(this);
@@ -199,6 +202,8 @@ Widget::Widget(QWidget *parent)
     m_file_system_model = new QFileSystemModel(this);
     m_file_system_model->setFilter(QDir::Dirs);
     m_file_system_model->setRootPath("/home/john/");
+    m_ToK_view = new QTreeView(this);
+    m_ToK_view->setModel(m_ToK_model);
     m_directoryView->setModel(m_file_system_model);
     m_directoryView->setColumnWidth(0,400);
     m_directoryView->setColumnWidth(1,100);
@@ -221,7 +226,7 @@ Widget::Widget(QWidget *parent)
     connect(m_bottomTableView, &EntriesView::clicked,
             this, &Widget::on_bottom_table_view_clicked );
     connect(m_generate_new_filename_button, &QPushButton::clicked,
-            this, &Widget::generate_new_title);
+            this, &Widget::generate_new_filename);
 
     connect(m_delete_size_on_selected_biblio_entries,SIGNAL(clicked()) ,
             this , SLOT(delete_size_on_selected_biblio_entries())  );
@@ -357,6 +362,9 @@ Widget::Widget(QWidget *parent)
 
 
 
+}
+bool Widget::biblio_model_contains(Entry* entry) {
+    return m_biblioModel->contains(entry);
 }
 void Widget::on_bottom_table_view_doubleClicked(QModelIndex index){
 
@@ -1030,7 +1038,7 @@ void Widget::on_middle_widget_item_changed(int row, int column ){
     if (  ( m_bottom_table_widget->hasFocus() || m_middle_table_wdget->hasFocus())  &&
           (row == 1 || row == 2 || row == 3)  )
     {
-        generate_new_title();
+        generate_new_filename();
     }
 }
 
@@ -1085,28 +1093,23 @@ void Widget::`register_biblioentry_by_key(Entry* entry){
     }
 }
 */
-void Widget::generate_new_title(){
-    // change this so that it takes information from the EntryModel associated with the selected item -- not one of the views.
-    QString prefix;
-    QString author, author_surname;
-    QString  title, new_title, year, new_filename, new_biblio_key;
+void Widget::generate_new_filename(){
+    QString prefix, author, author_surname;
+    QString  title, year, new_filename, new_biblio_key;
 
     if (m_filePrefixTableWidget->selectedItems().count() > 0){
         int prefix_row = m_filePrefixTableWidget->selectedItems().first()->row();
         prefix = m_filePrefixTableWidget->item(prefix_row,0)->text() + " " +
                  m_filePrefixTableWidget->item(prefix_row,1)->text() + " ";
     }
-    new_filename = prefix;
 
     year =  m_selected_entry->get_year();
     if (year.length() == 0) {
         year = QString("9999");
     }
-    new_filename += " " + year;
 
     author = get_first_author(m_selected_entry->get_author());
     author_surname = find_surname(author);
-    new_filename += author_surname;
 
     int max_title_length = 50;
     title = m_selected_entry->get_title();
@@ -1120,25 +1123,24 @@ void Widget::generate_new_title(){
                     break;
                 }
             }            
-    }
-    new_filename += title;
+    }    
+    QString space = " ";
+    QString underscore = "_";
 
+    new_filename = prefix + space + year + space + author_surname + space + title + ".pdf";
+    new_biblio_key = author_surname + underscore + year + underscore + author_surname;
+    m_proposed_new_title_widget->setText(new_filename);
 
-
-    new_biblio_key += "_" + year;
-    new_biblio_key = author_surname;
-
-
-    m_proposed_new_title_widget->setText(new_filename + ".pdf");
-    if (m_biblioModel->contains_key(new_biblio_key) ) { //  })  m_data_by_key.contains(new_biblio_key)){
+    if (m_biblioModel->contains_key(new_biblio_key) ) {
         new_biblio_key += title;
     }
-    QTableWidgetItem * item = new QTableWidgetItem(new_biblio_key);
+    /*
+    m_selected_entry->set_filenameStem(new_filename);
+    m_selected_entry->set_key(new_biblio_key);
 
-    // PUT THIS IN THE MODEL !!
-    // todo
-    m_middle_table_wdget->setItem(row_for_biblio_key,1,item);
-
+    QModelIndex filename_index = m_selected_entry_model->index(  m_selected_entry_model->get_filename_row() ,1 );
+    emit m_selected_entry_model->dataChanged(filename_index, filename_index);
+    */
 }
 
 void Widget::on_listWidget_doubleClicked(QListWidgetItem* item){

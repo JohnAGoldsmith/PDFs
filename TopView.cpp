@@ -22,7 +22,7 @@
 #include <QScrollBar>
 #include<QAbstractScrollArea>
 #include <EGL/egl.h>
-
+#include "BiblioTableModel.h"
 class List;
 
 

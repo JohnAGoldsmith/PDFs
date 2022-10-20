@@ -23,9 +23,12 @@ SOURCES += \
     main.cpp \
     popUp.cpp \
     string_functions.cpp \
+    tok.cpp \
     widget.cpp
 
 HEADERS += \
+    BiblioTableModel.h \
+    tok.h \
     widget.h
 
 # Default rules for deployment.

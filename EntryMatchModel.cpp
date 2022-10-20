@@ -24,7 +24,7 @@
 #include <QSplitter>
 #include <QFileSystemModel>
 #include "widget.h"
-
+#include "BiblioTableModel.h"
 
 EntryMatchModel::EntryMatchModel(BiblioTableModel* biblio_model, EntriesModel* file_model, QWidget* parent){
    m_biblio_model = biblio_model;

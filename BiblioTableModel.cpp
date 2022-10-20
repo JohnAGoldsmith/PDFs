@@ -22,6 +22,9 @@
 #include <QScrollBar>
 #include<QAbstractScrollArea>
 #include <EGL/egl.h>
+#include "BiblioTableModel.h"
+
+
 class List;
 
 /*
@@ -41,6 +44,7 @@ Entry*  BiblioTableModel::get_entry_by_size(int size) {
         return nullptr;
     }
 }
+
 void BiblioTableModel::register_all_entries()
 {
      foreach (Entry* entry, m_entries){

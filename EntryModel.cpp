@@ -38,6 +38,15 @@ EntryModel::EntryModel(Entry* entry, QStringList bibliography_labels){
 EntryModel::~EntryModel(){
 
 }
+int  EntryModel::get_filename_row(){
+    for (int n = 0; n < m_bibliography_labels.length(); n++){
+        if (m_bibliography_labels[n] == "filenamestem"){
+            return n;
+        }
+    }
+    return -1;
+}
+
 
 void EntryModel::change_entry(Entry * entry){
     m_entry = entry;
