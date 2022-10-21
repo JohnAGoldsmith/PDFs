@@ -247,6 +247,7 @@ private slots:
     void promote_file_from_preferred_location(Entry*);
     //void put_bibitem_info_on_middle_table_widget(const QModelIndex & index);
     void put_file_info_on_entry_view(QModelIndex & current_model_index);
+    void read_ToK_from_json(QString filename);
     void search_folders_for_pdf();
     void set_new_root_folder();
     void set_screen_state();

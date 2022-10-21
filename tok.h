@@ -31,10 +31,11 @@ public:
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
     QStringList         output(bool key_only_flag); // if key_only_flag is true, then the prefix is just the key, not the entire prefix. Key only is preferred for tableview
                                                     // the whole prefix is preferred for output to json file.
+    void addItem(const QString  & data);
+    void addItem(const QString & prefix, const QString & data);
 
 private:
     void setupModelData(const QStringList &lines, TreeItem *parent);
-    void addItem(const QString  & data);
 
     TreeItem *m_rootItem;
 };

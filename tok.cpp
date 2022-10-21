@@ -143,6 +143,7 @@ ToK_model::ToK_model(QObject *parent)
 {
     m_rootItem = new TreeItem(QString::number(0), QString::number(0), tr("Tree of knowledge"));
 
+    /*
     addItem("0 1 Zellig to Noam");
     addItem("0 2 lxa and segmentation");
     addItem("0 3 prime suspect");
@@ -159,9 +160,12 @@ ToK_model::ToK_model(QObject *parent)
     addItem("1 Linguistics");
     addItem("1 1 Phonology");
     addItem("1 2 Morphology");
+    */
+
 
     bool key_only_flag = false;
     output (key_only_flag);
+
 }
 
 ToK_model::~ToK_model()
@@ -258,6 +262,12 @@ void ToK_model::addItem(const QString & string){
     TreeItem * item = m_rootItem->find_place_in_tree(prefix);
     item->setData(line);
 }
+/*
+void ToK_model::addItem(const QString & prefix, const QString & string){
+    TreeItem * item = m_rootItem->find_place_in_tree(prefix.split(" "));
+    item->setData(string);
+}
+*/
 TreeItem * TreeItem::find_place_in_tree(QStringList& prefixes) {
     QString first = prefixes.takeFirst().trimmed();
     qDebug() << 260 << ">" << first << "<"<< "length" << first.length();

@@ -177,6 +177,7 @@ Widget::Widget(QWidget *parent)
     same_size_files_model = new EntriesModel(this);
     m_biblioModel = new BiblioTableModel(this);
     m_ToK_model = new ToK_model(this);
+    read_ToK_from_json("pdf_manager_tok_init.json");
 
     // Views
     m_topTableView = new QTableView(this);

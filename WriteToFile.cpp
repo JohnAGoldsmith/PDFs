@@ -52,6 +52,32 @@ void Widget::write_ToK_to_file(){
     qDebug() << "finished writing tok";
 
 }
+void Widget::read_ToK_from_json(QString filename){
+    QString file_name = "pdf_manager_tok_init.json";
+    QFile fileIn(filename);
+    if (!fileIn.open(QIODevice::ReadWrite | QIODevice::Text))
+        return;
+    QByteArray bytearray = fileIn.readAll();
+    QJsonParseError parseError;
+    QJsonDocument json_doc =  QJsonDocument::fromJson(bytearray, &parseError);
+    if (parseError.error != QJsonParseError::NoError) {
+            qWarning() << "Parse error at" << parseError.offset << ":" << parseError.errorString();
+    } else {
+            json_doc.toJson(QJsonDocument::Compact);
+    }
+    if(!json_doc.isObject()){
+            qDebug() << "JSON doc root is not an object.";
+    }
+    QJsonArray json_ToK;
+    json_ToK =  json_doc["ToK"].toArray();
+    qDebug() << 73 << json_ToK.size();
+    foreach (QJsonValue value, json_ToK){
+        QJsonObject this_object = value.toObject();
+        m_ToK_model->addItem(this_object["prefix"].toString()+ " " + this_object["string"].toString());
+
+    }
+
+}
 
 /*           WRITE TO FILE              */
 void write_list_to_json(List* list, QJsonArray & json_array ){
