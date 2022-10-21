@@ -71,6 +71,38 @@ void Entry::read_json(QJsonObject & json){
         qDebug() << 354 << key << info[key] << get_size();
     }
 }
+void Widget::read_init_file( ){
+    QJsonObject json_init;
+    QString filename = "\\pdf_manager_ini.json";
+//    if (m_init_folder filename.isEmpty()){
+//                filename= QFileDialog::getOpenFileName(this, "Choose File", m_json_folder, "JSON files (*.json)");
+//                if(filename.isEmpty())
+//                    return;
+//            }
+    QFile fileIn(filename);
+    if (!fileIn.open(QIODevice::ReadWrite | QIODevice::Text))
+         return;
+    //int slash_loc = filename.lastIndexOf("/") + 1;
+    //foldername = filename.left(slash_loc);
+    //m_json_folder= foldername;
+    QByteArray bytearray = fileIn.readAll();
+    QJsonParseError parseError;
+    QJsonDocument json_doc =  QJsonDocument::fromJson(bytearray, &parseError);
+    if (parseError.error != QJsonParseError::NoError) {
+         qWarning() << "Parse error at" << parseError.offset << ":" << parseError.errorString();
+    } else {
+         json_doc.toJson(QJsonDocument::Compact);
+    }
+
+    //m_settings.setValue("jsonfilename", filename);
+    //m_settings.setValue("jsonfoldername", foldername);
+    fileIn.close();
+    if(!json_doc.isObject()){
+            qDebug() << "JSON doc root is not an object.";
+    }
+
+
+}
 void Widget::read_JSON_file_new(QString filename){
     QJsonObject json_bibliography;
     QString foldername;

@@ -1,4 +1,5 @@
 #include <QRegExp>
+#include <QDebug>
 #include "tok.h"
 
 QStringList break_up_regexp(QString & string){
@@ -14,14 +15,26 @@ QStringList break_up_regexp(QString & string){
     string = string.mid(offset);
     return output;
 }
-
-ToK::ToK()
-{
-
+QString cut_off_prefix(QString & string){
+    QRegExp regex1("(\\d )");
+    QString prefix;
+    int pos = 0;
+    int offset = 0;
+    while ((pos = regex1.indexIn(string, pos)) != -1) {
+        prefix +=  regex1.cap(1) ;
+        pos += regex1.matchedLength();
+        offset += regex1.matchedLength();
+    }
+    string = string.mid(offset    );
+    return prefix;
 }
-TreeItem::TreeItem(const QString key, const QString &data, TreeItem *parent)
-    : m_key(key), m_string(data), m_parentItem(parent)
-{}
+
+
+TreeItem::TreeItem(const QString prefix, const QString key, const QString &data, TreeItem *parent)
+    : m_prefix(prefix.trimmed()), m_key(key), m_string(data), m_parentItem(parent)
+{
+    qDebug() << "constructor" << m_key << "key length" << m_key.length() << "prefix" << m_prefix << m_prefix.length();
+}
 
 TreeItem::~TreeItem()
 {
@@ -34,7 +47,7 @@ bool TreeItem::insertChildren(int position, int count, int columns)
 
     for (int row = 0; row < count; ++row) {
         QString data(columns);
-        TreeItem *item = new TreeItem(QString::number(row), data, this);
+        TreeItem *item = new TreeItem(QString(), QString::number(row), data, this);
         m_childItems.insert(position, item);
     }
 
@@ -87,12 +100,39 @@ void TreeItem::appendChild(TreeItem *item)
 }
 
 
+ToK::ToK()
+{
+
+}
+QStringList ToK_model::output(bool key_only_flag){
+    QStringList result;
+    result = m_rootItem->output(result, key_only_flag);
+    qDebug() << 96 <<"End result:" << result;
+    return result;
+}
+QStringList TreeItem::output(QStringList& list, bool key_only_flag){
+    qDebug() << 99 << "new item"<<m_key << m_string;
+    if (key_only_flag){
+        list.append(m_key + " " + m_string);
+    } else{
+        list.append(m_prefix + " " + m_string);
+    }
+    foreach (TreeItem* item, m_childItems){
+        qDebug() << 101 << item->data();
+        QStringList new_list;
+        //list.append(item->get_key() + ":" + item->get_string() + "(103)");
+        list.append(item->output(new_list, key_only_flag));
+    }
+
+    //qDebug() << "\n" <<105 <<  list;
+    return list;
+}
 
 
 ToK_model::ToK_model(const QString &data, QObject *parent)
     : QAbstractItemModel(parent)
 {
-    m_rootItem = new TreeItem(QString::number(0), tr("Tree of knowledge"));
+    m_rootItem = new TreeItem(QString(), QString::number(0), tr("Tree of knowledge"));
 
 
 
@@ -101,14 +141,27 @@ ToK_model::ToK_model(const QString &data, QObject *parent)
 ToK_model::ToK_model(QObject *parent)
     : QAbstractItemModel(parent)
 {
-    m_rootItem = new TreeItem(QString::number(0), tr("Tree of knowledge"));
+    m_rootItem = new TreeItem(QString::number(0), QString::number(0), tr("Tree of knowledge"));
 
-    addItem("1 testing");
-    addItem("1 0 testing1");
-    addItem("1 1 testing2");
-    addItem("2 1 testing3");
-        addItem("2 1 2 testing4");
-            addItem("2 1 2 2 testing3");
+    addItem("0 1 Zellig to Noam");
+    addItem("0 2 lxa and segmentation");
+    addItem("0 3 prime suspect");
+    addItem("0 3 1 Sidney Reilly");
+    addItem("0 3 2 Gurdjieff");
+    addItem("0 3 3 prime numbers");
+    addItem("0 4 Battle in the mind field");
+    addItem("0 4 1 chapter 1");
+    addItem("0 4 2 chapter 2");
+    addItem("0 4 2 1 IndoEuropean");
+    addItem("0 4 3 chapter 3");
+    addItem("0 5 JFK");
+    addItem("0 6 Confrontation (Volume 2)");
+    addItem("1 Linguistics");
+    addItem("1 1 Phonology");
+    addItem("1 2 Morphology");
+
+    bool key_only_flag = false;
+    output (key_only_flag);
 }
 
 ToK_model::~ToK_model()
@@ -201,11 +254,13 @@ void ToK_model::addItem(const QString & string){
     QString line(string);
     QStringList prefix = break_up_regexp(line);//line is modified by this function; its prefix is removed.
     if (prefix.length() == 0) {return;}
+    qDebug() << 257 << "prefix" << prefix << "length" << prefix.length();
     TreeItem * item = m_rootItem->find_place_in_tree(prefix);
     item->setData(line);
 }
 TreeItem * TreeItem::find_place_in_tree(QStringList& prefixes) {
-    QString first = prefixes.takeFirst();
+    QString first = prefixes.takeFirst().trimmed();
+    qDebug() << 260 << ">" << first << "<"<< "length" << first.length();
     for (int i = 0; i < m_childItems.count(); i++){
         if (m_childItems[i]->get_key() == first){
             if (prefixes.size() == 0){
@@ -214,7 +269,9 @@ TreeItem * TreeItem::find_place_in_tree(QStringList& prefixes) {
             return m_childItems[i]->find_place_in_tree(prefixes);
         }
         if (m_childItems[i]->get_key() > first){
-            TreeItem * item = new TreeItem(first, QString(), this);
+            QString prefix = m_prefix  + first; // ***
+
+            TreeItem * item = new TreeItem(prefix, first, QString(), this);
             m_childItems.insert(i, item);
             if (prefixes.size()== 0){
                 return item;
@@ -222,7 +279,9 @@ TreeItem * TreeItem::find_place_in_tree(QStringList& prefixes) {
             return item->find_place_in_tree(prefixes);
         }
     }
-    TreeItem * item = new TreeItem(first, QString(), this);
+    QString prefix = m_prefix + " " + first;
+    qDebug() << 269 << prefix; // good
+    TreeItem * item = new TreeItem(prefix, first, QString(), this);
     m_childItems.append(item);
     if (prefixes.size() == 0){
         return item;
@@ -274,7 +333,7 @@ void ToK_model::setupModelData(const QStringList &lines, TreeItem *parent)
             }
 
             // Append a new item to the current parent's list of children.
-            parents.last()->appendChild(new TreeItem(QString::number(0), this_string, parents.last()));
+            parents.last()->appendChild(new TreeItem(QString::number(0),QString::number(0), this_string, parents.last()));
         }
         ++number;
     }

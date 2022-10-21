@@ -138,6 +138,7 @@ Widget::Widget(QWidget *parent)
     QSettings settings ("JohnAGoldsmith", "PdfManager");
     m_root_folder = m_settings.value("rootfoldername", "/home/john/Dropbox/").toString();
     m_json_folder = m_settings.value("jsonfoldername", "/home/").toString();
+    m_init_folder = m_settings.value("initfoldername", "/home/").toString();
     m_lists_complete_filename = m_settings.value("listsfilename").toString();
 
     QPalette palette = QPalette();
@@ -204,6 +205,7 @@ Widget::Widget(QWidget *parent)
     m_file_system_model->setRootPath("/home/john/");
     m_ToK_view = new QTreeView(this);
     m_ToK_view->setModel(m_ToK_model);
+    m_ToK_view->expandAll();
     m_directoryView->setModel(m_file_system_model);
     m_directoryView->setColumnWidth(0,400);
     m_directoryView->setColumnWidth(1,100);
@@ -359,10 +361,8 @@ Widget::Widget(QWidget *parent)
     //m_keyCtrl1 = new QShortcut(this);
     //m_keyCtrl1->setKey(Qt::CTRL + Qt::Key_1);
     //connect(m_keyCtrl1, SIGNAL(activated()), this, SLOT(toggle_right_side()));
-
-
-
 }
+
 bool Widget::biblio_model_contains(Entry* entry) {
     return m_biblioModel->contains(entry);
 }

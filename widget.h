@@ -147,6 +147,7 @@ private:
     QStringList     m_bibliography_short_labels;
     QString         m_root_folder;
     QString         m_json_folder;
+    QString         m_init_folder;
     QString         m_directory_view_root;
     QSettings       m_settings;
     QString         m_prefered_location; // if a copy is found in this folder, then it automatically becomes the primary location of the file.
@@ -218,6 +219,7 @@ private slots:
     void quit_now() {QApplication::quit();}
     void read_JSON_file_old();
     void read_JSON_file_new(QString filename = QString());
+    void read_init_file();
     void add_entry_to_top_view(Entry*);
     void change_filename(QString old_name, QString new_fullname);
     void change_selected_filename();
@@ -256,6 +258,7 @@ private slots:
     void write_bibliography_to_json();
     void write_bibliography_to_bibtex();
     void write_bibentry_to_json(Entry *, QJsonObject & );
+    void write_ToK_to_file();
     //void keyPressEvent(QKeyEvent * event);
     //void mousePressEvent(QMouseEvent * event);
     //void put_file_info_on_middle_table_widget(int bottom_widget_row);

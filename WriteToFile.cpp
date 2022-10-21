@@ -22,11 +22,36 @@
 #include <QScrollBar>
 #include<QAbstractScrollArea>
 #include <EGL/egl.h>
+
 #include "BiblioTableModel.h"
 
 class List;
+QString cut_off_prefix(QString & string);
 
+void Widget::write_ToK_to_file(){
+    QString outfile_name = "pdf_manager_tok_init.json";
+    bool key_only_flag = false;
+    QStringList lines = m_ToK_model->output(key_only_flag);
+    QJsonObject json_top;
+    QJsonArray json_ToK; // tree of knowledge
+    foreach (QString tok_line,  lines){
+        QJsonObject json_line;
+        json_line["prefix"] = QJsonValue(cut_off_prefix(tok_line).trimmed() );
+        json_line["string"] = tok_line;
+        json_ToK.append(json_line);
+    }
+    json_top["ToK"] = json_ToK;
+    QFile saveFile(outfile_name);
+    if (!saveFile.open(QIODevice::WriteOnly)) {
+         qWarning("Couldn't open save file.");
+         return;
+    }
+    qDebug() << 610 << outfile_name;
+    QJsonDocument doc(json_top);
+    saveFile.write(doc.toJson());
+    qDebug() << "finished writing tok";
 
+}
 
 /*           WRITE TO FILE              */
 void write_list_to_json(List* list, QJsonArray & json_array ){
@@ -45,9 +70,8 @@ void write_list_to_json(List* list, QJsonArray & json_array ){
     }
     this_list["entries"] = this_list_entries;
     json_array.append(this_list);
+
 }
-
-
 void Widget::write_lists_to_json(QJsonArray & json_array){
     foreach (List* list, m_Lists){
         write_list_to_json (list,json_array);
@@ -56,8 +80,8 @@ void Widget::write_lists_to_json(QJsonArray & json_array){
 void Widget::write_bibliography(){
     write_bibliography_to_json();
     write_bibliography_to_bibtex();
+    write_ToK_to_file();
 }
-
 void Widget::write_bibliography_to_json( ){
     QDateTime date = QDateTime::currentDateTime();
     QString formattedTime = date.toString("yyyy_MM_dd_hh:mm:ss");
