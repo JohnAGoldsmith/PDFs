@@ -26,17 +26,17 @@
 #include "BiblioTableModel.h"
 
 class List;
-QString cut_off_prefix(QString & string);
+QString remove_prefix_and_remove_spaces(QString & string);
 
 void Widget::write_ToK_to_file(){
     QString outfile_name = "pdf_manager_tok_init.json";
     bool key_only_flag = false;
-    QStringList lines = m_ToK_model->output(key_only_flag);
+    QStringList lines = m_ToK_model->output(key_only_flag);  // key_only means that each line has only the lowest (last) digit of its prefix
     QJsonObject json_top;
     QJsonArray json_ToK; // tree of knowledge
     foreach (QString tok_line,  lines){
         QJsonObject json_line;
-        json_line["prefix"] = QJsonValue(cut_off_prefix(tok_line).trimmed() );
+        json_line["prefix"] = QJsonValue(remove_prefix_and_remove_spaces(tok_line).trimmed() );
         json_line["string"] = tok_line;
         json_ToK.append(json_line);
     }
@@ -53,7 +53,7 @@ void Widget::write_ToK_to_file(){
 
 }
 void Widget::read_ToK_from_json(QString filename){
-    QString file_name = "pdf_manager_tok_init.json";
+
     QFile fileIn(filename);
     if (!fileIn.open(QIODevice::ReadWrite | QIODevice::Text))
         return;
@@ -70,10 +70,15 @@ void Widget::read_ToK_from_json(QString filename){
     }
     QJsonArray json_ToK;
     json_ToK =  json_doc["ToK"].toArray();
-    qDebug() << 73 << json_ToK.size();
+
     foreach (QJsonValue value, json_ToK){
         QJsonObject this_object = value.toObject();
-        m_ToK_model->addItem(this_object["prefix"].toString()+ " " + this_object["string"].toString());
+        QString prefix = this_object["prefix"].toString();
+        QString string =  this_object["string"].toString();
+        qDebug() << "";
+        qDebug() << 77 << "reading json"<< this_object["prefix"].toString() << this_object["string"].toString();
+        m_ToK_model->addItem(prefix, string);
+
 
     }
 

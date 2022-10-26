@@ -24,7 +24,7 @@ PopUp::PopUp(EntryModel * selected_entry_model){
 void Widget::open_popUp(){
     if (myPopUp== nullptr){
 
-        if (! m_selected_entry ) {
+        if (! m_selected_onboard_entry ) {
             QMessageBox box;
 
             box.setText( "Select an item first.");
@@ -37,7 +37,7 @@ void Widget::open_popUp(){
         m_keyCtrlRightBracket->setKey(Qt::CTRL  + Qt::Key_BracketRight);
         connect(m_keyCtrlRightBracket, SIGNAL(activated()), this, SLOT(close_popUp()));
     } else{
-        myPopUp->setEntry(m_selected_entry);
+        myPopUp->setEntry(m_selected_onboard_entry);
 
     }
 

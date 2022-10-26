@@ -92,12 +92,13 @@ private:
     QTableView                m_center_entry_model;
     ToK_model               * m_ToK_model;
 
-
-    Entry                   * m_selected_entry;
+    Entry                   * m_selected_biblio_entry;
+    Entry                   * m_selected_onboard_entry;
     EntryModel              * m_selected_entry_model;
+    TreeItem                * m_selected_ToK_item;
     Entry                   * m_entry_in_top_table;  // change this to curent selection in model;
     Entry                   * m_entry_in_middle_table; // ditto
-    Entry                   * m_entry_in_bottom_table; // ditto
+    //Entry                   * m_entry_in_bottom_table; // ditto
 
     int                      m_number_of_sceen_states;
     int                      m_screen_state;
@@ -207,7 +208,8 @@ private:
 
     //void put_bibitem_info_on_middle_table_widget(const Entry* entry);
     void establish_screen_layout();
-    Entry* get_selected_entry() {return m_selected_entry;}
+    Entry* get_selected_biblio_entry() {return m_selected_biblio_entry;}
+    Entry* get_selected_onboard_entry() {return m_selected_onboard_entry;}
 
 private slots:
 
@@ -221,14 +223,21 @@ private slots:
     void read_JSON_file_new(QString filename = QString());
     void read_init_file();
     void add_entry_to_top_view(Entry*);
-    void change_filename(QString old_name, QString new_fullname);
+
+    /* names */
+    QString create_new_filename_stem(QString old_name);
+    void change_full_filename(QString old_name, QString new_fullname);
     void change_selected_filename();
-    void create_new_bibentry();
     void change_onboard_filename(QString new_name);
+    void generate_new_filename();
+    void add_prefix_to_selected_onboard_filename();
+
+
+    void create_new_bibentry();
     void delete_selected_files();
     void delete_size_on_selected_biblio_entries();
-    void generate_new_filename();
     QStringList get_bibliography_labels() {return m_bibliography_labels;}
+    //TreeItem* get_selected_ToK_line();
     void link_top_and_bottom_entries_from_size();
     void link_top_and_bottom_entries();
     void match_filestems() ;
@@ -238,6 +247,7 @@ private slots:
     void on_bottom_table_view_clicked(const QModelIndex&);
     void on_bottom_table_view_doubleClicked(QModelIndex);
     void on_middle_widget_item_changed(int row, int column);
+    void on_ToK_view_selection_changed();
     void open_popUp();
     void hide_popUp();
     void close_popUp();
@@ -523,6 +533,8 @@ class EntryView: public QTableView{
 public:
     EntryView(){};
 };
+
+
 
 //.................................................................................................................
 

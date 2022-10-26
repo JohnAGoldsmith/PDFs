@@ -1,4 +1,6 @@
 #include <QGridLayout>
+#include <QDir>
+#include <QFileInfo>
 #include <QFileSystemModel>
 #include <QSettings>
 #include <QJsonParseError>
@@ -32,7 +34,7 @@ Qt::ItemFlags BiblioTableModel::flags(const QModelIndex &index) const
     if (!index.isValid())
         return Qt::ItemIsEnabled;
 
-    return QAbstractTableModel::flags(index) | Qt::ItemIsEditable;
+    return QAbstractTableModel::flags(index) | Qt::ItemIsEditable | Qt::ItemIsEnabled | Qt::ItemIsSelectable;
 }
 //NewStandardItemModel::NewStandardItemModel (QObject * myparent) {
 //    //parent = myparent;
@@ -146,8 +148,9 @@ Widget::Widget(QWidget *parent)
     setPalette(palette);
 
     m_mainSplitter = nullptr;
-    m_selected_entry = nullptr;
-
+    m_selected_onboard_entry = nullptr;
+    m_selected_biblio_entry = nullptr;
+    m_selected_ToK_item = nullptr;
     // Table widgets, which we will probably get rid of
     // left side
     m_middle_table_wdget = new QTableWidget;
@@ -207,6 +210,7 @@ Widget::Widget(QWidget *parent)
     m_ToK_view = new QTreeView(this);
     m_ToK_view->setModel(m_ToK_model);
     m_ToK_view->expandAll();
+    m_ToK_view->setSelectionMode(QTreeView::SingleSelection);
     m_directoryView->setModel(m_file_system_model);
     m_directoryView->setColumnWidth(0,400);
     m_directoryView->setColumnWidth(1,100);
@@ -255,6 +259,9 @@ Widget::Widget(QWidget *parent)
                 this,SLOT(place_entries_with_shared_filename_on_table()));
     connect(m_check_biblio_for_shared_size_button,SIGNAL(clicked()),
                 this,SLOT(place_entries_with_shared_size_on_table()));
+    connect(m_ToK_view->selectionModel(), &QItemSelectionModel::selectionChanged,
+            this, &Widget::on_ToK_view_selection_changed);
+
 
     // Double clicks
     connect(m_topTableView, &QTableView::doubleClicked,
@@ -308,7 +315,7 @@ Widget::Widget(QWidget *parent)
 
     m_keyCtrlK = new QShortcut(this);
     m_keyCtrlK->setKey(Qt::CTRL + Qt::Key_K);
-    connect(m_keyCtrlK, SIGNAL(activated()), this, SLOT(change_filename()));
+    connect(m_keyCtrlK,  &QShortcut::activated, this, &Widget::add_prefix_to_selected_onboard_filename);
 
 
     m_keyCtrlM = new QShortcut(this);
@@ -383,6 +390,14 @@ void Widget::on_bottom_table_view_doubleClicked(QModelIndex index){
     //QDesktopServices::openUrl(QUrl::fromLocalFile(filename));
 }
 
+
+void Widget::on_ToK_view_selection_changed(){
+    m_selected_ToK_item =  static_cast<TreeItem*>(m_ToK_view->currentIndex().internalPointer());
+    //QString key = m_selected_ToK_item->get_key();
+    QString prefix  = m_selected_ToK_item->get_prefix();
+    qDebug() << 398   << prefix << m_selected_ToK_item->get_string();
+}
+
 void Widget::on_middle_table_widget_doubleClicked(int row,int column){
     if (! m_entry_in_middle_table ){
         qDebug() << "No entry selected on middle view";
@@ -414,7 +429,8 @@ Widget::~Widget()
 }
 
 void Widget::create_or_update_biblio_entry(){
-    if (! m_biblioModel->contains(m_selected_entry) ) {
+
+    if (! m_biblioModel->contains(m_selected_biblio_entry) ) {
         create_new_biblio_entry();
     }
     update_selected_biblio_entry();
@@ -426,8 +442,8 @@ void Widget::create_new_bibentry(){
 
 // this creates a new database Entry.
 void Widget::create_new_biblio_entry(){
-    if (!m_selected_entry) {return;}
-    Entry * new_entry  = new Entry(*m_selected_entry);
+    if (!m_selected_biblio_entry) {return;} // todo that's not a biblio entry
+    Entry * new_entry  = new Entry(*m_selected_onboard_entry);
     m_biblioModel->add_entry(new_entry);
     m_biblioModel->make_dirty();
 }
@@ -466,32 +482,63 @@ void Widget::update_selected_biblio_entry(){
     //qDebug() << 899 << entry->display();
     */
 }
+
+
+void Widget::add_prefix_to_selected_onboard_filename(){
+    Entry* entry = m_selected_onboard_entry;
+    if (!entry) {return;}
+    QString old_stem_name = entry->get_filenamestem();
+    QString old_full_name = entry->get_filenamefull();
+    QFileInfo fileInfo(old_full_name);
+    QString folder= fileInfo.absolutePath();
+    QString prefix;
+    if (m_selected_ToK_item){
+        prefix = m_selected_ToK_item->get_prefix() + " ";
+    }
+    qDebug() << 497 << prefix;
+    QString new_stem_name = prefix + " " + old_stem_name;
+    if (old_stem_name == new_stem_name){
+        QMessageBox msgBox;
+        msgBox.setText("The new name is the same as the old name; no change made.");
+        msgBox.exec();
+        return;}
+    QString new_full_name = folder + "//" + prefix + old_stem_name;
+    QFile file(old_full_name);
+    file.rename(old_full_name, new_full_name);
+}
+
+
+
 void Widget::change_onboard_filename(QString new_full_filename){
-/*    Purpose is to change the filename on computer ("onboard") when it is changed in either
-            the middle, the bottom widget, or the PopUp.
+/*    Purpose is to change the onboard_filename.
+ *    It can be changed (i) by adding the "prefix" from the ToK, or
+ *    (ii) by adding year, author, title (or both, of course);
            It is intended for changing the filename on the computer, not in the biblio database.
-           There can be several copies of the same file on the computer, and it will change the names of
+           There can be several copies of the same file on the computer, and it *should* change the names of
             those files that have the same filenamestem.
 
             i. change the filename on the computer
-            ii. change the filename in the Entry;
+            ii. change the filename in the onboard Entry;
             iii. update hashes from filename to entry
-            iv.   change the name on bottom widgets' Item
+            iv.   change the name on onboard widgets' Item
+            Vi.  if there is a matching biblio_entry already, change the filename in the database too.
+        Figure out what action triggers this. Keyboard entry at the least.
 
-            v.  change the name on the middle widget.
-            Vi.  if there is a matching record already, change the filename in the database too.
-      The process should be triggered by focus leaving either the middle or the bottom widget  item, if it is changed.
  */
     // Verify that selected entry is a member of the onboard group:
-    if (!onboard_pdf_model->contains( m_selected_entry) ) {
+    if (!onboard_pdf_model->contains( m_selected_biblio_entry) ) {
         return;
     }
     //(i.)
-    Entry* entry = m_entry_in_bottom_table;
+    QString new_stem_name;
+    Entry* entry = m_selected_onboard_entry;
     QString old_filename_stem = entry->get_filenamestem();
     QString old_full_filename = entry->get_filenamefull();
-    QFileInfo fileInfo(QFile(old_full_filename));
-    change_filename(old_full_filename, new_full_filename);
+    QFileInfo fileInfo(old_full_filename);
+    QString folder= fileInfo.dir().dirName();
+    new_stem_name = create_new_filename_stem(old_filename_stem);
+
+    change_full_filename(old_full_filename, folder + "\\"  + new_full_filename);
     //(ii.)
     entry->set_filenameFull(new_full_filename);
     QFileInfo fileInfo2(new_full_filename);
@@ -504,7 +551,7 @@ void Widget::change_onboard_filename(QString new_full_filename){
     set_filename_item_bottom_widget(m_selected_row_in_bottom_table, new_filename_stem);
 }
 
-void Widget::change_filename(QString old_name, QString new_name){
+void Widget::change_full_filename(QString old_name, QString new_name){
     if (old_name == new_name){
         QMessageBox msgBox;
         msgBox.setText("The new name is the same as the old name; no change made.");
@@ -513,9 +560,22 @@ void Widget::change_filename(QString old_name, QString new_name){
     QFile file(old_name);
     file.rename(old_name, new_name);
 }
+QString Widget::create_new_filename_stem(QString old_stem_name){
+    QString prefix;
+    if (m_selected_ToK_item){
+        prefix = m_selected_ToK_item->get_prefix();
+    }
+    return prefix + " " + old_stem_name;
+}
+// how does this relate to the function just above, change_onboard_filename?
 void Widget::change_selected_filename(){
     QString new_filename;
-    Entry* entry = m_entry_in_bottom_table;
+    if (m_selected_ToK_item){
+        new_filename = m_selected_ToK_item->get_prefix();
+    }
+    Entry* entry = m_selected_onboard_entry;
+    new_filename += " " + entry->get_filenamestem();
+    //Entry* entry = m_entry_in_bottom_table;
     //change_onboard_filename()
 
 }
@@ -911,27 +971,27 @@ void Widget::link_top_and_bottom_entries_from_filename( ){
 }
 */
 void Widget::link_top_and_bottom_entries(){
-   if (! m_entry_in_top_table) {\
+   if (! m_selected_biblio_entry) {\
        qDebug() << 1301 << "Can't link entries, because no item in top view has been selected.";
        return;
    }
-   if (! m_entry_in_bottom_table) {\
+   if (! m_selected_onboard_entry) {\
        qDebug() << 1301 << "Can't link entries, because no item in bottom view has been selected.";
        return;
    }
    int column_for_size = 5;
    int column_for_key = 3;
-   int size = m_entry_in_bottom_table->get_size();
+   int size = m_selected_onboard_entry->get_size();
 
    qDebug() << 1303 << "row"<< m_entry_in_top_table << "size" << size;
    m_entry_in_top_table->set_size(size);
-   m_entry_in_top_table->add_to_onboard_entries(m_entry_in_bottom_table);
-   m_entry_in_top_table->set_filenameStem(m_entry_in_bottom_table->get_filenamestem());
-   m_entry_in_top_table->set_folder(m_entry_in_bottom_table->get_folder());
-   m_entry_in_top_table->set_filenameFull(m_entry_in_bottom_table->get_filenamefull());
+   m_entry_in_top_table->add_to_onboard_entries(m_selected_onboard_entry);
+   m_entry_in_top_table->set_filenameStem(m_selected_onboard_entry->get_filenamestem());
+   m_entry_in_top_table->set_folder(m_selected_onboard_entry->get_folder());
+   m_entry_in_top_table->set_filenameFull(m_selected_onboard_entry->get_filenamefull());
    m_entry_in_top_table->add_keywords(m_middle_table_wdget);
-   m_entry_in_top_table->set_info("date", m_entry_in_bottom_table->get_info("date"));
-   m_entry_in_top_table->set_info("lastread", m_entry_in_bottom_table->get_info("lastread"));
+   m_entry_in_top_table->set_info("date", m_selected_onboard_entry->get_info("date"));
+   m_entry_in_top_table->set_info("lastread", m_selected_onboard_entry->get_info("lastread"));
 
 
 }
@@ -1104,16 +1164,16 @@ void Widget::generate_new_filename(){
                  m_filePrefixTableWidget->item(prefix_row,1)->text() + " ";
     }
 
-    year =  m_selected_entry->get_year();
+    year =  m_selected_onboard_entry->get_year();
     if (year.length() == 0) {
         year = QString("9999");
     }
 
-    author = get_first_author(m_selected_entry->get_author());
+    author = get_first_author(m_selected_onboard_entry->get_author());
     author_surname = find_surname(author);
 
     int max_title_length = 50;
-    title = m_selected_entry->get_title();
+    title = m_selected_onboard_entry->get_title();
     if (title.length() == 0) {
             title = "title";
     } else {

@@ -70,7 +70,7 @@ void Widget::on_bottom_table_view_clicked(const QModelIndex& index){
         m_selected_entry_model = new EntryModel(entry, m_bibliography_labels);
     } else {
         m_selected_entry_model->change_entry(entry);
-        m_selected_entry = entry;
+        m_selected_onboard_entry = entry;
     }
 }
 
