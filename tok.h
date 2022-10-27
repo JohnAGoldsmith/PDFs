@@ -5,6 +5,7 @@
 #include <QAbstractItemModel>
 
 class TreeItem;
+struct Prefix_String;
 
 class ToK
 {
@@ -29,9 +30,9 @@ public:
     QModelIndex parent(const QModelIndex &index) const override;
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
-    QStringList         output(bool key_only_flag); // if key_only_flag is true, then the prefix is just the key, not the entire prefix. Key only is preferred for tableview
+    QList<Prefix_String*>         output(bool key_only_flag); // if key_only_flag is true, then the prefix is just the key, not the entire prefix. Key only is preferred for tableview
                                                     // the whole prefix is preferred for output to json file.
-    QStringList         silent_output (bool key_only_flag); // differs from output in that it ignores the root node;
+    //QStringList         silent_output (bool key_only_flag); // differs from output in that it ignores the root node;
     //void addItem(const QString  & data);
     void addItem(   QString & prefix, const QString & data);
 
@@ -64,7 +65,7 @@ public:
     TreeItem *  find_place_in_tree(QString & prefix);
     //QString     get_key() {return m_key;}
     QString     get_string() {return m_string;}
-    QStringList output(QStringList&, bool key_only_flag);
+    QList<Prefix_String*> output(QList<Prefix_String*>&, bool key_only_flag);
     QString     get_prefix() {return m_prefix;}
     void        set_prefix(QString prefix) {m_prefix = prefix;}
 

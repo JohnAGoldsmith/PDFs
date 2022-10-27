@@ -1,6 +1,7 @@
 #include <QRegExp>
 #include <QDebug>
 #include "tok.h"
+#include "widget.h"
 
 QStringList break_up_regexp(QString & string){
     QRegExp regex1("(\\d )");
@@ -111,22 +112,27 @@ ToK::ToK()
 {
 
 }
-QStringList ToK_model::output(bool key_only_flag){  // ignores root node.
-    QStringList list;
+
+
+
+QList<Prefix_String*> ToK_model::output(bool key_only_flag){  // ignores root node.
+    QList<Prefix_String*> list;
     foreach (TreeItem* item, *m_rootItem->get_childItems()){
         list = item->output(list, key_only_flag);
     }
     return list;
 }
-QStringList TreeItem::output(QStringList& list, bool key_only_flag){
+QList<Prefix_String*> TreeItem::output(QList<Prefix_String*> & list, bool key_only_flag){
     qDebug() << 99 << "new item"<<m_prefix << m_string;
     if (key_only_flag){
-        list.append(m_prefix.back() + " " + m_string);
+        Prefix_String * PS1 = new Prefix_String(QString(m_prefix.back()), m_string);
+        list.append(PS1);
     } else{
-        list.append(m_prefix + " " + m_string);
+        Prefix_String * PS2 = new Prefix_String(m_prefix, m_string);
+        list.append(PS2);
     }
     foreach (TreeItem* item, m_childItems){
-        QStringList new_list;
+        QList<Prefix_String*> new_list;
         list.append(item->output(new_list, key_only_flag));
     }
     return list;

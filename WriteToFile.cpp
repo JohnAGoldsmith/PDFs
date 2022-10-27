@@ -28,30 +28,6 @@
 class List;
 QString remove_prefix_and_remove_spaces(QString & string);
 
-void Widget::write_ToK_to_file(){
-    QString outfile_name = "pdf_manager_tok_init.json";
-    bool key_only_flag = false;
-    QStringList lines = m_ToK_model->output(key_only_flag);  // key_only means that each line has only the lowest (last) digit of its prefix
-    QJsonObject json_top;
-    QJsonArray json_ToK; // tree of knowledge
-    foreach (QString tok_line,  lines){
-        QJsonObject json_line;
-        json_line["prefix"] = QJsonValue(remove_prefix_and_remove_spaces(tok_line).trimmed() );
-        json_line["string"] = tok_line;
-        json_ToK.append(json_line);
-    }
-    json_top["ToK"] = json_ToK;
-    QFile saveFile(outfile_name);
-    if (!saveFile.open(QIODevice::WriteOnly)) {
-         qWarning("Couldn't open save file.");
-         return;
-    }
-    qDebug() << 610 << outfile_name;
-    QJsonDocument doc(json_top);
-    saveFile.write(doc.toJson());
-    qDebug() << "finished writing tok";
-
-}
 void Widget::read_ToK_from_json(QString filename){
 
     QFile fileIn(filename);
@@ -83,7 +59,30 @@ void Widget::read_ToK_from_json(QString filename){
     }
 
 }
+void Widget::write_ToK_to_file(){
+    QString outfile_name = "pdf_manager_tok_init.json";
+    bool key_only_flag = false;
+    QList<Prefix_String*> lines = m_ToK_model->output(key_only_flag);  // key_only means that each line has only the lowest (last) digit of its prefix
+    QJsonObject json_top;
+    QJsonArray json_ToK; // tree of knowledge
+    foreach (Prefix_String* PS,  lines){
+        QJsonObject json_line;
+        json_line["prefix"] = QJsonValue(PS->m_prefix);
+        json_line["string"] = QJsonValue(PS->m_string);
+        json_ToK.append(json_line);
+    }
+    json_top["ToK"] = json_ToK;
+    QFile saveFile(outfile_name);
+    if (!saveFile.open(QIODevice::WriteOnly)) {
+         qWarning("Couldn't open save file.");
+         return;
+    }
+    qDebug() << 610 << outfile_name;
+    QJsonDocument doc(json_top);
+    saveFile.write(doc.toJson());
+    qDebug() << "finished writing tok";
 
+}
 /*           WRITE TO FILE              */
 void write_list_to_json(List* list, QJsonArray & json_array ){
     QJsonObject this_list;

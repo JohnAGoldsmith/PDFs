@@ -27,6 +27,15 @@
 #include "tok.h"
 
 struct bibentry;
+struct Prefix_String{
+    QString m_prefix;
+    QString m_string;
+    Prefix_String(QString prefix, QString string){
+        m_prefix = prefix;
+        m_string = string;
+    }
+};
+
 class List;
 class Entry;
 class PopUp;
