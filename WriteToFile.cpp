@@ -51,8 +51,8 @@ void Widget::read_ToK_from_json(QString filename){
         QJsonObject this_object = value.toObject();
         QString prefix = this_object["prefix"].toString();
         QString string =  this_object["string"].toString();
-        qDebug() << "";
-        qDebug() << 77 << "reading json"<< this_object["prefix"].toString() << this_object["string"].toString();
+        //qDebug() << "";
+        //qDebug() << 77 << "reading json"<< this_object["prefix"].toString() << this_object["string"].toString();
         m_ToK_model->addItem(prefix, string);
 
 

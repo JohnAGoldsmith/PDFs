@@ -491,10 +491,8 @@ void Widget::add_prefix_to_selected_onboard_filename(){
     QString old_full_name = entry->get_filenamefull();
     QFileInfo fileInfo(old_full_name);
     QString folder= fileInfo.absolutePath();
-    QString prefix;
-    if (m_selected_ToK_item){
-        prefix = m_selected_ToK_item->get_prefix() + " ";
-    }
+    QString prefix = m_selected_ToK_item->get_prefix();
+    prefix = prefix.split("").join(" ").trimmed() + " ";
     qDebug() << 497 << prefix;
     QString new_stem_name = prefix + " " + old_stem_name;
     if (old_stem_name == new_stem_name){
