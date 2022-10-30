@@ -155,9 +155,9 @@ void Widget::show_files_with_same_size(){
     QStringList horizontal_headers;
     horizontal_headers << "Filename " << "Folder" << "Size";
     QList<int> sizes = m_files_onboard_by_size.uniqueKeys();
-    if (same_size_files_model) { delete same_size_files_model;}
-    same_size_files_model = new EntriesModel(this);
-    m_bottomTableView->setModel(same_size_files_model);
+    if (m_same_size_files_model) { delete m_same_size_files_model;}
+    m_same_size_files_model = new EntriesModel(this);
+    m_bottomTableView->setModel(m_same_size_files_model);
 
 
     int row = 0;
@@ -199,7 +199,7 @@ void Widget::show_files_with_same_size(){
                 }
                 stop_row = row;
                 row++;
-                same_size_files_model->addEntry(entry);
+                m_same_size_files_model->addEntry(entry);
             }
         }
     }

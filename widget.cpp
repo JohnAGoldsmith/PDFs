@@ -57,9 +57,6 @@ void Widget::set_screen_layout(){
     m_mainSplitter->addWidget(m_center_entry_view);
     m_mainSplitter->addWidget(m_rightSplitter);
 
-    //m_mainSplitter->`(QList<int>({100, 50, 100}));
-
-
     // left column
     m_leftSplitter->addWidget(m_topTableView);
     m_leftSplitter->addWidget(m_middle_table_wdget);
@@ -68,54 +65,49 @@ void Widget::set_screen_layout(){
     m_leftSplitter->addWidget(m_entry_match_view);
 
     // right column
-    load_file_prefixes(m_filePrefixTableWidget);
-    m_filePrefixTableWidget->setSelectionMode( QAbstractItemView::SingleSelection );
-
     m_small_grid_layout   = new QGridLayout;
     m_middle_right_widget = new QWidget(this);
     m_middle_right_widget->setLayout(m_small_grid_layout);
 
-       m_proposed_new_title_label = new QLabel("Proposed new title") ;
-       m_proposed_new_title_widget = new QLineEdit();
-       m_new_list_name_widget = new QLineEdit("(enter name of new list here)");
-       m_generate_new_filename_button = new QPushButton("Generate new filename and key");
+    m_proposed_new_title_label = new QLabel("Proposed new title") ;
+    m_proposed_new_title_widget = new QLineEdit();
+    m_new_list_name_widget = new QLineEdit("(enter name of new list here)");
+    m_generate_new_filename_button = new QPushButton("Generate new filename and key");
             //m_change_filename_button = new QPushButton("Change file name to (^K):");
-       m_create_new_bibentry_button = new QPushButton("Create new biblio entry (^K):");
-       m_change_root_directory = new QPushButton("Change root directory");
-       m_create_new_list_button = new QPushButton("Create new list (^N):");
-       m_save_biblio_file_button = new QPushButton("Save biblio file (^S)");
-       m_add_to_list_button = new QPushButton("Add entry to selected list (^U)");
-       m_link_two_entries = new QPushButton("Link top and bottom entries (^Z)");
+    m_create_new_bibentry_button = new QPushButton("Create new biblio entry (^K):");
+    m_change_root_directory = new QPushButton("Change root directory");
+    m_create_new_list_button = new QPushButton("Create new list (^N):");
+    m_save_biblio_file_button = new QPushButton("Save biblio file (^S)");
+    m_add_to_list_button = new QPushButton("Add entry to selected list (^U)");
+    m_link_two_entries = new QPushButton("Link top and bottom entries (^Z)");
 
-       m_delete_selected_files_button = new QPushButton("Delete selected files");
-       m_delete_size_on_selected_biblio_entries = new QPushButton("Delete size on selected biblio entries");
-       m_check_biblio_for_shared_key_button = new QPushButton("Check biblio for shared keys");
-       m_check_biblio_for_shared_size_button = new QPushButton("Check biblio for shared sizes");
-       m_check_biblio_for_shared_filename_button = new QPushButton("Check biblio for shared filenames");
+    m_delete_selected_files_button = new QPushButton("Delete selected files");
+    m_delete_size_on_selected_biblio_entries = new QPushButton("Delete size on selected biblio entries");
+    m_check_biblio_for_shared_key_button = new QPushButton("Check biblio for shared keys");
+    m_check_biblio_for_shared_size_button = new QPushButton("Check biblio for shared sizes");
+    m_check_biblio_for_shared_filename_button = new QPushButton("Check biblio for shared filenames");
 
-       m_small_grid_layout->addWidget(m_create_new_list_button,0,0);
-       m_small_grid_layout->addWidget(m_new_list_name_widget,0,1);
-       //small_grid_layout->addWidget(m_change_filename_button,1,0);
-       m_small_grid_layout->addWidget(m_create_new_bibentry_button,1,0);
-       m_small_grid_layout->addWidget(m_proposed_new_title_widget,1,1);
-       m_small_grid_layout->addWidget(m_generate_new_filename_button,2,0);
-       m_small_grid_layout->addWidget(m_delete_size_on_selected_biblio_entries,3,0);
-       m_small_grid_layout->addWidget(m_change_root_directory,4,0);
-       m_small_grid_layout->addWidget(m_save_biblio_file_button,5,0);
-       m_small_grid_layout->addWidget(m_add_to_list_button,6,0);
-       m_small_grid_layout->addWidget(m_link_two_entries,7,0);
-       m_small_grid_layout->addWidget(m_delete_selected_files_button,8,0);
-       m_small_grid_layout->addWidget(m_check_biblio_for_shared_key_button,9,0);
-       m_small_grid_layout->addWidget(m_check_biblio_for_shared_size_button,10,0);
-       m_small_grid_layout->addWidget(m_check_biblio_for_shared_filename_button,11,0);
-       m_current_list = nullptr;
+    m_small_grid_layout->addWidget(m_create_new_list_button,0,0);
+    m_small_grid_layout->addWidget(m_new_list_name_widget,0,1);
+    m_small_grid_layout->addWidget(m_create_new_bibentry_button,1,0);
+    m_small_grid_layout->addWidget(m_proposed_new_title_widget,1,1);
+    m_small_grid_layout->addWidget(m_generate_new_filename_button,2,0);
+    m_small_grid_layout->addWidget(m_delete_size_on_selected_biblio_entries,3,0);
+    m_small_grid_layout->addWidget(m_change_root_directory,4,0);
+    m_small_grid_layout->addWidget(m_save_biblio_file_button,5,0);
+    m_small_grid_layout->addWidget(m_add_to_list_button,6,0);
+    m_small_grid_layout->addWidget(m_link_two_entries,7,0);
+    m_small_grid_layout->addWidget(m_delete_selected_files_button,8,0);
+    m_small_grid_layout->addWidget(m_check_biblio_for_shared_key_button,9,0);
+    m_small_grid_layout->addWidget(m_check_biblio_for_shared_size_button,10,0);
+    m_small_grid_layout->addWidget(m_check_biblio_for_shared_filename_button,11,0);
+    m_current_list = nullptr;
 
-   m_rightSplitter->addWidget(m_listNamesWidget);
-   m_rightSplitter->addWidget(m_listWidget);
-   m_rightSplitter->addWidget(m_filePrefixTableWidget);
-   m_rightSplitter->addWidget(m_ToK_view);
-   m_rightSplitter->addWidget(m_middle_right_widget);
-   m_rightSplitter->addWidget(m_directoryView);
+    m_rightSplitter->addWidget(m_listNamesWidget);
+    m_rightSplitter->addWidget(m_listWidget);
+    m_rightSplitter->addWidget(m_ToK_view);
+    m_rightSplitter->addWidget(m_middle_right_widget);
+    m_rightSplitter->addWidget(m_directoryView);
 }
 
 Widget::Widget(QWidget *parent)
@@ -162,12 +154,6 @@ Widget::Widget(QWidget *parent)
     m_center_entry_view->setMaximumWidth(1400);
     m_center_entry_view->setMinimumWidth(500);
 
-
-    m_filePrefixTableWidget = new QTableWidget(this);
-    m_filePrefixTableWidget->setMinimumWidth(200);
-    m_filePrefixTableWidget->setMaximumWidth(500);
-    m_filePrefixTableWidget->setColumnWidth(0,40);
-    m_filePrefixTableWidget->setColumnWidth(1,40);
     m_directoryView = new QTreeView;
 
     // for the selected entry
@@ -177,7 +163,7 @@ Widget::Widget(QWidget *parent)
 
     // Models
     onboard_pdf_model = new EntriesModel(this);
-    same_size_files_model = new EntriesModel(this);
+    m_same_size_files_model = new EntriesModel(this);
     m_biblioModel = new BiblioTableModel(this);
     m_ToK_model = new ToK_model(this);
     read_ToK_from_json("pdf_manager_tok_init.json");
@@ -429,7 +415,6 @@ Widget::~Widget()
 }
 
 void Widget::create_or_update_biblio_entry(){
-
     if (! m_biblioModel->contains(m_selected_biblio_entry) ) {
         create_new_biblio_entry();
     }
@@ -450,40 +435,10 @@ void Widget::create_new_biblio_entry(){
 void Widget::update_selected_biblio_entry(){
     for (int row = 0; row < m_bibliography_labels.count(); row++){
         QString label = m_bibliography_labels[row];
-        //m_selected_entry->set_info(label,  )
     }
-    /*
-    Entry* new_entry, *entry_onboard;
-    //QString new_keywords = m_middle_table_wdget->item(6,1)->text();
-    QString full_old_name = entry_onboard->get_filenamefull();
-    QString full_new_name = entry_onboard->get_folder() + "/" + new_name;
-
-    new_entry->set_filenameStem(m_proposed_new_title_widget->text());
-    //new_entry->set_filenameFull(full_new_name);
-    //new_entry->set_author(author);
-    //new_entry->set_title(title);
-    //new_entry->set_year(year);
-    //new_entry->set_key(new_name);
-    //new_entry->set_keywords(new_keywords);
-    //new_entry->set_size(entry_onboard->get_size());
-    new_entry->add_to_onboard_entries(entry_onboard);
-    //update_data_by_fullfilename(full_old_name, full_new_name,entry_onboard);
-    m_biblioModel->update_data_by_fullfilename(full_old_name, full_new_name,entry_onboard);
-    update_files_onboard_by_fullfilename(full_old_name, full_new_name, entry_onboard);
-    update_files_onboard_by_filenamestem(old_filestem, new_name, entry_onboard);
-
-    m_biblioModel->insertRows(0,1);
-    m_biblioModel->replace_entry(0,new_entry);
-    m_topTableView->showRow(0);
-    new_entry->add_to_onboard_entries(entry_onboard);
-    m_files_onboard_by_filenamestem.remove(old_filestem);
-    m_files_onboard_by_filenamestem.insert(new_name, new_entry);
-    m_files_onboard_by_filenamefull[full_new_name] = new_entry;
-    //qDebug() << 899 << entry->display();
-    */
 }
 
-
+/*  Control K   */
 void Widget::add_prefix_to_selected_onboard_filename(){
     Entry* entry = m_selected_onboard_entry;
     if (!entry) {return;}
@@ -506,7 +461,7 @@ void Widget::add_prefix_to_selected_onboard_filename(){
 }
 
 
-
+/*   was called by function change_selected_filename, but no longer  */
 void Widget::change_onboard_filename(QString new_full_filename){
 /*    Purpose is to change the onboard_filename.
  *    It can be changed (i) by adding the "prefix" from the ToK, or
@@ -549,6 +504,7 @@ void Widget::change_onboard_filename(QString new_full_filename){
     set_filename_item_bottom_widget(m_selected_row_in_bottom_table, new_filename_stem);
 }
 
+/*  called by "change_onboard_filename"   */
 void Widget::change_full_filename(QString old_name, QString new_name){
     if (old_name == new_name){
         QMessageBox msgBox;
@@ -558,6 +514,8 @@ void Widget::change_full_filename(QString old_name, QString new_name){
     QFile file(old_name);
     file.rename(old_name, new_name);
 }
+
+/*  Called by "change_onboard_filename"  */
 QString Widget::create_new_filename_stem(QString old_stem_name){
     QString prefix;
     if (m_selected_ToK_item){
@@ -982,16 +940,14 @@ void Widget::link_top_and_bottom_entries(){
    int size = m_selected_onboard_entry->get_size();
 
    qDebug() << 1303 << "row"<< m_entry_in_top_table << "size" << size;
-   m_entry_in_top_table->set_size(size);
-   m_entry_in_top_table->add_to_onboard_entries(m_selected_onboard_entry);
-   m_entry_in_top_table->set_filenameStem(m_selected_onboard_entry->get_filenamestem());
-   m_entry_in_top_table->set_folder(m_selected_onboard_entry->get_folder());
-   m_entry_in_top_table->set_filenameFull(m_selected_onboard_entry->get_filenamefull());
-   m_entry_in_top_table->add_keywords(m_middle_table_wdget);
-   m_entry_in_top_table->set_info("date", m_selected_onboard_entry->get_info("date"));
-   m_entry_in_top_table->set_info("lastread", m_selected_onboard_entry->get_info("lastread"));
-
-
+   m_selected_biblio_entry->set_size(size);
+   m_selected_biblio_entry->add_to_onboard_entries(m_selected_onboard_entry);
+   m_selected_biblio_entry->set_filenameStem(m_selected_onboard_entry->get_filenamestem());
+   m_selected_biblio_entry->set_folder(m_selected_onboard_entry->get_folder());
+   m_selected_biblio_entry->set_filenameFull(m_selected_onboard_entry->get_filenamefull());
+   m_selected_biblio_entry->add_keywords(m_middle_table_wdget);
+   m_selected_biblio_entry->set_info("date", m_selected_onboard_entry->get_info("date"));
+   m_selected_biblio_entry->set_info("lastread", m_selected_onboard_entry->get_info("lastread"));
 }
 
 
@@ -1028,63 +984,6 @@ void display_entry_on_tablewidget(QTableWidget* table_widget, Entry* entry, QStr
         //labels.removeAll(label);
     }
 }
-/*
-void display_entry_on_tableview(QTableView* table_view, Entry* entry, QStringList & my_labels){
-    //table_view->setRowCount(my_labels.length());
-    //table_view->setColumnCount(4);
-    //table_view->clear();
-    //table_widget->setColumnWidth(1,500);
-    //table_view * item;
-    QStringList labels(my_labels);
-    int row_number (0);
-    foreach (QString label, labels){
-        QString value;
-        if (entry) {
-            value = entry->get_info(label);
-        } else { value = ""; }
-        item = new QTableWidgetItem(label);
-        table_widget->setItem(row_number,0,item);
-        if (label == "size" && entry){
-            item = new QTableWidgetItem(QString::number(entry->get_size()));
-        } else{
-            item = new QTableWidgetItem(value);
-        }
-        table_widget->setItem(row_number,1,item);
-        row_number++;
-        //labels.removeAll(label);
-    }
-}
-*/
-//void Widget::display_entry_on_middle_table(){
-//    Entry * entry = m_entry_in_middle_table;
-//    display_entry_on_tablewidget(m_middle_table_wdget, entry, m_bibliography_labels);/
-//}
-/*
-void Widget::put_bibitem_info_on_middle_table_widget(const QModelIndex & index){
-    Q_UNUSED(index);
-    m_entry_in_middle_table = m_entry_in_top_table;
-    display_entry_on_middle_table();
-    m_proposed_new_title_widget->clear();
-}
-*/
-/*
-void Widget::put_file_info_on_middle_table_widget(int bottom_widget_row){
-    QString filename(bottomTableWidget->item(bottom_widget_row,1)->text());
-    QString foldername(bottomTableWidget->item(bottom_widget_row,2)->text());
-    QString fullname = foldername + "/" + filename;
-    Entry* entry = m_files_onboard_by_filenamefull[fullname];
-    m_entry_in_bottom_table = entry;
-}
-*/
-/*
-void Widget::put_file_info_on_center_entry_view(Entry* entry){
-    //m_entry_in_middle_table = entry;
-    m_selected_entry  = entry;                                  // TODO
-    m_center_entry_model->change_entry(entry);
-    //display_entry_on_center_entry_view();
-    //m_proposed_new_title_widget->clear();
-}
-*/
 
 void Widget::put_file_info_on_entry_view(QModelIndex & current_model_index){
 

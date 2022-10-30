@@ -34,7 +34,7 @@ void Widget::on_top_table_view_clicked(const QModelIndex&index){
     int model_row = basic_index.row();
     qDebug() <<1035  << "model row" <<model_row ;
     Entry * entry = m_biblioModel->get_entries().at(model_row);
-    m_entry_in_top_table  = entry;
+    //m_entry_in_top_table  = entry;   // Oct 30 2022
 
     if (!m_selected_entry_model){
         m_selected_entry_model = new EntryModel(entry, m_bibliography_labels);

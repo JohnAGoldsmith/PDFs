@@ -89,30 +89,30 @@ public:
 private:
     bool                    m_isDirty; // true means that BiblioTableModel has changed since last saving of it.
 
-    // Models and views
+    /* Models and views   */
+
     //MySortFilterProxyModel* proxyModel_for_topTableView;
     BiblioTableModel        * m_biblioModel;
-    QFileSystemModel        * file_system_model;
     EntriesModel            * onboard_pdf_model;
-    EntriesModel            * same_size_files_model;
+
+    EntriesModel            * m_same_size_files_model;
     EntryMatchModel         * m_entry_match_model;
     QFileSystemModel        * m_file_system_model;
-    //EntryModel            * m_center_entry_model;
-    QTableView                m_center_entry_model;
     ToK_model               * m_ToK_model;
+    EntryModel              * m_selected_entry_model;
 
+    /*      Entry       */
     Entry                   * m_selected_biblio_entry;
     Entry                   * m_selected_onboard_entry;
-    EntryModel              * m_selected_entry_model;
     TreeItem                * m_selected_ToK_item;
     Entry                   * m_entry_in_top_table;  // change this to curent selection in model;
     Entry                   * m_entry_in_middle_table; // ditto
-    //Entry                   * m_entry_in_bottom_table; // ditto
 
     int                      m_number_of_sceen_states;
     int                      m_screen_state;
 
     // GUI
+
     QTableView                * m_topTableView;
     QTableView                * m_topTableView2;
     EntryMatchView            * m_entry_match_view;
