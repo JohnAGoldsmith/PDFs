@@ -163,11 +163,11 @@ QVariant EntriesModel::data(const QModelIndex & index, int role )const
            return QVariant(entry->get_size());
            break;
         case 4:
-           return QVariant(entry->get_info("date_created" ));
+           return QVariant(entry->get_info("date" ));
            break;
 
         default:
-            return  QVariant(entry->get_info("last_accessed"));
+            return  QVariant(entry->get_info("lastread"));
         }
     }
     if (role == Qt::BackgroundRole && entry->if_linked_to_biblio_entry()){

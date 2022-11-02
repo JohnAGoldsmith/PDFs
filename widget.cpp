@@ -881,6 +881,31 @@ void Widget::set_new_root_folder(){
     m_settings.setValue("rootfoldername", foldername);
 }
 
+void Widget::link_top_and_bottom_entries(){         // to do todo remove this? &&&
+   if (! m_selected_biblio_entry) {\
+       qDebug() << 1301 << "Can't link entries, because no item in top view has been selected.";
+       return;
+   }
+   if (! m_selected_onboard_entry) {\
+       qDebug() << 1301 << "Can't link entries, because no item in bottom view has been selected.";
+       return;
+   }
+   int column_for_size = 5;
+   int column_for_key = 3;
+   int size = m_selected_onboard_entry->get_size();
+
+   qDebug() << 1303 << "row"<< m_entry_in_top_table << "size" << size;
+   m_selected_biblio_entry->set_size(size);
+   m_selected_biblio_entry->add_to_onboard_entries(m_selected_onboard_entry);
+   m_selected_biblio_entry->set_filenameStem(m_selected_onboard_entry->get_filenamestem());
+   m_selected_biblio_entry->set_folder(m_selected_onboard_entry->get_folder());
+   m_selected_biblio_entry->set_filenameFull(m_selected_onboard_entry->get_filenamefull());
+   //m_selected_biblio_entry->add_keywords(m_middle_table_wdget);
+   m_selected_biblio_entry->set_info("date", m_selected_onboard_entry->get_info("date"));
+   m_selected_biblio_entry->set_info("lastread", m_selected_onboard_entry->get_info("lastread"));
+}
+
+
 void Widget::link_biblio_entry_and_onboard_entry(Entry* biblio, Entry* onboard){
     biblio->add_to_onboard_entries(onboard);
     onboard->add_to_bib_entries(biblio);
@@ -889,6 +914,7 @@ void Widget::link_biblio_entry_and_onboard_entry(Entry* biblio, Entry* onboard){
     biblio->set_folder(onboard->get_folder());
     biblio->set_info("date", onboard->get_info("date"));
     biblio->set_info("lastread", onboard->get_info("lastread"));
+    biblio->set_size(onboard->get_size());
 }
 void Widget::link_biblio_entries_and_onboard_entries_from_size( ){
     if (m_biblioModel->get_entries().count() == 0 || m_onboard_pdf_model->number_of_entries() == 0) {
@@ -970,31 +996,6 @@ void Widget::link_biblio_entries_and_onboard_entries_by_filename(){
     }
     emit m_biblioModel->dataChanged(QModelIndex(), QModelIndex());
 
-}
-
-
-void Widget::link_top_and_bottom_entries(){         // to do todo remove this? &&&
-   if (! m_selected_biblio_entry) {\
-       qDebug() << 1301 << "Can't link entries, because no item in top view has been selected.";
-       return;
-   }
-   if (! m_selected_onboard_entry) {\
-       qDebug() << 1301 << "Can't link entries, because no item in bottom view has been selected.";
-       return;
-   }
-   int column_for_size = 5;
-   int column_for_key = 3;
-   int size = m_selected_onboard_entry->get_size();
-
-   qDebug() << 1303 << "row"<< m_entry_in_top_table << "size" << size;
-   m_selected_biblio_entry->set_size(size);
-   m_selected_biblio_entry->add_to_onboard_entries(m_selected_onboard_entry);
-   m_selected_biblio_entry->set_filenameStem(m_selected_onboard_entry->get_filenamestem());
-   m_selected_biblio_entry->set_folder(m_selected_onboard_entry->get_folder());
-   m_selected_biblio_entry->set_filenameFull(m_selected_onboard_entry->get_filenamefull());
-   //m_selected_biblio_entry->add_keywords(m_middle_table_wdget);
-   m_selected_biblio_entry->set_info("date", m_selected_onboard_entry->get_info("date"));
-   m_selected_biblio_entry->set_info("lastread", m_selected_onboard_entry->get_info("lastread"));
 }
 
 

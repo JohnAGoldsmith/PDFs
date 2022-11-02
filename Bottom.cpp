@@ -84,10 +84,6 @@ void Widget::search_folders_for_pdf()
     delete m_onboard_pdf_model;
     m_onboard_pdf_model = new EntriesModel(this);
     m_bottomTableView->setModel(m_onboard_pdf_model->getProxyModel());
-
-    //m_files_onboard_by_filenamefull.clear();
-    //m_files_onboard_by_filenamestem.clear();
-    //m_files_onboard_by_size.clear();
     QString targetStr = ".pdf"; // What we search for
     QFileInfoList hitList; // Container for matches
     QDirIterator it(m_root_folder, QDirIterator::Subdirectories);
@@ -104,20 +100,10 @@ void Widget::search_folders_for_pdf()
         }
      foreach (QFileInfo hit, hitList) {
         Entry * entry = new Entry(hit);
-        /*
-        m_files_onboard_by_filenamestem.insert(entry->get_filenamestem(), entry);
-        m_files_onboard_by_filenamefull.insert(entry->get_filenamefull(), entry);
-        m_files_onboard_by_size.insert(entry->get_size(), entry);
-        */
-
-
-        // but this isn't doing enough stuff yet...
         m_onboard_pdf_model->addEntry(entry);
-
     }
     m_bottomTableView->resizeColumnsToContents();
     m_bottomTableView->sortByColumn(0);
-
 
     // this is done in a different function ::  todo to do
     if (m_biblioModel){
