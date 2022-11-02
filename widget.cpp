@@ -241,8 +241,7 @@ Widget::Widget(QWidget *parent)
     // Double clicks
     connect(m_topTableView, &QTableView::doubleClicked,
              this , &Widget::on_top_table_view_doubleClicked);
-    //connect(m_middle_table_wdget,SIGNAL(cellDoubleClicked(int,int)) ,
-    //        this , SLOT(on_middle_table_widget_doubleClicked(int,int)));
+
     //    connect(m_bottomTableView,SIGNAL(cellDoubleClicked(int,int)) ,
     //            this , SLOT(on_bottom_table_view_doubleClicked(int,int)));
     connect(m_bottomTableView, &QAbstractItemView::doubleClicked,
@@ -326,12 +325,6 @@ Widget::Widget(QWidget *parent)
     m_keyCtrlZ->setKey(Qt::CTRL + Qt::Key_Z);
     connect(m_keyCtrlZ, SIGNAL(activated()), this, SLOT(link_top_and_bottom_entries()));
 
-    /*
-    m_keyCtrlSlash = new QShortcut(this);
-    m_keyCtrlSlash->setKey(Qt::CTRL + Qt::Key_Slash);
-    connect(m_keyCtrlSlash, SIGNAL(activated()), this, SLOT(toggle_screens()));
-    */
-
     m_keyCtrlComma = new QShortcut(this);
     m_keyCtrlComma->setKey(Qt::CTRL + Qt::Key_Comma);
     connect(m_keyCtrlComma, SIGNAL(activated()), this, SLOT(toggle_screens_backwards()));
@@ -339,19 +332,12 @@ Widget::Widget(QWidget *parent)
     m_keyCtrlPeriod = new QShortcut(this);
     m_keyCtrlPeriod->setKey(Qt::CTRL + Qt::Key_Period);
     connect(m_keyCtrlPeriod, SIGNAL(activated()), this, SLOT(toggle_screens()));
-
-
-    //m_keyCtrl1 = new QShortcut(this);
-    //m_keyCtrl1->setKey(Qt::CTRL + Qt::Key_1);
-    //connect(m_keyCtrl1, SIGNAL(activated()), this, SLOT(toggle_right_side()));
 }
 
 bool Widget::biblio_model_contains(Entry* entry) {
     return m_biblioModel->contains(entry);
 }
 void Widget::on_bottom_table_view_doubleClicked(QModelIndex index){
-
-
 
     QModelIndex underlying_index = m_onboard_pdf_model->m_proxyModel->mapToSource(index);
     int model_row = underlying_index.row();
@@ -360,9 +346,6 @@ void Widget::on_bottom_table_view_doubleClicked(QModelIndex index){
 
     QString filename =  entry->get_filenamefull();
     QDesktopServices::openUrl(QUrl::fromLocalFile(filename));
-
-    //QString filename =  m_entry_in_middle_table->get_filenamefull();
-    //QDesktopServices::openUrl(QUrl::fromLocalFile(filename));
 }
 
 
@@ -377,14 +360,6 @@ void Widget::on_ToK_view_selection_changed(){
 
 
 
-void Widget::on_middle_table_widget_doubleClicked(int row,int column){
-    if (! m_entry_in_middle_table ){
-        qDebug() << "No entry selected on middle view";
-    }
-    QString filename =  m_entry_in_middle_table->get_filenamefull();
-    QDesktopServices::openUrl(QUrl::fromLocalFile(filename));
-
-}
 
 void Widget::Control_S(){
     if (m_screen_state == 1) {            // the user is updating the onboard-entry to make a biblio entry...
@@ -492,10 +467,10 @@ void Widget::change_onboard_filename(QString new_full_filename){
 
     change_full_filename(old_full_filename, folder + "\\"  + new_full_filename);
     //(ii.)
-    entry->set_filenameFull(new_full_filename);
+    entry->set_filename_full(new_full_filename);
     QFileInfo fileInfo2(new_full_filename);
     QString new_filename_stem = fileInfo2.fileName();
-    entry->set_filenameStem(new_filename_stem);
+    entry->set_filename_stem(new_filename_stem);
     // iii.
     update_files_onboard_by_fullfilename(old_full_filename, new_full_filename, entry );
     update_files_onboard_by_filenamestem(old_filename_stem, new_filename_stem, entry );
@@ -836,8 +811,8 @@ void Widget::promote_file_from_preferred_location(Entry* entry){
               !(entry->get_filenamestem() == stem_name) ){
                 qDebug() << 416 << "We found an occurrence of the file in the preferred folder but its stem name is different." << entry->get_filenamestem() << stem_name;
             }
-            entry->set_filenameFull(this_filename);
-            entry->set_filenameStem(stem_name);
+            entry->set_filename_full(this_filename);
+            entry->set_filename_stem(stem_name);
             entry->set_info("folder", foldername);
             break;
         } else{
@@ -897,9 +872,9 @@ void Widget::link_top_and_bottom_entries(){         // to do todo remove this? &
    qDebug() << 1303 << "row"<< m_entry_in_top_table << "size" << size;
    m_selected_biblio_entry->set_size(size);
    m_selected_biblio_entry->add_to_onboard_entries(m_selected_onboard_entry);
-   m_selected_biblio_entry->set_filenameStem(m_selected_onboard_entry->get_filenamestem());
+   m_selected_biblio_entry->set_filename_stem(m_selected_onboard_entry->get_filenamestem());
    m_selected_biblio_entry->set_folder(m_selected_onboard_entry->get_folder());
-   m_selected_biblio_entry->set_filenameFull(m_selected_onboard_entry->get_filenamefull());
+   m_selected_biblio_entry->set_filename_full(m_selected_onboard_entry->get_filenamefull());
    //m_selected_biblio_entry->add_keywords(m_middle_table_wdget);
    m_selected_biblio_entry->set_info("date", m_selected_onboard_entry->get_info("date"));
    m_selected_biblio_entry->set_info("lastread", m_selected_onboard_entry->get_info("lastread"));
@@ -910,7 +885,7 @@ void Widget::link_biblio_entry_and_onboard_entry(Entry* biblio, Entry* onboard){
     biblio->add_to_onboard_entries(onboard);
     onboard->add_to_bib_entries(biblio);
     //biblio->set_filenameFull(onboard->get_filenamefull());
-    biblio->set_filenameStem(onboard->get_filenamestem());
+    biblio->set_filename_stem(onboard->get_filenamestem());
     biblio->set_folder(onboard->get_folder());
     biblio->set_info("date", onboard->get_info("date"));
     biblio->set_info("lastread", onboard->get_info("lastread"));

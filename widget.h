@@ -254,7 +254,6 @@ private slots:
     void match_filestems() ;
     void on_top_table_view_clicked(const QModelIndex&);
     void on_top_table_view_doubleClicked(const QModelIndex &);
-    void on_middle_table_widget_doubleClicked(int,int);
     void on_bottom_table_view_clicked(const QModelIndex&);
     void on_bottom_table_view_doubleClicked(QModelIndex);
     void on_middle_widget_item_changed(int row, int column);
@@ -328,6 +327,7 @@ class Entry {
     int                     size;
     bool                    m_selected_for_deletion;
     //QDateTime m_creation_time;`
+    QString                 m_filename_full;
     QStringList             m_multiple_filenamefulls;
     QStandardItem *         m_top_view_size_item;
     QStandardItem *         m_top_view_filename_item;
@@ -381,8 +381,8 @@ public:
     void set_title(QString s)  {info["title"] = s;}
     void set_author(QString s) {info["author"] = s;}
     void set_year(QString s) {info["year"] = s;}
-    void set_filenameFull(QString s);// {info["filenamefull"] = s;}
-    void set_filenameStem(QString s) {info["filenamestem"] = s;}
+    void set_filename_full(QString s);// {info["filenamefull"] = s;}
+    void set_filename_stem(QString s) {info["filenamestem"] = s;}
     void set_folder(QString folder) {info["folder"] = folder;}
     void set_size(int s) {size = s;}
     bool selected_for_deletion() {return m_selected_for_deletion;}
@@ -498,7 +498,7 @@ class EntriesModel: public QAbstractTableModel{
     QMultiMap<int, Entry*>      m_data_by_size_multiple;
 
 
-    QMap<QString, Entry*>       m_map_by_filenamefull;
+    QMap<QString, Entry*>       m_data_by_filenamefull;
 
 
 
@@ -523,12 +523,14 @@ public:
     QList<Entry*> * get_entries(){return & m_entries;}
     Entry*          get_entry_with_filenamestem(QString stem) {return m_data_by_filename_stem.value(stem);}
     QList<Entry*>   get_entries_with_filenamestem(QString stem) {return m_data_by_filename_stem_multiple.values(stem);}
+    Entry*          get_entry_by_full_filename(QString filename) {return m_data_by_filenamefull.value(filename);}
     bool            contains_entry_with_filenamestem(QString stem) {return m_data_by_filename_stem.contains(stem);}
     bool            contains_multiple_entries_with_filenamestem(QString stem){return m_data_by_filename_stem_multiple.contains(stem);}
     bool            contains(Entry * entry) { return m_entries.contains(entry);}
 
     void            register_entry(Entry*);
     void            register_entry_by_size(Entry*);
+    void            register_entry_by_filename_full(Entry*);
 
     int             get_count_of_multiply_used_sizes() {return m_data_by_size_multiple.keys().count();}
     Entry*          get_entry_by_size(int size) {return m_data_by_size[size];}

@@ -49,7 +49,8 @@ Entry::Entry (QFileInfo& info){
     QString filenamefull = folder + "/" + filenameStem;
     int     size = info.size();
     set_folder(folder);
-    set_filenameStem(filenameStem);
+    set_filename_stem(filenameStem);
+    set_info("filenamefull", filenamefull);
     set_info("date", info.lastModified().date().toString("yyyy MM dd"));
     set_info("lastread", info.lastRead().date().toString("yyyy MM dd"));
     set_size(size);
@@ -79,8 +80,8 @@ Entry::Entry(QString stem, QString folder, int this_size)
   size = this_size;
   QString filenameFull = folder + "/" + stem;
   set_folder(folder);
-  set_filenameStem(stem);
-  set_filenameFull(filenameFull);
+  set_filename_stem(stem);
+  set_filename_full(filenameFull);
   /*
   m_top_view_size_item = NULL;
   m_top_view_filename_item = NULL;
@@ -105,7 +106,7 @@ void Entry::set_info(QString this_key,QString this_value)
         info.insert(this_key, this_value);
     }
 }
-void Entry::set_filenameFull(QString s) {
+void Entry::set_filename_full(QString s) {
     if (get_filenamefull().length() == 0){
         info["filenamefull"] = s;
     } else{
@@ -168,9 +169,8 @@ QString Entry::get_filenamefull() {
     if (info.contains("filenamefull")){
         filenamefull = info["filenamefull"];
     }
-    {if (filenamefull.length() > 0){
+    if (filenamefull.length() > 0){
         return filenamefull;
-        }
     }
     if (info["filenamestem"].length()>0 &&
          info["folder"].length() > 0){

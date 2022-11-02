@@ -31,41 +31,17 @@ class List;
 /*              BOTTOM VIEW                 */
 // This should really be a function of the lower widget, if I subclass it.
 // Currently this is only used by a function no longer used, one that reads the old format. It should be removed.
-/*
-void::Widget::mark_file_as_indexed(QString filename){
-    if (! filename.endsWith(".pdf")){
-        filename += ".pdf";
-    }
-    for (int rowno = 0; rowno < bottomTableWidget->rowCount(); rowno++){
-        QString this_file_name = bottomTableWidget->item(rowno,0)->text() +
-                bottomTableWidget->item(rowno,1)->text();
-        if (filename == this_file_name){
-            QTableWidgetItem * item = bottomTableWidget->item(rowno,2);
-            item->setForeground(QBrush(QColor(0,255, 255)));
-        }
-    }
-}
-*/
 
-/*
-void Widget::on_bottom_table_widget_clicked(const QModelIndex& index){
-    //convert to Entry*, then pass a signal
-    int row = index.row();
-    QString  stem =   bottomTableWidget->item(row,1)->text();
-    QString filename = bottomTableWidget->item(row,2)->text() + "/" + stem;
-    Entry * entry = m_files_onboard_by_filenamefull[filename];
-    //m_selected_row_in_bottom_table = index.row();
-    //put_file_info_on_middle_table_widget(m_selected_row_in_bottom_table); // this should send the entry, not the row, no?
-    put_file_info_on_middle_table_widget(entry);
-}
-*/
+
 void Widget::on_bottom_table_view_clicked(const QModelIndex& index){
     if (m_onboard_pdf_model->number_of_entries() < 1) {return;}
+    //QModelIndex index2 = m_onboard_pdf_model->getProxyModel()->mapToSource( index  );
     int row =  m_onboard_pdf_model->getProxyModel()->mapToSource( index  ).row() ;
     if (row < 0) {return;}
+    //Entry * entry_2 = static_cast<Entry*>(index2.internalPointer());
     QString  stem =   m_onboard_pdf_model->index(row,1).data().toString();
     QString filename = m_onboard_pdf_model->index(row,2).data().toString() + "/" + stem;
-    Entry * entry = m_files_onboard_by_filenamefull[filename];
+    Entry * entry = m_onboard_pdf_model->get_entry_by_full_filename(filename);
     if (!m_selected_entry_model){
         m_selected_entry_model = new EntryModel(entry, m_bibliography_labels);
     } else {
@@ -74,10 +50,7 @@ void Widget::on_bottom_table_view_clicked(const QModelIndex& index){
     }
 }
 
-void Entry::remove_bottom_view_links(){
-    m_bottom_view_size_item = nullptr;
-    m_bottom_view_filename_item = nullptr;
-    }
+
 void Widget::search_folders_for_pdf()
 {
     // For each entry in the top model, remove the link to items in the bottom widget:
@@ -110,15 +83,10 @@ void Widget::search_folders_for_pdf()
         link_biblio_entries_and_onboard_entries_from_size(); // TODO: clear out any previous linkings before doing this;
         // link_top_and_bottom_entries_from_filename(); // TODO: clear out any previous linkings before doing this;
     }
-
-
-
 }
-
 void Widget::set_filename_item_bottom_widget(int row, QString new_name){
     QTableWidgetItem * item = m_bottom_table_widget->item(row,1);
 }
-
 void Widget::delete_selected_files(){
     // TODO why the rowcount -1 ? Check for presence of entries in the widget.
     for(int row = 0; row < m_bottom_table_widget->rowCount()-1; row++){
@@ -134,7 +102,6 @@ void Widget::delete_selected_files(){
     }
     m_bottom_table_widget->clear();
     search_folders_for_pdf();
-
 }
 void Widget::show_files_with_same_size(){
     QStringList horizontal_headers;

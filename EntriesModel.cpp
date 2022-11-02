@@ -75,7 +75,10 @@ void EntriesModel::addEntry(Entry * entry){
 }
 void EntriesModel::register_entry(Entry* entry){
     register_entry_by_size(entry);
-
+    register_entry_by_filename_full(entry);
+}
+void EntriesModel::register_entry_by_filename_full(Entry* entry){
+    m_data_by_filenamefull[entry->get_filenamefull()] = entry;
 }
 void EntriesModel::register_entry_by_size(Entry * entry){
     int size = entry->get_size();
@@ -112,7 +115,7 @@ bool EntriesModel::setData(const QModelIndex &index, const QVariant & value, int
         if (index.column() == 1){
             switch (index.row()) {
                 case 0:{
-                    entry->set_filenameStem(value.toString());
+                    entry->set_filename_stem(value.toString());
                     break;
                 }
                 case 1:{
