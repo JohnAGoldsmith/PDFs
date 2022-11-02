@@ -39,7 +39,18 @@ EntriesModel::EntriesModel(Widget * main_widget){
 EntriesModel::~EntriesModel(){
 
 }
-
+bool EntriesModel::contains_size(int this_size){
+    if (m_data_by_size.contains(this_size)) {
+        return true;
+    }
+    return false;
+}
+bool EntriesModel::contains_filename_stem(QString stem){
+    if (m_data_by_filename_stem.contains(stem)){
+        return true;
+    }
+    return false;
+}
 QVariant EntriesModel::headerData(int section, Qt::Orientation orientation, int role) const{
   QStringList horizontal_headers;
   horizontal_headers << " " << "File name" << "Folder" << "Size" << "Date created" << "Date accessed";
@@ -60,7 +71,27 @@ void EntriesModel::addEntry(Entry * entry){
     beginInsertRows(QModelIndex(), m_entries.size(), m_entries.size());
     m_entries.append(entry);
     endInsertRows(); //notify views that you're done with modifying the underlying data
- }
+    register_entry(entry);
+}
+void EntriesModel::register_entry(Entry* entry){
+    register_entry_by_size(entry);
+
+}
+void EntriesModel::register_entry_by_size(Entry * entry){
+    int size = entry->get_size();
+    if (size == 0) {return;}
+    if (m_data_by_size_multiple.contains(size)){
+        m_data_by_size_multiple.insert(size, entry);
+    } else {
+        if (m_data_by_size.contains(size) ) {
+              m_data_by_size_multiple.insert(size, m_data_by_size[size]);
+              m_data_by_size_multiple.insert(size, entry);
+            }
+           else {
+              m_data_by_size.insert(size, entry);
+           }
+    }
+}
 int EntriesModel::rowCount(const QModelIndex &index ) const
 {
 //   qDebug() << 66 << m_entries.count();
@@ -136,8 +167,13 @@ QVariant EntriesModel::data(const QModelIndex & index, int role )const
            break;
 
         default:
-            return  QVariant( "default");
+            return  QVariant(entry->get_info("last_accessed"));
         }
+    }
+    if (role == Qt::BackgroundRole && entry->if_linked_to_biblio_entry()){
+            QColor col1(0,255,255);
+            QVariant var2 = col1;
+            return var2;
     }
 
      // end of role 0, which is displayed material

@@ -35,12 +35,24 @@ Entry::Entry(){
     //m_creation_time = QDateTime(QDate::currentDate(), QTime::currentTime());
      m_selected_for_deletion = false;
      m_temporary_color = QColorConstants::Black;
+
 }
 Entry::Entry(const Entry& entry){
     size = entry.size;
     foreach (QString label, entry.info.keys()){
         info[label] = entry.info[label];
     }
+}
+Entry::Entry (QFileInfo& info){
+    QString filenameStem = info.fileName();
+    QString folder = info.dir().absolutePath();
+    QString filenamefull = folder + "/" + filenameStem;
+    int     size = info.size();
+    set_folder(folder);
+    set_filenameStem(filenameStem);
+    set_info("date", info.lastModified().date().toString("yyyy MM dd"));
+    set_info("lastread", info.lastRead().date().toString("yyyy MM dd"));
+    set_size(size);
 }
 Entry::~Entry(){
 
@@ -78,7 +90,14 @@ Entry::Entry(QString stem, QString folder, int this_size)
   //m_creation_time = QDateTime(QDate::currentDate(), QTime::currentTime());
    m_selected_for_deletion = false;
 }
-
+bool Entry::if_linked_to_biblio_entry(){
+    if (m_links_to_bib_entries.size() > 0) {return true;}
+    return false;
+}
+bool Entry::if_linked_to_onboard_entry(){
+    if (m_links_to_on_board_entries.size() > 0){return true;}
+    return false;
+}
 void Entry::set_info(QString this_key,QString this_value)
 {   if (this_key == "size"){
         size = this_value.toInt();
@@ -134,6 +153,9 @@ void Entry::mark_bottom_view_entry_as_matched_to_biblio(){
      item_bottom->setForeground(Qt::GlobalColor(Qt::darkBlue));
 
 }
+
+
+// this should be removed entirely, and put into the view itself, from the model.
 void Entry::color_bottom_view_item_for_size(){
     m_bottom_view_size_item->setForeground(QBrush(QColor(Qt::blue)));
     m_bottom_view_filename_item->setForeground(QBrush(QColor(Qt::blue)));

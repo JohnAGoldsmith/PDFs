@@ -60,11 +60,11 @@ void Widget::on_bottom_table_widget_clicked(const QModelIndex& index){
 }
 */
 void Widget::on_bottom_table_view_clicked(const QModelIndex& index){
-    if (onboard_pdf_model->number_of_entries() < 1) {return;}
-    int row =  onboard_pdf_model->getProxyModel()->mapToSource( index  ).row() ;
+    if (m_onboard_pdf_model->number_of_entries() < 1) {return;}
+    int row =  m_onboard_pdf_model->getProxyModel()->mapToSource( index  ).row() ;
     if (row < 0) {return;}
-    QString  stem =   onboard_pdf_model->index(row,1).data().toString();
-    QString filename = onboard_pdf_model->index(row,2).data().toString() + "/" + stem;
+    QString  stem =   m_onboard_pdf_model->index(row,1).data().toString();
+    QString filename = m_onboard_pdf_model->index(row,2).data().toString() + "/" + stem;
     Entry * entry = m_files_onboard_by_filenamefull[filename];
     if (!m_selected_entry_model){
         m_selected_entry_model = new EntryModel(entry, m_bibliography_labels);
@@ -81,16 +81,14 @@ void Entry::remove_bottom_view_links(){
 void Widget::search_folders_for_pdf()
 {
     // For each entry in the top model, remove the link to items in the bottom widget:
-    delete onboard_pdf_model;    
-    onboard_pdf_model = new EntriesModel(this);
-    m_bottomTableView->setModel(onboard_pdf_model->getProxyModel());
+    delete m_onboard_pdf_model;
+    m_onboard_pdf_model = new EntriesModel(this);
+    m_bottomTableView->setModel(m_onboard_pdf_model->getProxyModel());
 
-    m_files_onboard_by_filenamefull.clear();
-    m_files_onboard_by_filenamestem.clear();
-    m_files_onboard_by_size.clear();
+    //m_files_onboard_by_filenamefull.clear();
+    //m_files_onboard_by_filenamestem.clear();
+    //m_files_onboard_by_size.clear();
     QString targetStr = ".pdf"; // What we search for
-    QString filenameStem,  folder, filenamefull;
-    int size;
     QFileInfoList hitList; // Container for matches
     QDirIterator it(m_root_folder, QDirIterator::Subdirectories);
     while (it.hasNext()) {
@@ -104,32 +102,33 @@ void Widget::search_folders_for_pdf()
                 hitList.append(file);
             }
         }
-
      foreach (QFileInfo hit, hitList) {
-        Entry * entry = new Entry();
-        filenameStem = hit.fileName();
-        folder = hit.dir().absolutePath();
-        filenamefull = folder + "/" + filenameStem;
-        size = hit.size();
-        if (size == 0){
-            continue;
-        }
-        entry->set_folder(folder);
-        entry->set_filenameStem(filenameStem);
-        entry->set_info("date", hit.lastModified().date().toString("yyyy MM dd"));
-        entry->set_info("lastread", hit.lastRead().date().toString("yyyy MM dd"));
-        entry->set_size(size);
-        m_files_onboard_by_filenamestem.insert(filenameStem, entry);
-        m_files_onboard_by_filenamefull.insert(filenamefull, entry);
-        m_files_onboard_by_size.insert(size, entry);
-        onboard_pdf_model->addEntry(entry);  // this should replace a huge amount of other code above!
+        Entry * entry = new Entry(hit);
+        /*
+        m_files_onboard_by_filenamestem.insert(entry->get_filenamestem(), entry);
+        m_files_onboard_by_filenamefull.insert(entry->get_filenamefull(), entry);
+        m_files_onboard_by_size.insert(entry->get_size(), entry);
+        */
+
+
+        // but this isn't doing enough stuff yet...
+        m_onboard_pdf_model->addEntry(entry);
+
     }
     m_bottomTableView->resizeColumnsToContents();
     m_bottomTableView->sortByColumn(0);
-    link_top_and_bottom_entries_from_size(); // TODO: clear out any previous linkings before doing this;
 
-    // link_top_and_bottom_entries_from_filename(); // TODO: clear out any previous linkings before doing this;
+
+    // this is done in a different function ::  todo to do
+    if (m_biblioModel){
+        link_biblio_entries_and_onboard_entries_from_size(); // TODO: clear out any previous linkings before doing this;
+        // link_top_and_bottom_entries_from_filename(); // TODO: clear out any previous linkings before doing this;
+    }
+
+
+
 }
+
 void Widget::set_filename_item_bottom_widget(int row, QString new_name){
     QTableWidgetItem * item = m_bottom_table_widget->item(row,1);
 }

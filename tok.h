@@ -32,7 +32,6 @@ public:
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
     QList<Prefix_String*>         output(bool key_only_flag); // if key_only_flag is true, then the prefix is just the key, not the entire prefix. Key only is preferred for tableview
                                                     // the whole prefix is preferred for output to json file.
-    //QStringList         silent_output (bool key_only_flag); // differs from output in that it ignores the root node;
     //void addItem(const QString  & data);
     void addItem(   QString & prefix, const QString & data);
 

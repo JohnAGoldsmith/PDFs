@@ -93,7 +93,7 @@ private:
 
     //MySortFilterProxyModel* proxyModel_for_topTableView;
     BiblioTableModel        * m_biblioModel;
-    EntriesModel            * onboard_pdf_model;
+    EntriesModel            * m_onboard_pdf_model;
 
     EntriesModel            * m_same_size_files_model;
     EntryMatchModel         * m_entry_match_model;
@@ -127,14 +127,14 @@ private:
     QTreeView                 * m_directoryView;
     QTreeView                 * m_ToK_view;
 
-    QTableWidget            * m_middle_table_wdget;
+    //QTableWidget            * m_middle_table_wdget;
     QTableWidget            * m_bottom_table_widget;  // get rid of this
     QTableWidget            * m_bottom_table_widget2;
-    QTableWidget            * m_filePrefixTableWidget;
+    //QTableWidget            * m_filePrefixTableWidget;
     QWidget                 * m_middle_right_widget;
     PopUp                   * myPopUp;
-    QListWidget             * m_listWidget;
-    QListWidget             * m_listNamesWidget;
+    //QListWidget             * m_listWidget;
+    //QListWidget             * m_listNamesWidget;
     QLabel                  * m_proposed_new_title_label;
 
     QLineEdit   * m_proposed_new_title_widget;
@@ -175,9 +175,9 @@ private:
 
     /*   Lists         */
     QString              m_lists_complete_filename;
-    List *               m_current_list;
-    QList<List*>         m_Lists;
-    QMap<QString, List*> m_Lists_map;
+    //List *               m_current_list;
+    //QList<List*>         m_Lists;
+    //QMap<QString, List*> m_Lists_map;
 
     QShortcut *  m_keyCtrlA; // show files of same size
     QShortcut *  m_keyCtrlC; // change filename
@@ -205,21 +205,21 @@ private:
     bool biblio_model_contains(Entry* entry);
     void list_functionality();
 
-    //void display_entry_on_middle_table();  // this will be deleted
-    void display_entry_on_entry_model(EntryModel*, Entry*);
+    //void  display_entry_on_middle_table();  // this will be deleted
+    void    display_entry_on_entry_model(EntryModel*, Entry*);
     QList<Entry*>  get_entries_by_size(int);              // this should be removed, changed to biblio model
 
-    void update_data_by_fullfilename (QString, QString, Entry*);
-    void update_files_onboard_by_fullfilename(QString, QString, Entry*);
-    void update_files_onboard_by_filenamestem(QString, QString, Entry*);
-    void update_selected_biblio_entry();
-    void load_file_prefixes(QTableWidget*);
+    void    update_data_by_fullfilename (QString, QString, Entry*);
+    void    update_files_onboard_by_fullfilename(QString, QString, Entry*);
+    void    update_files_onboard_by_filenamestem(QString, QString, Entry*);
+    void    update_selected_biblio_entry();
+    void    load_file_prefixes(QTableWidget*);
 
-    //void put_bibitem_info_on_middle_table_widget(const Entry* entry);
-    void establish_screen_layout();
-    Entry* get_selected_biblio_entry() {return m_selected_biblio_entry;}
-    Entry* get_selected_onboard_entry() {return m_selected_onboard_entry;}
-
+    //void  put_bibitem_info_on_middle_table_widget(const Entry* entry);
+    void    establish_screen_layout();
+    Entry*  get_selected_biblio_entry() {return m_selected_biblio_entry;}
+    Entry*  get_selected_onboard_entry() {return m_selected_onboard_entry;}
+    void    link_biblio_entry_and_onboard_entry(Entry* biblio, Entry* onboard);
 private slots:
 
     void Control_S();
@@ -247,7 +247,9 @@ private slots:
     void delete_size_on_selected_biblio_entries();
     QStringList get_bibliography_labels() {return m_bibliography_labels;}
     //TreeItem* get_selected_ToK_line();
-    void link_top_and_bottom_entries_from_size();
+    QString get_selected_ToK_item_with_spaces();
+    void link_biblio_entries_and_onboard_entries_from_size();
+    void link_biblio_entries_and_onboard_entries_by_filename();
     void link_top_and_bottom_entries();
     void match_filestems() ;
     void on_top_table_view_clicked(const QModelIndex&);
@@ -262,7 +264,7 @@ private slots:
     void close_popUp();
     void place_entries_with_shared_keys_on_table();
     void place_entries_with_shared_filename_on_table();
-    void place_entries_with_shared_size_on_table();
+    void place_biblio_entries_with_shared_size_on_table();
     void promote_file_from_preferred_location(Entry*);
     //void put_bibitem_info_on_middle_table_widget(const QModelIndex & index);
     void put_file_info_on_entry_view(QModelIndex & current_model_index);
@@ -301,6 +303,7 @@ private slots:
 
     /*    Lists              */
     //void read_lists_file();
+    /*
     void new_list();
     void new_list(QString);
     void add_entry_to_list();
@@ -313,7 +316,7 @@ private slots:
     void select_new_list(QListWidgetItem * );
     void on_listWidget_doubleClicked(QListWidgetItem*);
     void save_current_list();
-
+    */
 };
 // ------------------------------------------------------------------------------------------------------ //
 
@@ -336,6 +339,7 @@ class Entry {
 public:
     Entry();
     Entry(const Entry&);
+    Entry (QFileInfo &);
     Entry(QString this_key) {info.insert("key", this_key); }
     Entry(QString filename, QString path, qint64 size);
     Entry(QString filename, QString path, int size) ;
@@ -364,6 +368,8 @@ public:
     QStringList* get_multiple_filenamefulls() {return &m_multiple_filenamefulls;}
     QString get_filenamestem() {if (info.contains("filenamestem")) {return info["filenamestem"];} else{return QString();}}
     QColor get_temporary_color() {return m_temporary_color;}
+    bool    if_linked_to_onboard_entry();
+    bool    if_linked_to_biblio_entry();
     void write_bibentry_to_bibtex( QTextStream & ,QStringList &);
     QList<Entry*> get_on_board_entries(){return m_links_to_on_board_entries;}
     QList<Entry*> get_links_to_bib_entries() {return m_links_to_bib_entries;}
@@ -481,12 +487,22 @@ public:
 class EntriesModel: public QAbstractTableModel{
     Q_OBJECT
     Widget *                   m_parent;
-    //Entry*                   m_entry;
     Entry*                     m_selected_entry; // ?? is this needed?
+
     QList<Entry*>              m_entries;
-    QMap<QString, Entry*>      m_map_by_filenamestem;
-    QMultiMap<QString, Entry*> m_multimap_by_filenamestem;
+
+    QMap<QString, Entry*>      m_data_by_filename_stem;
+    QMultiMap<QString, Entry*> m_data_by_filename_stem_multiple;
+
+    QMap<int, Entry*>           m_data_by_size;
+    QMultiMap<int, Entry*>      m_data_by_size_multiple;
+
+
     QMap<QString, Entry*>       m_map_by_filenamefull;
+
+
+
+
 public:
     EntriesModel ( Widget *parent );
     ~EntriesModel();
@@ -505,11 +521,29 @@ public:
     MySortFilterProxyModel* getProxyModel() {return m_proxyModel;}
     int            number_of_entries(){return m_entries.count();}
     QList<Entry*> * get_entries(){return & m_entries;}
-    Entry*          get_entry_with_filenamestem(QString stem) {return m_map_by_filenamestem.value(stem);}
-    QList<Entry*>   get_entries_with_filenamestem(QString stem) {return m_multimap_by_filenamestem.values(stem);}
-    bool            contains_entry_with_filenamestem(QString stem) {return m_map_by_filenamestem.contains(stem);}
-    bool            contains_multiple_entries_with_filenamestem(QString stem){return m_multimap_by_filenamestem.contains(stem);}
+    Entry*          get_entry_with_filenamestem(QString stem) {return m_data_by_filename_stem.value(stem);}
+    QList<Entry*>   get_entries_with_filenamestem(QString stem) {return m_data_by_filename_stem_multiple.values(stem);}
+    bool            contains_entry_with_filenamestem(QString stem) {return m_data_by_filename_stem.contains(stem);}
+    bool            contains_multiple_entries_with_filenamestem(QString stem){return m_data_by_filename_stem_multiple.contains(stem);}
     bool            contains(Entry * entry) { return m_entries.contains(entry);}
+
+    void            register_entry(Entry*);
+    void            register_entry_by_size(Entry*);
+
+    int             get_count_of_multiply_used_sizes() {return m_data_by_size_multiple.keys().count();}
+    Entry*          get_entry_by_size(int size) {return m_data_by_size[size];}
+    QList<int>      get_list_of_sizes_used() {return m_data_by_size.keys();}
+    QList<Entry*>   get_multiple_entries_from_size(int size) {return m_data_by_size_multiple.values(size);}
+    bool            if_size_occurs_multiply(int size) {return m_data_by_size_multiple.contains(size);}
+    bool            contains_size(int this_size);
+
+    int             get_count_of_multiply_used_filename_stems() {return m_data_by_filename_stem_multiple.keys().count();}
+    Entry*          get_entry_by_filename_stem(QString stem) {return m_data_by_filename_stem[stem];}
+    QList<QString>  get_list_of_filename_stems_used() {return m_data_by_filename_stem.keys();}
+    QList<Entry*>   get_multiple_entries_from_filename_stem(QString stem) {return m_data_by_filename_stem_multiple.values(stem);}
+    bool            if_filename_stem_occurs_multiply(QString stem) {return m_data_by_filename_stem_multiple.contains(stem);}
+    bool            contains_filename_stem(QString stem);
+
 };
 //....................................................................................................
 class EntryModel : public QAbstractListModel{
@@ -518,6 +552,7 @@ class EntryModel : public QAbstractListModel{
     Q_OBJECT
     Entry*          m_entry;
     QStringList    m_bibliography_labels;
+    QWidget         m_parent;
 
 public:
                    EntryModel (Entry *, QStringList bibliography_labels);

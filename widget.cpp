@@ -52,43 +52,36 @@ void Widget::set_screen_layout(){
     // top level
     m_leftSplitter = new QSplitter(Qt::Vertical, m_mainSplitter);
     m_rightSplitter = new QSplitter(Qt::Vertical,m_mainSplitter);
-
     m_mainSplitter->addWidget(m_leftSplitter);
     m_mainSplitter->addWidget(m_center_entry_view);
     m_mainSplitter->addWidget(m_rightSplitter);
 
     // left column
     m_leftSplitter->addWidget(m_topTableView);
-    m_leftSplitter->addWidget(m_middle_table_wdget);
-    m_leftSplitter->addWidget(m_bottom_table_widget2);
+    m_leftSplitter->addWidget(m_bottom_table_widget2); // used for displaying shared stem-names, sizes, etc. Reports to user...
     m_leftSplitter->addWidget(m_bottomTableView);
-    m_leftSplitter->addWidget(m_entry_match_view);
+    m_leftSplitter->addWidget(m_entry_match_view); // not currently used
+    m_entry_match_view->setVisible(false);
 
     // right column
+    // 1. grid layout first:
     m_small_grid_layout   = new QGridLayout;
     m_middle_right_widget = new QWidget(this);
     m_middle_right_widget->setLayout(m_small_grid_layout);
-
     m_proposed_new_title_label = new QLabel("Proposed new title") ;
     m_proposed_new_title_widget = new QLineEdit();
-    m_new_list_name_widget = new QLineEdit("(enter name of new list here)");
     m_generate_new_filename_button = new QPushButton("Generate new filename and key");
-            //m_change_filename_button = new QPushButton("Change file name to (^K):");
+  //m_change_filename_button = new QPushButton("Change file name to (^K):");
     m_create_new_bibentry_button = new QPushButton("Create new biblio entry (^K):");
     m_change_root_directory = new QPushButton("Change root directory");
-    m_create_new_list_button = new QPushButton("Create new list (^N):");
     m_save_biblio_file_button = new QPushButton("Save biblio file (^S)");
-    m_add_to_list_button = new QPushButton("Add entry to selected list (^U)");
     m_link_two_entries = new QPushButton("Link top and bottom entries (^Z)");
-
     m_delete_selected_files_button = new QPushButton("Delete selected files");
     m_delete_size_on_selected_biblio_entries = new QPushButton("Delete size on selected biblio entries");
     m_check_biblio_for_shared_key_button = new QPushButton("Check biblio for shared keys");
     m_check_biblio_for_shared_size_button = new QPushButton("Check biblio for shared sizes");
     m_check_biblio_for_shared_filename_button = new QPushButton("Check biblio for shared filenames");
 
-    m_small_grid_layout->addWidget(m_create_new_list_button,0,0);
-    m_small_grid_layout->addWidget(m_new_list_name_widget,0,1);
     m_small_grid_layout->addWidget(m_create_new_bibentry_button,1,0);
     m_small_grid_layout->addWidget(m_proposed_new_title_widget,1,1);
     m_small_grid_layout->addWidget(m_generate_new_filename_button,2,0);
@@ -101,13 +94,12 @@ void Widget::set_screen_layout(){
     m_small_grid_layout->addWidget(m_check_biblio_for_shared_key_button,9,0);
     m_small_grid_layout->addWidget(m_check_biblio_for_shared_size_button,10,0);
     m_small_grid_layout->addWidget(m_check_biblio_for_shared_filename_button,11,0);
-    m_current_list = nullptr;
 
-    m_rightSplitter->addWidget(m_listNamesWidget);
-    m_rightSplitter->addWidget(m_listWidget);
+    // 2. What appears in the right column:
     m_rightSplitter->addWidget(m_ToK_view);
-    m_rightSplitter->addWidget(m_middle_right_widget);
+    m_rightSplitter->addWidget(m_middle_right_widget); // this is the grid-layout
     m_rightSplitter->addWidget(m_directoryView);
+
 }
 
 Widget::Widget(QWidget *parent)
@@ -133,7 +125,6 @@ Widget::Widget(QWidget *parent)
     m_root_folder = m_settings.value("rootfoldername", "/home/john/Dropbox/").toString();
     m_json_folder = m_settings.value("jsonfoldername", "/home/").toString();
     m_init_folder = m_settings.value("initfoldername", "/home/").toString();
-    m_lists_complete_filename = m_settings.value("listsfilename").toString();
 
     QPalette palette = QPalette();
     palette.setColor(QPalette::Window,QColor(0,0,200,250));
@@ -143,9 +134,6 @@ Widget::Widget(QWidget *parent)
     m_selected_onboard_entry = nullptr;
     m_selected_biblio_entry = nullptr;
     m_selected_ToK_item = nullptr;
-    // Table widgets, which we will probably get rid of
-    // left side
-    m_middle_table_wdget = new QTableWidget;
     m_bottom_table_widget = new QTableWidget;
     m_bottom_table_widget2 = new QTableWidget;
 
@@ -162,9 +150,10 @@ Widget::Widget(QWidget *parent)
     m_center_entry_view->setColumnWidth(0,160);
 
     // Models
-    onboard_pdf_model = new EntriesModel(this);
+    m_onboard_pdf_model = new EntriesModel(this);
     m_same_size_files_model = new EntriesModel(this);
-    m_biblioModel = new BiblioTableModel(this);
+    //m_biblioModel = new BiblioTableModel(this);
+    m_biblioModel = nullptr;
     m_ToK_model = new ToK_model(this);
     read_ToK_from_json("pdf_manager_tok_init.json");
 
@@ -174,7 +163,7 @@ Widget::Widget(QWidget *parent)
     m_topTableView->setSortingEnabled(true);
 
     m_bottomTableView = new EntriesView_onboard_files();
-    m_bottomTableView->setModel(onboard_pdf_model->getProxyModel());
+    m_bottomTableView->setModel(m_onboard_pdf_model->getProxyModel());
     m_bottomTableView->setColumnHidden(0,true);
     m_bottomTableView->setColumnWidth(1,200);
     m_entry_match_view = new EntryMatchView();
@@ -187,8 +176,8 @@ Widget::Widget(QWidget *parent)
     m_bottom_table_widget2->setVisible(false);
 
     // Lists:
-    m_listWidget = new QListWidget(this);
-    list_functionality();
+    //m_listWidget = new QListWidget(this);
+    //list_functionality();
 
     m_file_system_model = new QFileSystemModel(this);
     m_file_system_model->setFilter(QDir::Dirs);
@@ -207,7 +196,7 @@ Widget::Widget(QWidget *parent)
     m_screen_state = 0;
     set_screen_layout();
 
-    m_entry_match_model = new EntryMatchModel(m_biblioModel, onboard_pdf_model, this);
+    m_entry_match_model = new EntryMatchModel(m_biblioModel, m_onboard_pdf_model, this);
 
     // Selection changed signal
     //connect(m_bottomTableView, &QAbstractItemView::selectionChanged,
@@ -227,16 +216,16 @@ Widget::Widget(QWidget *parent)
     //            this,SLOT(change_filename()));
     connect(m_create_new_bibentry_button,SIGNAL(clicked()),
             this,SLOT(create_new_bibentry()));
-    connect(m_listNamesWidget,SIGNAL(itemClicked(QListWidgetItem*)),
-                this,SLOT(select_new_list(QListWidgetItem*)));
-    connect(m_create_new_list_button,SIGNAL(clicked()),
-                this,SLOT(new_list()));
+    //connect(m_listNamesWidget,SIGNAL(itemClicked(QListWidgetItem*)),
+    //            this,SLOT(select_new_list(QListWidgetItem*)));
+    //connect(m_create_new_list_button,SIGNAL(clicked()),
+    //            this,SLOT(new_list()));
     connect(m_save_biblio_file_button,SIGNAL(clicked()),
                 this,SLOT(write_bibliography()));
     connect(m_link_two_entries,SIGNAL(clicked()),
                 this,SLOT(link_top_and_bottom_entries()));
-    connect(m_add_to_list_button,SIGNAL(clicked()),
-                this,SLOT(add_entry_to_list()));
+    //connect(m_add_to_list_button,SIGNAL(clicked()),
+    //            this,SLOT(add_entry_to_list()));
     connect(m_delete_selected_files_button,SIGNAL(clicked()),
                 this,SLOT(delete_selected_files()));
     connect(m_check_biblio_for_shared_key_button,SIGNAL(clicked()),
@@ -244,7 +233,7 @@ Widget::Widget(QWidget *parent)
     connect(m_check_biblio_for_shared_filename_button,SIGNAL(clicked()),
                 this,SLOT(place_entries_with_shared_filename_on_table()));
     connect(m_check_biblio_for_shared_size_button,SIGNAL(clicked()),
-                this,SLOT(place_entries_with_shared_size_on_table()));
+                this,SLOT(place_biblio_entries_with_shared_size_on_table()));
     connect(m_ToK_view->selectionModel(), &QItemSelectionModel::selectionChanged,
             this, &Widget::on_ToK_view_selection_changed);
 
@@ -258,8 +247,8 @@ Widget::Widget(QWidget *parent)
     //            this , SLOT(on_bottom_table_view_doubleClicked(int,int)));
     connect(m_bottomTableView, &QAbstractItemView::doubleClicked,
             this, &Widget::on_bottom_table_view_doubleClicked);
-    connect(m_listWidget,SIGNAL(itemDoubleClicked(QListWidgetItem*)) ,
-            this , SLOT(on_listWidget_doubleClicked(QListWidgetItem*)));
+    //connect(m_listWidget,SIGNAL(itemDoubleClicked(QListWidgetItem*)) ,
+    //        this , SLOT(on_listWidget_doubleClicked(QListWidgetItem*)));
 
 
 /*
@@ -311,7 +300,7 @@ Widget::Widget(QWidget *parent)
 
     m_keyCtrlN = new QShortcut(this);
     m_keyCtrlN->setKey(Qt::CTRL + Qt::Key_N);
-    connect(m_keyCtrlN, SIGNAL(activated()), this, SLOT(create_new_list()));
+   // connect(m_keyCtrlN, SIGNAL(activated()), this, SLOT(create_new_list()));
 
     m_keyCtrlO = new QShortcut(this);
     m_keyCtrlO->setKey(Qt::CTRL + Qt::Key_O);
@@ -364,10 +353,10 @@ void Widget::on_bottom_table_view_doubleClicked(QModelIndex index){
 
 
 
-    QModelIndex underlying_index = onboard_pdf_model->m_proxyModel->mapToSource(index);
+    QModelIndex underlying_index = m_onboard_pdf_model->m_proxyModel->mapToSource(index);
     int model_row = underlying_index.row();
     qDebug() <<63   <<  index << "index row"<<index.row() << "model row" <<model_row ;
-    Entry * entry = onboard_pdf_model->get_entries()->at(model_row);
+    Entry * entry = m_onboard_pdf_model->get_entries()->at(model_row);
 
     QString filename =  entry->get_filenamefull();
     QDesktopServices::openUrl(QUrl::fromLocalFile(filename));
@@ -377,12 +366,16 @@ void Widget::on_bottom_table_view_doubleClicked(QModelIndex index){
 }
 
 
+
+// not used: todo
 void Widget::on_ToK_view_selection_changed(){
     m_selected_ToK_item =  static_cast<TreeItem*>(m_ToK_view->currentIndex().internalPointer());
     //QString key = m_selected_ToK_item->get_key();
     QString prefix  = m_selected_ToK_item->get_prefix();
     qDebug() << 398   << prefix << m_selected_ToK_item->get_string();
 }
+
+
 
 void Widget::on_middle_table_widget_doubleClicked(int row,int column){
     if (! m_entry_in_middle_table ){
@@ -411,7 +404,7 @@ void Widget::match_filestems() {
 Widget::~Widget()
 {
    delete m_biblioModel;
-   delete onboard_pdf_model;
+   delete m_onboard_pdf_model;
 }
 
 void Widget::create_or_update_biblio_entry(){
@@ -438,6 +431,14 @@ void Widget::update_selected_biblio_entry(){
     }
 }
 
+QString Widget::get_selected_ToK_item_with_spaces(){
+    if (!m_selected_ToK_item){return QString();}
+    QString prefix = m_selected_ToK_item->get_prefix();
+    prefix = prefix.split("").join(" ").trimmed() + " ";
+    qDebug() << 497 << prefix;
+    return prefix;
+}
+
 /*  Control K   */
 void Widget::add_prefix_to_selected_onboard_filename(){
     Entry* entry = m_selected_onboard_entry;
@@ -446,9 +447,7 @@ void Widget::add_prefix_to_selected_onboard_filename(){
     QString old_full_name = entry->get_filenamefull();
     QFileInfo fileInfo(old_full_name);
     QString folder= fileInfo.absolutePath();
-    QString prefix = m_selected_ToK_item->get_prefix();
-    prefix = prefix.split("").join(" ").trimmed() + " ";
-    qDebug() << 497 << prefix;
+    QString prefix = get_selected_ToK_item_with_spaces();
     QString new_stem_name = prefix + " " + old_stem_name;
     if (old_stem_name == new_stem_name){
         QMessageBox msgBox;
@@ -479,7 +478,7 @@ void Widget::change_onboard_filename(QString new_full_filename){
 
  */
     // Verify that selected entry is a member of the onboard group:
-    if (!onboard_pdf_model->contains( m_selected_biblio_entry) ) {
+    if (!m_onboard_pdf_model->contains( m_selected_biblio_entry) ) {
         return;
     }
     //(i.)
@@ -501,7 +500,7 @@ void Widget::change_onboard_filename(QString new_full_filename){
     update_files_onboard_by_fullfilename(old_full_filename, new_full_filename, entry );
     update_files_onboard_by_filenamestem(old_filename_stem, new_filename_stem, entry );
     // iv.
-    set_filename_item_bottom_widget(m_selected_row_in_bottom_table, new_filename_stem);
+    //set_filename_item_bottom_widget(m_selected_row_in_bottom_table, new_filename_stem);
 }
 
 /*  called by "change_onboard_filename"   */
@@ -574,32 +573,31 @@ void Widget::set_screen_state(){
     switch ( m_screen_state ) {
         case 0:{
             m_topTableView->setVisible(true);
-            m_middle_table_wdget->setVisible(true);
+            //m_middle_table_wdget->setVisible(true);
             m_bottomTableView->setVisible(true);
             m_entry_match_view->setVisible(false);
             m_rightSplitter->setVisible(true);
             m_middle_right_widget->setVisible(true);
-            m_listNamesWidget->setVisible(true);
+            //m_listNamesWidget->setVisible(true);
             m_directoryView->setVisible(true);
-            m_listWidget->setVisible(true);
+            //m_listWidget->setVisible(true);
             m_mainSplitter->setSizes(QList<int>({2000, 100, 1000}));
             break;
         }
-        case 1:{
-
+        case 1:{ // only biblio entries   entry view for selected item
             m_topTableView->setVisible(true);
             m_bottomTableView->setVisible(false);
-            m_middle_table_wdget->setVisible(false);
+            //m_middle_table_wdget->setVisible(false);
             m_entry_match_view->setVisible(false);
             m_rightSplitter->setVisible(false);
             m_mainSplitter->setSizes(QList<int>({1000, 10, 00}));
 
             break;
         }
-        case 2:
+        case 2:// only onboard files and entry view for select4ed item
         {   m_bottomTableView->setVisible(true);
                 m_topTableView->setVisible(false);
-                m_middle_table_wdget->setVisible(false);
+                //m_middle_table_wdget->setVisible(false);
                 m_entry_match_view->setVisible(false);
                 m_rightSplitter->setVisible(false);
             m_mainSplitter->setSizes(QList<int>({1000, 10, 00}));
@@ -608,7 +606,7 @@ void Widget::set_screen_state(){
         case 3:{
             m_topTableView->setVisible(true);
             m_bottomTableView->setVisible(true);
-                m_middle_table_wdget->setVisible(false);
+                //m_middle_table_wdget->setVisible(false);
                 m_entry_match_view->setVisible(false);
                 m_rightSplitter->setVisible(false);
             m_mainSplitter->setSizes(QList<int>({1000, 10, 0}));
@@ -616,10 +614,10 @@ void Widget::set_screen_state(){
             break;
         }
         case 4:{
-            m_entry_match_view->setVisible(true);
+            m_entry_match_view->setVisible(true); // not currently used, however.
                 m_topTableView->setVisible(false);
                 m_bottomTableView->setVisible(false);
-                m_middle_table_wdget->setVisible(false);
+                //m_middle_table_wdget->setVisible(false);
                 m_rightSplitter->setVisible(false);
             m_mainSplitter->setSizes(QList<int>({1000, 100, 100}));
             break;
@@ -629,19 +627,19 @@ void Widget::set_screen_state(){
             m_rightSplitter->setVisible(true);
             m_bottomTableView->setVisible(true);
                 m_topTableView->setVisible(false);
-                m_middle_table_wdget->setVisible(false);
+                //m_middle_table_wdget->setVisible(false);
                 m_entry_match_view->setVisible(false);
                 //m_small_grid_layout->setVisible(false);
                 m_middle_right_widget->setVisible(false);
-                m_listNamesWidget->setVisible(false);
-                m_listWidget->setVisible(false);
+                //m_listNamesWidget->setVisible(false);
+                //m_listWidget->setVisible(false);
                 m_directoryView->setVisible(false);
             break;
         }
         default:{
             m_bottomTableView->setVisible(true);
             m_topTableView->setVisible(true);
-            m_middle_table_wdget->setVisible(true);
+            //m_middle_table_wdget->setVisible(true);
             m_rightSplitter->setVisible(true);
         }
     }
@@ -746,10 +744,8 @@ void Widget::place_entries_with_shared_filename_on_table(){
     m_bottom_table_widget2->setColumnCount(2);
     m_bottom_table_widget2->setColumnWidth(0,400);
     m_bottom_table_widget2->setColumnWidth(1,500);
-    foreach (QString  filename, m_biblioModel->get_filenames_used_multiply()  ){
-
-        QList<Entry*> entries = m_biblioModel->get_multiple_entries_from_one_filename(filename);
-
+    foreach (QString  filename, m_biblioModel->get_list_of_filename_stems_used_muliply() ) {
+        QList<Entry*> entries = m_biblioModel->get_multiple_entries_from_filename_stem(filename);
         foreach (Entry* entry, entries){
             QTableWidgetItem * item = new QTableWidgetItem (entry->get_author());
             qDebug() << 708 << entry->get_filenamestem();
@@ -760,17 +756,20 @@ void Widget::place_entries_with_shared_filename_on_table(){
         }
     }
 }
-void Widget::place_entries_with_shared_size_on_table(){
-    int row(0), rowcount(0);
+void Widget::place_biblio_entries_with_shared_size_on_table(){
+    int row(0);
     int color(0);
     int startrow(0);
     qDebug() << 718 << "check for shared size";
 
+    int rowcount = m_biblioModel->get_count_of_multiply_used_sizes();
+    /*
     foreach (int size, m_data_by_size.uniqueKeys() ){
         if (size == 0){continue;}
         QList<Entry*> entries = m_data_by_size.values(size);
         if (entries.count() > 1) { rowcount++; }
     }
+    */
     if (rowcount == 0) {return;}
 
     m_bottom_table_widget2->setRowCount(rowcount);
@@ -881,52 +880,100 @@ void Widget::set_new_root_folder(){
     m_root_folder = foldername;
     m_settings.setValue("rootfoldername", foldername);
 }
-void Widget::link_top_and_bottom_entries_from_size( ){
-    //QStandardItem * item_top;
-    //`QTableWidgetItem * item_bottom;
-    if (m_data_by_size.size() == 0 || m_files_onboard_by_size.size() == 0) {return;}
-    foreach (int this_size, m_data_by_size.uniqueKeys()){         
+
+void Widget::link_biblio_entry_and_onboard_entry(Entry* biblio, Entry* onboard){
+    biblio->add_to_onboard_entries(onboard);
+    onboard->add_to_bib_entries(biblio);
+    //biblio->set_filenameFull(onboard->get_filenamefull());
+    biblio->set_filenameStem(onboard->get_filenamestem());
+    biblio->set_folder(onboard->get_folder());
+    biblio->set_info("date", onboard->get_info("date"));
+    biblio->set_info("lastread", onboard->get_info("lastread"));
+}
+void Widget::link_biblio_entries_and_onboard_entries_from_size( ){
+    if (m_biblioModel->get_entries().count() == 0 || m_onboard_pdf_model->number_of_entries() == 0) {
+        return;
+    }
+    foreach (int this_size, m_biblioModel->get_list_of_sizes_used()){
         if (this_size==0) { continue; }
-        foreach (Entry* entry_top, m_data_by_size.values(this_size)){
-            if (m_files_onboard_by_size.contains(this_size)){                              
-                foreach(Entry* entry_bottom, m_files_onboard_by_size.values(this_size) ){                    
-                    entry_top->add_to_onboard_entries(entry_bottom);
-                    entry_bottom->add_to_bib_entries(entry_top);
-                    entry_bottom->color_bottom_view_item_for_size();
-                    //entry_top->set_filenameFull(entry_bottom->get_filenamefull());
-                    entry_top->set_filenameStem(entry_bottom->get_filenamestem());
-                    entry_top->set_folder(entry_bottom->get_folder());
-                    entry_top->set_info("date", entry_bottom->get_info("date"));
-                    entry_top->set_info("lastread", entry_bottom->get_info("lastread"));
+        if (! m_onboard_pdf_model->contains_size(this_size)){
+            continue;
+        }
+        if (m_biblioModel->if_size_occurs_multiply(this_size)){
+            if (m_onboard_pdf_model->if_size_occurs_multiply(this_size)){
+                 QList<Entry*> biblios = m_biblioModel->get_multiple_entries_from_size(this_size);
+                 foreach (Entry* biblio, biblios){
+                     QList<Entry*> onboards = m_onboard_pdf_model->get_multiple_entries_from_size(this_size);
+                     foreach (Entry* onboard, onboards){
+                         link_biblio_entry_and_onboard_entry(biblio, onboard);
+                     }
+                 }
+            }else{
+                Entry* onboard = m_onboard_pdf_model->get_entry_by_size(this_size);
+                QList<Entry*> biblios = m_biblioModel->get_multiple_entries_from_size(this_size);
+                foreach (Entry* biblio, biblios){
+                    link_biblio_entry_and_onboard_entry(biblio, onboard);
                 }
             }
-        }
-      }
-}
-
-/*
-void Widget::link_top_and_bottom_entries_from_filename( ){
-    QStandardItem * item_top;
-    QTableWidgetItem * item_bottom;
-    int temp = 0;
-    //foreach (QString this_filename, m_data_by_filenamestem.uniqueKeys()){
-    foreach (QString this_filename, biblioModel->get_keys_used_multiply(){
-        foreach (Entry* entry_top, m_data_by_filenamestem.values(this_filename)) {
-            foreach(Entry* entry_top_2, m_data_by_filenamestem.values(this_filename)){
-                if (entry_top == entry_top_2) { continue; }
-                entry_top->add_to_bib_entries(entry_top_2);
-            }
-            QList<Entry*> onboard_list = m_files_onboard_by_filenamestem.values(this_filename);
-            foreach (Entry* entry_bottom, onboard_list){                
-                entry_bottom->color_bottom_view_item_for_filename();
-                entry_top->add_to_onboard_entries(entry_bottom);
-                entry_bottom->add_to_bib_entries(entry_top);
-            }
+        } else{
+          Entry* biblio = m_biblioModel->get_entry_by_size(this_size);
+          if (m_onboard_pdf_model->if_size_occurs_multiply(this_size)){
+              QList<Entry*>  onboards = m_onboard_pdf_model->get_multiple_entries_from_size(this_size);
+              foreach (Entry* onboard, onboards){
+                  link_biblio_entry_and_onboard_entry(biblio, onboard);
+              }
+          }  else{ // the usual case!
+                Entry* onboard = m_onboard_pdf_model->get_entry_by_size(this_size);
+                link_biblio_entry_and_onboard_entry(biblio, onboard);
+          }
         }
     }
+    emit m_biblioModel->dataChanged(QModelIndex(), QModelIndex());
 }
-*/
-void Widget::link_top_and_bottom_entries(){
+void Widget::link_biblio_entries_and_onboard_entries_by_filename(){
+    if (m_biblioModel->get_entries().count() == 0 || m_onboard_pdf_model->number_of_entries() == 0) {
+        return;
+    }
+    foreach (QString filename_stem, m_biblioModel->get_list_of_filename_stems_used() ) {
+
+        if (! m_onboard_pdf_model->contains_filename_stem(filename_stem)){
+            continue;
+        }
+        if (m_biblioModel->if_filename_stem_occurs_multiply(filename_stem)){
+            if (m_onboard_pdf_model->if_filename_stem_occurs_multiply(filename_stem)){
+                 QList<Entry*> biblios = m_biblioModel->get_multiple_entries_from_filename_stem(filename_stem);
+                 foreach (Entry* biblio, biblios){
+                     QList<Entry*> onboards = m_onboard_pdf_model->get_multiple_entries_from_filename_stem(filename_stem);
+                     foreach (Entry* onboard, onboards){
+                         link_biblio_entry_and_onboard_entry(biblio, onboard);
+                     }
+                 }
+            }else{
+                Entry* onboard = m_onboard_pdf_model->get_entry_by_filename_stem(filename_stem);
+                QList<Entry*> biblios = m_biblioModel->get_multiple_entries_from_filename_stem(filename_stem);
+                foreach (Entry* biblio, biblios){
+                    link_biblio_entry_and_onboard_entry(biblio, onboard);
+                }
+            }
+        } else{
+          Entry* biblio = m_biblioModel->get_entry_by_filename_stem(filename_stem);
+          if (m_onboard_pdf_model->if_filename_stem_occurs_multiply(filename_stem)){
+              QList<Entry*>  onboards = m_onboard_pdf_model->get_multiple_entries_from_filename_stem(filename_stem);
+              foreach (Entry* onboard, onboards){
+                  link_biblio_entry_and_onboard_entry(biblio, onboard);
+              }
+          }  else{ // the usual case!
+                Entry* onboard = m_onboard_pdf_model->get_entry_by_filename_stem(filename_stem);
+                link_biblio_entry_and_onboard_entry(biblio, onboard);
+          }
+        }
+    }
+    emit m_biblioModel->dataChanged(QModelIndex(), QModelIndex());
+
+}
+
+
+void Widget::link_top_and_bottom_entries(){         // to do todo remove this? &&&
    if (! m_selected_biblio_entry) {\
        qDebug() << 1301 << "Can't link entries, because no item in top view has been selected.";
        return;
@@ -945,7 +992,7 @@ void Widget::link_top_and_bottom_entries(){
    m_selected_biblio_entry->set_filenameStem(m_selected_onboard_entry->get_filenamestem());
    m_selected_biblio_entry->set_folder(m_selected_onboard_entry->get_folder());
    m_selected_biblio_entry->set_filenameFull(m_selected_onboard_entry->get_filenamefull());
-   m_selected_biblio_entry->add_keywords(m_middle_table_wdget);
+   //m_selected_biblio_entry->add_keywords(m_middle_table_wdget);
    m_selected_biblio_entry->set_info("date", m_selected_onboard_entry->get_info("date"));
    m_selected_biblio_entry->set_info("lastread", m_selected_onboard_entry->get_info("lastread"));
 }
@@ -993,8 +1040,8 @@ void Widget::put_file_info_on_entry_view(QModelIndex & current_model_index){
 //}
 void Widget::on_middle_widget_item_changed(int row, int column ){
     Q_UNUSED(column);
-    if (  ( m_bottom_table_widget->hasFocus() || m_middle_table_wdget->hasFocus())  &&
-          (row == 1 || row == 2 || row == 3)  )
+    if (  ( m_bottom_table_widget->hasFocus()    &&
+          (row == 1 || row == 2 || row == 3)  ) )
     {
         generate_new_filename();
     }
@@ -1035,7 +1082,7 @@ void Widget::register_biblioentry_by_filenamestem(Entry* entry){
 }
 */
 /*
-void Widget::`register_biblioentry_by_key(Entry* entry){
+void Widget::register_biblioentry_by_key(Entry* entry){
     QString key;
     if (entry->get_key().length() > 0 && m_data_by_key.contains(entry->get_key())){
         m_filename_collisions.insert(entry->get_key(), entry);
@@ -1055,20 +1102,13 @@ void Widget::generate_new_filename(){
     QString prefix, author, author_surname;
     QString  title, year, new_filename, new_biblio_key;
 
-    if (m_filePrefixTableWidget->selectedItems().count() > 0){
-        int prefix_row = m_filePrefixTableWidget->selectedItems().first()->row();
-        prefix = m_filePrefixTableWidget->item(prefix_row,0)->text() + " " +
-                 m_filePrefixTableWidget->item(prefix_row,1)->text() + " ";
-    }
-
+    prefix = get_selected_ToK_item_with_spaces();
     year =  m_selected_onboard_entry->get_year();
     if (year.length() == 0) {
         year = QString("9999");
     }
-
     author = get_first_author(m_selected_onboard_entry->get_author());
     author_surname = find_surname(author);
-
     int max_title_length = 50;
     title = m_selected_onboard_entry->get_title();
     if (title.length() == 0) {
@@ -1100,7 +1140,7 @@ void Widget::generate_new_filename(){
     emit m_selected_entry_model->dataChanged(filename_index, filename_index);
     */
 }
-
+/*
 void Widget::on_listWidget_doubleClicked(QListWidgetItem* item){
     int row = m_listWidget->row(item);
     qDebug() << 724 << row;
@@ -1110,6 +1150,7 @@ void Widget::on_listWidget_doubleClicked(QListWidgetItem* item){
     QDesktopServices::openUrl(QUrl::fromLocalFile(filename));
     setWindowState(Qt::WindowActive);
 }
+*/
 /*
 QString Widget::test_key_for_uniqueness (QString key){
     while (m_data_by_key.contains(key)){
@@ -1140,19 +1181,19 @@ void Widget::set_screen_layout_old(){
             m_mainSplitter->addWidget(m_rightSplitter);
 
             m_leftSplitter->addWidget(m_topTableView);
-            m_leftSplitter->addWidget(m_middle_table_wdget);
+            //m_leftSplitter->addWidget(m_middle_table_wdget);
             m_leftSplitter->addWidget(m_bottom_table_widget2);
             m_leftSplitter->addWidget(m_bottomTableView);
             m_leftSplitter->addWidget(m_entry_match_view);
 
-            load_file_prefixes(m_filePrefixTableWidget);
-            m_filePrefixTableWidget->setSelectionMode( QAbstractItemView::SingleSelection );
+            //load_file_prefixes(m_filePrefixTableWidget);
+            //m_filePrefixTableWidget->setSelectionMode( QAbstractItemView::SingleSelection );
             //QHeaderView* header = m_filePrefixTableWidget ->horizontalHeader();
             //header->setSectionResizeMode(QHeaderView::Stretch);
             //header->setStretchLastSection(true);
             //m_filePrefixTableWidget->resizeRowToContents(3);
             //m_filePrefixTableWidget->setColumnWidth(2,500);
-            m_filePrefixTableWidget->horizontalHeader()->setStretchLastSection(true);
+            //m_filePrefixTableWidget->horizontalHeader()->setStretchLastSection(true);
 
             m_middle_right_widget = new QWidget(this);
             m_small_grid_layout = new QGridLayout;
@@ -1191,11 +1232,11 @@ void Widget::set_screen_layout_old(){
             m_small_grid_layout->addWidget(m_check_biblio_for_shared_size_button,10,0);
             m_small_grid_layout->addWidget(m_check_biblio_for_shared_filename_button,11,0);
 
-            m_current_list = nullptr;
+            //m_current_list = nullptr;
 
-            m_rightSplitter->addWidget(m_listNamesWidget);
-            m_rightSplitter->addWidget(m_listWidget);
-            m_rightSplitter->addWidget(m_filePrefixTableWidget);
+            //m_rightSplitter->addWidget(m_listNamesWidget);
+            //m_rightSplitter->addWidget(m_listWidget);
+            //m_rightSplitter->addWidget(m_filePrefixTableWidget);
             m_rightSplitter->addWidget(m_middle_right_widget);
             m_rightSplitter->addWidget(m_directoryView);
 

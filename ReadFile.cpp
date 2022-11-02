@@ -104,6 +104,8 @@ void Widget::read_init_file( ){
 
 }
 void Widget::read_JSON_file_new(QString filename){
+    if (m_biblioModel) { delete m_biblioModel; }
+    m_biblioModel =  m_biblioModel = new BiblioTableModel(this);
     QJsonObject json_bibliography;
     QString foldername;
     if (filename.isEmpty()){
@@ -186,6 +188,7 @@ void Widget::read_JSON_file_new(QString filename){
     m_topTableView->setColumnWidth(8,400);
 
     // What follows has to be done *after* the entries have been loaded: this is the List information.
+    /*
    if (false && NewFormatFlag){
        QJsonArray json_lists_array;
        json_lists_array = json_doc[1].toArray();
@@ -215,8 +218,11 @@ void Widget::read_JSON_file_new(QString filename){
             }
        }
     }
-   link_top_and_bottom_entries_from_size();
-//   link_top_and_bottom_entries_from_filename();
+   */
+   if (m_onboard_pdf_model){
+        link_biblio_entries_and_onboard_entries_from_size();
+//      link_top_and_bottom_entries_from_filename();
+   }
 
 
    //bottomTableWidget2->setVisible(true);

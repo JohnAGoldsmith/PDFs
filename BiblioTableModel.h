@@ -50,20 +50,31 @@ public:
     void            register_biblioentry_by_fullfilename(Entry* entry);
     void            register_biblioentry_by_filenamestem(Entry* entry);
 
-    QList<Entry*>   contains_filenamestem(QString);
     Entry*          contains_fullfilename(QString);
-    bool            contains_key(QString key) { return m_data_by_key.contains(key);}
 
+    /*   key   */
+    bool            contains_key(QString key) { return m_data_by_key.contains(key);}
     int             get_count_of_multiply_used_keys(){ return m_data_by_key_multiple.count();}
     QList<QString>  get_keys_used_multiply() {return m_data_by_key_multiple.keys();}
     QList<Entry*>   get_multiple_entries_from_one_key(QString key) { return m_data_by_key_multiple.values(key); }
 
+    /*     filename stems        */
+    QList<Entry*>   contains_filenamestem(QString);
     int             get_count_of_multiply_used_filenames(){ return m_data_by_filenamestem_multiple.count();}
-    QList<QString>  get_filenames_used_multiply() {return m_data_by_filenamestem_multiple.keys();}
-    QList<Entry*>   get_multiple_entries_from_one_filename(QString filename) { return m_data_by_filenamestem_multiple.values(filename); }
+    int             get_count_of_entries_with_filename_stem(){ return m_data_by_filenamestem.count(); }
+    Entry*          get_entry_by_filename_stem(QString stem) {return m_data_by_filenamestem.value(stem);}
+    QList<QString>  get_list_of_filename_stems_used() {return m_data_by_filenamestem.keys();}
+    QList<QString>  get_list_of_filename_stems_used_muliply() {return m_data_by_filenamestem_multiple.keys();}
+    QList<Entry*>   get_multiple_entries_from_filename_stem(QString stem);
+    bool            if_filename_stem_occurs_multiply(QString stem) {return m_data_by_filenamestem_multiple.contains(stem);}
 
+    /*       size                */
+    int             get_count_of_multiply_used_sizes() {return m_data_by_size_multiple.count();}
     int             get_count_of_entries_with_size() { return m_data_by_size.count(); }
     Entry*          get_entry_by_size(int size) ;
+    QList<int>      get_list_of_sizes_used() {return m_data_by_size.keys();}
+    QList<Entry*>   get_multiple_entries_from_size(int size);
+    bool            if_size_occurs_multiply(int size) {return m_data_by_size_multiple.contains(size);}
 
     void            register_entry(Entry*);
     void            update_data_by_fullfilename(QString full_old_name, QString full_new_name, Entry* entry_onboard);

@@ -102,11 +102,13 @@ void write_list_to_json(List* list, QJsonArray & json_array ){
     json_array.append(this_list);
 
 }
+/*
 void Widget::write_lists_to_json(QJsonArray & json_array){
     foreach (List* list, m_Lists){
         write_list_to_json (list,json_array);
     }
 }
+*/
 void Widget::write_bibliography(){
     write_bibliography_to_json();
     write_bibliography_to_bibtex();
@@ -123,9 +125,9 @@ void Widget::write_bibliography_to_json( ){
     json_settings["m_directory_view_root"] = m_directory_view_root;
     json_top.append(json_settings);
 
-    QJsonArray json_array_for_lists;
-    write_lists_to_json(json_array_for_lists);
-    json_top.append(json_array_for_lists);
+    //QJsonArray json_array_for_lists;
+    //write_lists_to_json(json_array_for_lists);
+    //json_top.append(json_array_for_lists);
 
     QJsonObject json_object_for_biblio;
     foreach (Entry* entry, m_biblioModel->get_entries()){

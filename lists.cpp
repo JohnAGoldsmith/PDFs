@@ -24,7 +24,7 @@
 #include <EGL/egl.h>
 class List;
 
-
+/*
 void Widget::list_functionality(){
     m_listWidget->dragEnabled();
     m_listWidget->setDragDropMode(QAbstractItemView::InternalMove);
@@ -43,12 +43,12 @@ void Widget::list_functionality(){
     new_list("Linguistica");
     new_list("Phonology");
 }
-
-
+*/
+/*
 void Widget::select_new_list(QListWidgetItem * item){
     save_current_list();
     List* list;
-    /* item is from List-of-lists listwidget */
+    // item is from List-of-lists listwidget
     list = m_Lists_map[item->text()];
     display_list(list);
     m_current_list = list;
@@ -122,3 +122,4 @@ void Widget::change_location_of_listsInfo(){
     m_settings.setValue("listsfoldername", foldername);
     qDebug() << 194 << filename << foldername;
 }
+*/
