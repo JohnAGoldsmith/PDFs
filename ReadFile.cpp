@@ -103,6 +103,17 @@ void Widget::read_init_file( ){
 
 
 }
+void set_qtableview_widths(QTableView * TV){
+    TV->setColumnWidth(0,300);
+    TV->setColumnWidth(1,400);
+    TV->setColumnWidth(2,100);
+    TV->setColumnWidth(3,400);
+    TV->setColumnWidth(4,300);
+    TV->setColumnWidth(5,150);
+    TV->setColumnWidth(6,100);
+    TV->setColumnWidth(7,400);
+    TV->setColumnWidth(8,400);
+}
 void Widget::read_JSON_file_new(QString filename){
     if (m_biblioModel) { delete m_biblioModel; }
     m_biblioModel =  m_biblioModel = new BiblioTableModel(this);
@@ -132,20 +143,16 @@ void Widget::read_JSON_file_new(QString filename){
     m_settings.setValue("jsonfoldername", foldername);
     fileIn.close();
 
-    bool NewFormatFlag = true;
-    if (NewFormatFlag){
-        if(!json_doc.isArray()){
-                qDebug() << "JSON doc root is not an array.";
-        }
-        QJsonObject  json_settings;
-        json_settings = json_doc[0].toObject();
-        if (json_settings.contains("m_directory_view_root") && json_settings["m_directory_view_root"].isString() ){
-            m_directory_view_root = json_settings["m_directory_view_root"].toString();
-            m_file_system_model->setRootPath(m_directory_view_root);
-            //m_file_system_model->dataChanged();
-        }
-        json_bibliography = json_doc[2].toObject();
+    if(!json_doc.isArray()){
+       qDebug() << "JSON doc root is not an array.";
     }
+    QJsonObject  json_settings;
+    json_settings = json_doc[0].toObject();
+    if (json_settings.contains("m_directory_view_root") && json_settings["m_directory_view_root"].isString() ){
+        m_directory_view_root = json_settings["m_directory_view_root"].toString();
+        m_file_system_model->setRootPath(m_directory_view_root);
+    }
+    json_bibliography = json_doc[2].toObject();
     if(json_bibliography.isEmpty()){
         qDebug() << "The array is empty";
     }
@@ -153,23 +160,19 @@ void Widget::read_JSON_file_new(QString filename){
         if(! json_bibliography[item_key].isObject()) {continue;}
         QJsonObject j_this_entry =  json_bibliography[item_key].toObject();
         if (j_this_entry.count() > 0){
-                Entry* entry = new Entry();
-                foreach (QString entry_internal_key, j_this_entry.keys()){
-                    if (entry_internal_key == "filenamestem") {
-
-                    }
-                    if (entry_internal_key == "folder"){
-                        continue;
-                    }
-                    if (entry_internal_key == "size"){
-                        entry->set_size(j_this_entry["size"].toInt());
-                    } else {
-                        QString value = j_this_entry[entry_internal_key].toString();
-                        entry->set_info(entry_internal_key, value);
-                    }
+            Entry* entry = new Entry();
+            foreach (QString entry_internal_key, j_this_entry.keys()){
+                if (entry_internal_key == "filenamestem" || entry_internal_key == "folder") { // to do todo  We probably don't want to ignore this in the future
+                    continue;
                 }
-                promote_file_from_preferred_location(entry);
-                m_biblioModel->add_entry(entry);
+                if (entry_internal_key == "size"){
+                    entry->set_size(j_this_entry["size"].toInt());
+                } else {
+                    QString value = j_this_entry[entry_internal_key].toString();
+                    entry->set_info(entry_internal_key, value);
+                }
+            }
+            m_biblioModel->add_entry(entry);
         }
     }
     m_biblioModel->register_all_entries();
@@ -177,55 +180,9 @@ void Widget::read_JSON_file_new(QString filename){
     m_biblioModel->m_proxyModel->setSourceModel( m_biblioModel );
 
     m_topTableView->setModel( m_biblioModel->m_proxyModel );
-    m_topTableView->setColumnWidth(0,300);
-    m_topTableView->setColumnWidth(1,400);
-    m_topTableView->setColumnWidth(2,100);
-    m_topTableView->setColumnWidth(3,400);
-    m_topTableView->setColumnWidth(4,300);
-    m_topTableView->setColumnWidth(5,150);
-    m_topTableView->setColumnWidth(6,100);
-    m_topTableView->setColumnWidth(7,400);
-    m_topTableView->setColumnWidth(8,400);
+    set_qtableview_widths(m_topTableView);
 
-    // What follows has to be done *after* the entries have been loaded: this is the List information.
-    /*
-   if (false && NewFormatFlag){
-       QJsonArray json_lists_array;
-       json_lists_array = json_doc[1].toArray();
-
-       QJsonObject json_list_object ;
-       List* list;
-       for (int n = 0; n < json_lists_array.size(); n++){
-           json_list_object = json_lists_array[n].toObject();
-           QString list_name = json_list_object["list_name"].toString();
-           if (m_Lists_map.contains(list_name)){
-               list = m_Lists_map[list_name];
-           } else{
-               list = new List (json_list_object["list_name"].toString());
-           }
-           QJsonArray json_entries;
-           json_entries = json_list_object["entries"].toArray();
-           //qDebug() << 411 << json_entries.count();
-           Entry * entry;
-           for (int n = 0; n < json_entries.size(); n++){
-               {
-                   QJsonObject list_entry;
-                   list_entry = json_entries[n].toObject();
-                   entry = m_biblioModel->get_entry_by_size(list_entry["size"].toInt());
-
-                   add_entry_to_list(list, entry);
-               }
-            }
-       }
+    if (m_onboard_pdf_model){
+         link_biblio_entries_and_onboard_entries_from_size();
     }
-   */
-   if (m_onboard_pdf_model){
-        link_biblio_entries_and_onboard_entries_from_size();
-//      link_top_and_bottom_entries_from_filename();
-   }
-
-
-   //bottomTableWidget2->setVisible(true);
-   //place_entries_with_shared_filename_on_table();
-   //place_entries_with_shared_keys_on_table();
 }

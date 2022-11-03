@@ -231,7 +231,6 @@ private slots:
     void read_JSON_file_old();
     void read_JSON_file_new(QString filename = QString());
     void read_init_file();
-    void add_entry_to_top_view(Entry*);
 
     /* names */
     QString create_new_filename_stem(QString old_name);
@@ -243,6 +242,7 @@ private slots:
 
 
     void create_new_bibentry();
+    void create_new_onboard_filename();
     void delete_selected_files();
     void delete_size_on_selected_biblio_entries();
     QStringList get_bibliography_labels() {return m_bibliography_labels;}
@@ -250,7 +250,7 @@ private slots:
     QString get_selected_ToK_item_with_spaces();
     void link_biblio_entries_and_onboard_entries_from_size();
     void link_biblio_entries_and_onboard_entries_by_filename();
-    void link_top_and_bottom_entries();
+    //void link_top_and_bottom_entries();
     void match_filestems() ;
     void on_top_table_view_clicked(const QModelIndex&);
     void on_top_table_view_doubleClicked(const QModelIndex &);
@@ -264,7 +264,7 @@ private slots:
     void place_entries_with_shared_keys_on_table();
     void place_entries_with_shared_filename_on_table();
     void place_biblio_entries_with_shared_size_on_table();
-    void promote_file_from_preferred_location(Entry*);
+    //void promote_file_from_preferred_location(Entry*);
     //void put_bibitem_info_on_middle_table_widget(const QModelIndex & index);
     void put_file_info_on_entry_view(QModelIndex & current_model_index);
     void read_ToK_from_json(QString filename);
@@ -351,10 +351,6 @@ public:
     void add_to_bib_entries(Entry* entry){m_links_to_bib_entries.append(entry);}
     void add_to_onboard_entries(Entry* entry);
     void add_keywords(QTableWidget *);
-    void color_bottom_view_item_for_size();
-    void color_bottom_view_item_for_filename();
-    void color_top_view_item_for_size();
-    void color_top_view_item_for_filename();
     bool contains_info(QString key){return info.contains(key);}
     QString get_info(QString);
     int     get_size()         {return size;}
@@ -373,7 +369,7 @@ public:
     void write_bibentry_to_bibtex( QTextStream & ,QStringList &);
     QList<Entry*> get_on_board_entries(){return m_links_to_on_board_entries;}
     QList<Entry*> get_links_to_bib_entries() {return m_links_to_bib_entries;}
-    void mark_bottom_view_entry_as_matched_to_biblio();
+    //void mark_bottom_view_entry_as_matched_to_biblio();
     void remove_bottom_view_links();
     void read_json(QJsonObject &);
     void set_key(QString s) {info["key"] = s;}
@@ -568,6 +564,7 @@ public:
     Qt::ItemFlags  flags(const QModelIndex &index) const override;
     void           display(Entry* entry);
     void           change_entry(Entry*);
+    Entry*          get_entry(){return m_entry;}
 //    void           dataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &roles = QVector<int>());
 //    void           setData(Entry* entry);
 //    bool           setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole);

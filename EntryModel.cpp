@@ -82,7 +82,7 @@ bool EntryModel::setData(const QModelIndex &index, const QVariant & value, int r
             } else{
                 qDebug() << "label" << label;
                 qDebug() << "value.string" << value.String;
-                m_entry->set_info(label, value.toString());
+                m_entry->set_info(label, value.toString().trimmed() );
                 emit dataChanged(index,index);
                 return true;
             }

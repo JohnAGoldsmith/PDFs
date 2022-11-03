@@ -125,10 +125,6 @@ void Widget::write_bibliography_to_json( ){
     json_settings["m_directory_view_root"] = m_directory_view_root;
     json_top.append(json_settings);
 
-    //QJsonArray json_array_for_lists;
-    //write_lists_to_json(json_array_for_lists);
-    //json_top.append(json_array_for_lists);
-
     QJsonObject json_object_for_biblio;
     foreach (Entry* entry, m_biblioModel->get_entries()){
         write_bibentry_to_json(entry, json_object_for_biblio ); //TODO  HERE IS WHERE I stopped. have to iterate over the right key.

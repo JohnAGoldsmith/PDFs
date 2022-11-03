@@ -178,11 +178,13 @@ QVariant EntriesModel::data(const QModelIndex & index, int role )const
             QVariant var2 = col1;
             return var2;
     }
-
+    if (role == 256){
+        return  QVariant::fromValue(static_cast<void*>(entry));
+    }
      // end of role 0, which is displayed material
 
     return QVariant();
-}
+    }
 
 EntriesView_onboard_files::EntriesView_onboard_files(){
     setSortingEnabled(true);

@@ -44,7 +44,7 @@ Entry::Entry(const Entry& entry){
     }
 }
 Entry::Entry (QFileInfo& info){
-    QString filenameStem = info.fileName();
+    QString filenameStem = info.fileName().trimmed();
     QString folder = info.dir().absolutePath();
     QString filenamefull = folder + "/" + filenameStem;
     int     size = info.size();
@@ -82,6 +82,7 @@ Entry::Entry(QString stem, QString folder, int this_size)
   set_folder(folder);
   set_filename_stem(stem);
   set_filename_full(filenameFull);
+  set_key (stem);
   /*
   m_top_view_size_item = NULL;
   m_top_view_filename_item = NULL;
@@ -149,21 +150,8 @@ void Entry::add_keywords(QTableWidget* middlewidget){
     int row_for_keywords = 7;
     set_keywords(middlewidget->item(row_for_keywords,1)->text());
 }
-void Entry::mark_bottom_view_entry_as_matched_to_biblio(){
-     QTableWidgetItem* item_bottom = m_bottom_view_size_item;
-     item_bottom->setForeground(Qt::GlobalColor(Qt::darkBlue));
-
-}
 
 
-// this should be removed entirely, and put into the view itself, from the model.
-void Entry::color_bottom_view_item_for_size(){
-    m_bottom_view_size_item->setForeground(QBrush(QColor(Qt::blue)));
-    m_bottom_view_filename_item->setForeground(QBrush(QColor(Qt::blue)));
-    QFont font;
-    font.setBold(true);
-    m_bottom_view_filename_item->setFont(font);
-}
 QString Entry::get_filenamefull() {
     QString filenamefull;
     if (info.contains("filenamefull")){
@@ -178,16 +166,7 @@ QString Entry::get_filenamefull() {
     }
     return QString();
 }
-void Entry::color_bottom_view_item_for_filename(){
-    QTableWidgetItem* item_bottom = m_bottom_view_filename_item;
-    item_bottom->setForeground(QColorConstants::Blue);
-}
-// deprecated
-void Entry::color_top_view_item_for_size(){
-}
-//deprecated
-void Entry::color_top_view_item_for_filename(){
-}
+
 
 
 void Entry::set_filename_item_bottom(QString filename){
