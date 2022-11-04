@@ -123,6 +123,7 @@ void Widget::write_bibliography_to_json( ){
     json_settings["m_root_folder"] = m_root_folder;
     json_settings["m_json_folder"] = m_json_folder;
     json_settings["m_directory_view_root"] = m_directory_view_root;
+    json_settings["version"] = "1";
     json_top.append(json_settings);
 
     QJsonObject json_object_for_biblio;

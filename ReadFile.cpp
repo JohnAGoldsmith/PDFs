@@ -117,6 +117,7 @@ void set_qtableview_widths(QTableView * TV){
 void Widget::read_JSON_file_new(QString filename){
     if (m_biblioModel) { delete m_biblioModel; }
     m_biblioModel =  m_biblioModel = new BiblioTableModel(this);
+    int version(-1);
     QJsonObject json_bibliography;
     QString foldername;
     if (filename.isEmpty()){
@@ -152,7 +153,19 @@ void Widget::read_JSON_file_new(QString filename){
         m_directory_view_root = json_settings["m_directory_view_root"].toString();
         m_file_system_model->setRootPath(m_directory_view_root);
     }
-    json_bibliography = json_doc[2].toObject();
+    if (json_settings.contains("version") && json_settings["m_directory_view_root"].isString() ){
+        version = json_settings["version"].toInt();
+    }  else{
+        version = 0;
+    }
+    switch (version){
+        case 0:{
+            json_bibliography = json_doc[2].toObject();
+        }
+        default: {
+            json_bibliography = json_doc[1].toObject();
+        }
+    }
     if(json_bibliography.isEmpty()){
         qDebug() << "The array is empty";
     }
