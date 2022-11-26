@@ -26,8 +26,11 @@
 #include <EGL/egl.h>
 #include "BiblioTableModel.h"
 #include "widget.h"
+#include "EntriesModel.h"
+#include "EntryModel.h"
+#include "Entry.h"
 
-class List;
+//class List;
 
 Qt::ItemFlags BiblioTableModel::flags(const QModelIndex &index) const
 {
@@ -68,7 +71,17 @@ void Widget::set_screen_layout(){
     m_middle_right_widget = new QWidget(this);
     m_middle_right_widget->setLayout(m_small_grid_layout);
     m_proposed_new_title_label = new QLabel("Proposed new title") ;
+
     m_proposed_new_title_widget = new QLineEdit();
+    m_proposed_new_title_widget->setFixedWidth(200);
+
+    m_new_ToK_item_button = new QPushButton();
+    m_new_ToK_item_button->setText("New ToK item");
+    m_new_ToK_prefix_widget = new QLineEdit();
+        //m_new_ToK_prefix_widget->setMaximumWidth(100);
+    m_new_ToK_prefix_widget->setFixedWidth(120);
+    m_new_ToK_prose_widget = new QLineEdit();
+    m_new_ToK_prose_widget->setFixedWidth(200);
     m_generate_new_filename_button = new QPushButton("Generate new filename and key");
   //m_change_filename_button = new QPushButton("Change file name to (^K):");
     m_create_new_bibentry_button = new QPushButton("Create new biblio entry (^K):");
@@ -81,18 +94,29 @@ void Widget::set_screen_layout(){
     m_check_biblio_for_shared_size_button = new QPushButton("Check biblio for shared sizes");
     m_check_biblio_for_shared_filename_button = new QPushButton("Check biblio for shared filenames");
 
+    QPalette sample_palette;
+    sample_palette.setColor(QPalette::Window, Qt::yellow); // not used?
+    sample_palette.setColor(QPalette::WindowText, Qt::green); // not used?
+    setStyleSheet("QLineEdit { background-color: yellow }");
+    setStyleSheet("Widget{ background-color: green}");
+    setStyleSheet("ToK_model { background-color: green}");
+
     m_small_grid_layout->addWidget(m_create_new_bibentry_button,1,0);
     m_small_grid_layout->addWidget(m_proposed_new_title_widget,1,1);
     m_small_grid_layout->addWidget(m_generate_new_filename_button,2,0);
     m_small_grid_layout->addWidget(m_delete_size_on_selected_biblio_entries,3,0);
     m_small_grid_layout->addWidget(m_change_root_directory,4,0);
     m_small_grid_layout->addWidget(m_save_biblio_file_button,5,0);
-    m_small_grid_layout->addWidget(m_add_to_list_button,6,0);
+    //m_small_grid_layout->addWidget(m_add_to_list_button,6,0);
     m_small_grid_layout->addWidget(m_link_two_entries,7,0);
     m_small_grid_layout->addWidget(m_delete_selected_files_button,8,0);
     m_small_grid_layout->addWidget(m_check_biblio_for_shared_key_button,9,0);
     m_small_grid_layout->addWidget(m_check_biblio_for_shared_size_button,10,0);
     m_small_grid_layout->addWidget(m_check_biblio_for_shared_filename_button,11,0);
+    m_small_grid_layout->addWidget(m_new_ToK_item_button,12,0);
+    m_small_grid_layout->addWidget(m_new_ToK_prefix_widget,12, 1);
+    m_small_grid_layout->addWidget(m_new_ToK_prose_widget, 12,2);
+
 
     // 2.  the right column:
     m_rightSplitter->addWidget(m_ToK_view);
@@ -104,12 +128,22 @@ void Widget::set_screen_layout(){
 Widget::Widget(QWidget *parent)
     : QWidget(parent)
 {
+    QPalette pal = QPalette();
+
+    // set black background
+    // Qt::black / "#000000" / "black"
+    pal.setColor(QPalette::Window, Qt::yellow);
+    setAutoFillBackground(true);
+    setPalette(pal);
+    //show();
+
+
+
+
     showMaximized();
     setFocusPolicy(Qt::FocusPolicy::StrongFocus);
     setFocus();
     m_isDirty = false;
-
-
     m_bibliography_labels  <<  "filenamestem" <<  "folder"<< "size"<< "author" << "title" << "year" << "key" << "fillnamefull"
                                "type"<< "booktitle"<< "month" << "organization" << "series" << "number" << "volume" << "doi" <<
                                "file (not found)" << "issn"<< "isbn" <<  "url" << "pages" << "abstract" <<  "address" <<
@@ -229,6 +263,8 @@ Widget::Widget(QWidget *parent)
                 this,SLOT(place_biblio_entries_with_shared_size_on_table()));
     connect(m_ToK_view->selectionModel(), &QItemSelectionModel::selectionChanged,
             this, &Widget::on_ToK_view_selection_changed);
+    connect(m_new_ToK_item_button, &QPushButton::clicked,
+            this, &Widget::add_ToK_item);
 
 
     // Double clicks
@@ -348,7 +384,12 @@ void Widget::on_ToK_view_selection_changed(){
     QString prefix  = m_selected_ToK_item->get_prefix();
     qDebug() << 398   << prefix << m_selected_ToK_item->get_string();
 }
+void Widget::add_ToK_item(){
+    QString prefix = m_new_ToK_prefix_widget->text();
+    QString title = m_new_ToK_prose_widget->text();
+    m_ToK_model->addItem(prefix, title);
 
+}
 
 
 
@@ -409,21 +450,26 @@ QString Widget::get_selected_ToK_item_with_spaces(){
 void Widget::add_prefix_to_selected_onboard_filename(){
     Entry* entry = m_selected_onboard_entry;
     if (!entry) {return;}
+    QString new_stem_name;
     QString old_stem_name = entry->get_filenamestem();
     QString old_full_name = entry->get_filenamefull();
     QFileInfo fileInfo(old_full_name);
     QString folder= fileInfo.absolutePath();
-    QString prefix = get_selected_ToK_item_with_spaces();
-    QString new_stem_name = prefix + " " + old_stem_name;
-    if (old_stem_name == new_stem_name){
-        QMessageBox msgBox;
-        msgBox.setText("The new name is the same as the old name; no change made.");
-        msgBox.exec();
-        return;}
-    QString new_full_name = folder + "//" + prefix + old_stem_name;
+    QString prefix = get_selected_ToK_item_with_spaces().trimmed();
+    QString year = m_selected_onboard_entry->get_year();
+    QString author = m_selected_onboard_entry->get_author();
+    QString title = m_selected_onboard_entry->get_title();
+    if (prefix.length() > 0) { new_stem_name = prefix + " ";}
+    if (year.length() > 0)   { new_stem_name += year + " ";}
+    if (author.length() > 0) { new_stem_name += author + " ";}
+    if (title.length() > 0)  { new_stem_name += title + ".pdf";}
+    else { new_stem_name += old_stem_name;}
+    QString new_folder = "/home/john/Dropbox/documents/";
+    QString new_full_name = new_folder +  new_stem_name;
     entry->set_key(new_stem_name.trimmed());
     QFile file(old_full_name);
     file.rename(old_full_name, new_full_name);
+    if (!m_biblioModel) {return;}                   // this assumes we only want to save a pdf to our records if we have opened a records file. That's not obvious.
     if (m_biblioModel->get_entries().size() > 0){
         m_biblioModel->add_entry(entry);
     }
@@ -1089,18 +1135,8 @@ void Widget::on_listWidget_doubleClicked(QListWidgetItem* item){
     setWindowState(Qt::WindowActive);
 }
 */
-/*
-QString Widget::test_key_for_uniqueness (QString key){
-    while (m_data_by_key.contains(key)){
-        key += "@";
-        qDebug() << 761 << "Collision of new key "<< key;
-    }
-    return key;
-}
-*/
-List::List(QString this_name){
-    name = this_name;
-}
+
+
 void Widget::set_screen_layout_old(){
     if (m_layout) delete m_layout;
     m_layout = new QVBoxLayout(this);
@@ -1119,19 +1155,9 @@ void Widget::set_screen_layout_old(){
             m_mainSplitter->addWidget(m_rightSplitter);
 
             m_leftSplitter->addWidget(m_topTableView);
-            //m_leftSplitter->addWidget(m_middle_table_wdget);
             m_leftSplitter->addWidget(m_bottom_table_widget2);
             m_leftSplitter->addWidget(m_bottomTableView);
             m_leftSplitter->addWidget(m_entry_match_view);
-
-            //load_file_prefixes(m_filePrefixTableWidget);
-            //m_filePrefixTableWidget->setSelectionMode( QAbstractItemView::SingleSelection );
-            //QHeaderView* header = m_filePrefixTableWidget ->horizontalHeader();
-            //header->setSectionResizeMode(QHeaderView::Stretch);
-            //header->setStretchLastSection(true);
-            //m_filePrefixTableWidget->resizeRowToContents(3);
-            //m_filePrefixTableWidget->setColumnWidth(2,500);
-            //m_filePrefixTableWidget->horizontalHeader()->setStretchLastSection(true);
 
             m_middle_right_widget = new QWidget(this);
             m_small_grid_layout = new QGridLayout;
@@ -1139,9 +1165,9 @@ void Widget::set_screen_layout_old(){
 
             m_proposed_new_title_label = new QLabel("Proposed new title") ;
             m_proposed_new_title_widget = new QLineEdit();
+
             m_new_list_name_widget = new QLineEdit("(enter name of new list here)");
             m_generate_new_filename_button = new QPushButton("Generate new filename and key");
-            //m_change_filename_button = new QPushButton("Change file name to (^K):");
             m_create_new_bibentry_button = new QPushButton("Create new biblio entry (^K):");
             m_change_root_directory = new QPushButton("Change root directory");
             m_create_new_list_button = new QPushButton("Create new list (^N):");
@@ -1169,12 +1195,6 @@ void Widget::set_screen_layout_old(){
             m_small_grid_layout->addWidget(m_check_biblio_for_shared_key_button,9,0);
             m_small_grid_layout->addWidget(m_check_biblio_for_shared_size_button,10,0);
             m_small_grid_layout->addWidget(m_check_biblio_for_shared_filename_button,11,0);
-
-            //m_current_list = nullptr;
-
-            //m_rightSplitter->addWidget(m_listNamesWidget);
-            //m_rightSplitter->addWidget(m_listWidget);
-            //m_rightSplitter->addWidget(m_filePrefixTableWidget);
             m_rightSplitter->addWidget(m_middle_right_widget);
             m_rightSplitter->addWidget(m_directoryView);
 

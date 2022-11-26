@@ -23,9 +23,10 @@
 #include<QAbstractScrollArea>
 #include <EGL/egl.h>
 #include "BiblioTableModel.h"
+#include "Entry.h"
 
 
-class List;
+//class List;
 
 /*
 BiblioTableModel::BiblioTableModel(QObject *parent)
@@ -123,7 +124,7 @@ void BiblioTableModel::register_biblioentry_by_filenamestem(Entry* entry){
         m_data_by_filenamestem_multiple.insert(stem_of_filename, entry);
     } else {
         if (m_data_by_filenamestem.contains(stem_of_filename ) ) {
-              m_data_by_filenamestem_multiple.insert(stem_of_filename, m_data_by_filenamestem[entry->get_filenamestem()]);
+              m_data_by_filenamestem_multiple.insert(stem_of_filename, m_data_by_filenamestem[stem_of_filename]);
               m_data_by_filenamestem_multiple.insert(stem_of_filename, entry);
             }
          else {
@@ -131,12 +132,16 @@ void BiblioTableModel::register_biblioentry_by_filenamestem(Entry* entry){
          }
     }
 }
-QList<Entry*> BiblioTableModel::contains_filenamestem(QString stem){
+/*
+QList<Entry*> BiblioTableModel::contains_filenamestem(const QString & stem ){
     if (m_data_by_filenamestem.contains(stem)){
         return m_data_by_filenamestem.values(stem);
     } else{
         return QList<Entry*>();
     }
+}*/
+bool BiblioTableModel::contains_filenamestem(const QString & stem){
+    return m_data_by_filenamestem.contains(stem);
 }
 
 void BiblioTableModel::add_entry(Entry *entry){

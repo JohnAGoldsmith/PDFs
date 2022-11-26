@@ -25,9 +25,11 @@
 #include <QAbstractItemModel>
 #include <QAbstractTableModel>
 #include <EGL/egl.h>
-class List;
+#include "Entry.h"
+#include "EntryModel.h"
+//class List;
 
-EntryModel::EntryModel(Entry* entry, QStringList bibliography_labels){
+EntryModel::EntryModel(Entry* entry, QList<QString> bibliography_labels){
     //m_parent = main_widget;
     m_entry = entry;
     m_bibliography_labels = bibliography_labels;

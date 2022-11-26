@@ -23,7 +23,7 @@
 #include<QAbstractScrollArea>
 #include <EGL/egl.h>
 
-class List;
+//class List;
 
 
 

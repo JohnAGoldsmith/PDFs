@@ -20,10 +20,14 @@
 #include <QList>
 #include <QSortFilterProxyModel>
 #include <QScrollBar>
-#include<QAbstractScrollArea>
+#include <QAbstractScrollArea>
 #include <QHeaderView>
 #include <EGL/egl.h>
-class List;
+#include <QTableView>
+#include "EntriesModel.h"
+#include "Entry.h"
+#include "EntryModel.h"
+//class List;
 
 
 
@@ -76,7 +80,7 @@ void Widget::search_folders_for_pdf()
         m_onboard_pdf_model->addEntry(entry);
     }
     m_bottomTableView->resizeColumnsToContents();
-    m_bottomTableView->sortByColumn(0);
+    m_bottomTableView->sortByColumn(0, Qt::AscendingOrder);
 
     // this is done in a different function ::  todo to do
     if (m_biblioModel){

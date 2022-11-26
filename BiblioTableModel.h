@@ -2,9 +2,11 @@
 #define BIBLIOTABLEMODEL_H
 #include <QString>
 #include <QAbstractTableModel>
+#include <QArrayData>
+#include <QMultiMap>
 
 class Entry;
-class MySortFilterProxyModel;
+class My_biblio_SortFilterProxyModel;
 
 class BiblioTableModel : public QAbstractTableModel
 {
@@ -24,7 +26,7 @@ class BiblioTableModel : public QAbstractTableModel
 public:
     BiblioTableModel(QObject *      parent = nullptr): QAbstractTableModel(parent){};
     BiblioTableModel(QList<Entry*>  entries, QObject *parent = 0);
-    MySortFilterProxyModel *        m_proxyModel;
+    My_biblio_SortFilterProxyModel *        m_proxyModel;
 
     int                             rowCount(const QModelIndex &parent = QModelIndex()) const override;
     int                             columnCount(const QModelIndex &parent = QModelIndex()) const override;
@@ -59,7 +61,7 @@ public:
     QList<Entry*>   get_multiple_entries_from_one_key(QString key) { return m_data_by_key_multiple.values(key); }
 
     /*     filename stems        */
-    QList<Entry*>   contains_filenamestem(QString);
+    bool            contains_filenamestem(const QString &);
     int             get_count_of_multiply_used_filenames(){ return m_data_by_filenamestem_multiple.count();}
     int             get_count_of_entries_with_filename_stem(){ return m_data_by_filenamestem.count(); }
     Entry*          get_entry_by_filename_stem(QString stem) {return m_data_by_filenamestem.value(stem);}

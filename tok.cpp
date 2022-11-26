@@ -1,10 +1,12 @@
-#include <QRegExp>
+#include <QRegularExpression>
 #include <QDebug>
 #include "tok.h"
 #include "widget.h"
 
+// not currently used
+/*
 QStringList break_up_regexp(QString & string){
-    QRegExp regex1("(\\d )");
+    QRegularExpression regex1("(\\d )");
     QStringList output;
     int pos = 0;
     int offset = 0;
@@ -16,6 +18,7 @@ QStringList break_up_regexp(QString & string){
     string = string.mid(offset);
     return output;
 }
+// Not currently used...
 QString remove_prefix_and_remove_spaces(QString & string){
     QRegExp regex1("(\\d )");
     QString prefix;
@@ -29,7 +32,7 @@ QString remove_prefix_and_remove_spaces(QString & string){
     string = string.mid(offset    );
     return prefix;
 }
-
+*/
 
 TreeItem::TreeItem(const QString prefix,
                    const QString data,
@@ -236,13 +239,9 @@ QVariant ToK_model::headerData(int section, Qt::Orientation orientation,
 void ToK_model::addItem(  QString & prefix,  const QString & string){
     if (prefix.length() == 0) {return;}
     QString prefix_copy = prefix;
-    //qDebug() << "";
-    //qDebug() << string;
     TreeItem * item = m_rootItem->find_place_in_tree(prefix_copy);
     item->setData(string);
     item->set_prefix(prefix);
-    //qDebug() << 239 << "prefix" << item->get_prefix() << "length" << prefix.length() << item->get_string();
-    //qDebug() << 239 << "End of adding item"<< "\n";
 }
 
 TreeItem* TreeItem::find_child_ending_with_char(QChar this_char){
@@ -265,7 +264,6 @@ int TreeItem::find_proper_location_among_children(QChar this_char){
 TreeItem * TreeItem::find_place_in_tree(QString & prefix) {
     QChar key = prefix[0];
     prefix = prefix.mid(1);
-    //qDebug() << 244 << "->"<< "current node prefix and string :"  << m_prefix << m_string <<"key for new item" <<key <<  "prefix after key"<<prefix;
     TreeItem * right_child = find_child_ending_with_char(key);
     if (right_child){
         switch (prefix.length()){

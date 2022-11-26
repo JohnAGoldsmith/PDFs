@@ -19,7 +19,6 @@ SOURCES += \
     ReadFile.cpp \
     TopView.cpp \
     WriteToFile.cpp \
-    lists.cpp \
     main.cpp \
     popUp.cpp \
     string_functions.cpp \
@@ -28,6 +27,9 @@ SOURCES += \
 
 HEADERS += \
     BiblioTableModel.h \
+    EntriesModel.h \
+    Entry.h \
+    EntryModel.h \
     tok.h \
     widget.h
 

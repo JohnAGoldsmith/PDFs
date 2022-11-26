@@ -3,6 +3,7 @@
 #include <QHeaderView>
 #include <QMessageBox>
 #include "widget.h"
+#include "EntryModel.h"
 
 //extern void display_entry_on_tablewidget(QTableWidget* table_widget, Entry* entry, QStringList & my_labels);
 //bextern void display_entry_on_tablewidget(QTableView* table_widget, Entry* entry, QStringList & my_labels);

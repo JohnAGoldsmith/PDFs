@@ -23,8 +23,9 @@
 #include<QAbstractScrollArea>
 #include <EGL/egl.h>
 #include "BiblioTableModel.h"
+#include "Entry.h"
 
-class List;
+//class List;
 
 
 
@@ -189,7 +190,7 @@ void Widget::read_JSON_file_new(QString filename){
         }
     }
     m_biblioModel->register_all_entries();
-    m_biblioModel->m_proxyModel = new MySortFilterProxyModel () ;
+    m_biblioModel->m_proxyModel = new My_biblio_SortFilterProxyModel () ;
     m_biblioModel->m_proxyModel->setSourceModel( m_biblioModel );
 
     m_topTableView->setModel( m_biblioModel->m_proxyModel );

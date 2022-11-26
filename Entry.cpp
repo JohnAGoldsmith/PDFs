@@ -22,8 +22,8 @@
 #include <QScrollBar>
 #include<QAbstractScrollArea>
 #include <EGL/egl.h>
-
-class List;
+#include "Entry.h"
+//class List;
 
 
 Entry::Entry(){

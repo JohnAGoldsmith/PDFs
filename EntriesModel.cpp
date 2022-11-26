@@ -24,7 +24,9 @@
 #include <QAbstractItemModel>
 #include <QAbstractTableModel>
 #include <EGL/egl.h>
-class List;
+#include "EntriesModel.h"
+#include "Entry.h"
+//class List;
 
 
 
@@ -33,12 +35,45 @@ class List;
 EntriesModel::EntriesModel(Widget * main_widget){
     m_parent = main_widget;
     //m_entry = main_widget->m_entry_in_bottom_table;
-    m_proxyModel = new MySortFilterProxyModel();
+    m_proxyModel = new My_onboard_SortFilterProxyModel();
     m_proxyModel->setSourceModel(this);
 }
 EntriesModel::~EntriesModel(){
 
 }
+
+bool test_for_pattern (QString str){
+    if (str.length()<4) {return false;}
+    if (str[0].isLetterOrNumber() &&
+        str[1].isSpace() &&
+        str[2].isLetterOrNumber() &&
+        str[3].isSpace()){
+        return true;
+    }
+    return false;
+}
+/* The following could be done differently: instead of using a
+ * SortFilterProxyModel, we could have changed the sort() function for
+ * the EntriesModel for a particular column number.
+ */
+bool My_onboard_SortFilterProxyModel::lessThan(const QModelIndex &left, const QModelIndex &right) const{
+    QString left_name = sourceModel()->data(left).toString();
+    QString right_name = sourceModel()->data(right).toString();
+    if (test_for_pattern(left_name) && test_for_pattern(right_name)){
+        return left_name < right_name;
+    }
+    if ( ! test_for_pattern(left_name) && ! test_for_pattern(right_name)){
+        return left_name < right_name;
+    }
+    if (test_for_pattern(left_name) && ! test_for_pattern(right_name)){
+        return true;
+    }
+    if (! test_for_pattern(left_name) && test_for_pattern(right_name)){
+         return false;
+    }
+    return false;
+}
+
 bool EntriesModel::contains_size(int this_size){
     if (m_data_by_size.contains(this_size)) {
         return true;

@@ -36,7 +36,7 @@ struct Prefix_String{
     }
 };
 
-class List;
+//class List;
 class Entry;
 class PopUp;
 class EntryModel;
@@ -54,10 +54,16 @@ QString find_surname(QString name);
 QString prepose_surname_if_necessary(QString name);
 QString invert_first_author_if_necessary(QString authors);
 
-class MySortFilterProxyModel : public QSortFilterProxyModel{
+class My_onboard_SortFilterProxyModel : public QSortFilterProxyModel{
     Q_OBJECT
+protected:
+    bool lessThan(const QModelIndex &left, const QModelIndex &right) const;
 };
 
+
+class My_biblio_SortFilterProxyModel : public QSortFilterProxyModel{
+    Q_OBJECT
+};
 
 /*
 class TableView : public QTableView{
@@ -67,12 +73,17 @@ public:
     //void currentChanged(const QM  odelIndex &current, const QModelIndex &previous) override;
 };
 */
+
+// this is not used, should be tossed:
 class NewStandardItemModel : public QStandardItemModel
 {
     Q_OBJECT
 public:
     NewStandardItemModel(QObject * parent);
 };
+
+
+
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
 class Widget : public QWidget
@@ -126,15 +137,11 @@ private:
     QGridLayout               * m_small_grid_layout;
     QTreeView                 * m_directoryView;
     QTreeView                 * m_ToK_view;
-
-    //QTableWidget            * m_middle_table_wdget;
     QTableWidget            * m_bottom_table_widget;  // get rid of this
     QTableWidget            * m_bottom_table_widget2;
     //QTableWidget            * m_filePrefixTableWidget;
     QWidget                 * m_middle_right_widget;
     PopUp                   * myPopUp;
-    //QListWidget             * m_listWidget;
-    //QListWidget             * m_listNamesWidget;
     QLabel                  * m_proposed_new_title_label;
 
     QLineEdit   * m_proposed_new_title_widget;
@@ -150,7 +157,10 @@ private:
     QPushButton * m_check_biblio_for_shared_key_button;
     QPushButton * m_check_biblio_for_shared_size_button;
     QPushButton * m_check_biblio_for_shared_filename_button;
-    QLineEdit * m_new_list_name_widget;
+    QLineEdit   * m_new_list_name_widget;
+    QPushButton * m_new_ToK_item_button;
+    QLineEdit * m_new_ToK_prefix_widget;
+    QLineEdit * m_new_ToK_prose_widget;
 
     // Keeping track of GUI
     QStringList     m_bibliography_labels;
@@ -173,11 +183,6 @@ private:
     QMultiMap<QString, Entry*> m_filename_collisions;
 
 
-    /*   Lists         */
-    QString              m_lists_complete_filename;
-    //List *               m_current_list;
-    //QList<List*>         m_Lists;
-    //QMap<QString, List*> m_Lists_map;
 
     QShortcut *  m_keyCtrlA; // show files of same size
     QShortcut *  m_keyCtrlC; // change filename
@@ -221,7 +226,7 @@ private:
     Entry*  get_selected_onboard_entry() {return m_selected_onboard_entry;}
     void    link_biblio_entry_and_onboard_entry(Entry* biblio, Entry* onboard);
 private slots:
-
+    void add_ToK_item();
     void Control_S();
     void create_new_biblio_entry();
     void create_or_update_biblio_entry();
@@ -300,121 +305,13 @@ private slots:
     //void read_JSON_file();
     //void link_top_and_bottom_entries_from_filename();
 
-    /*    Lists              */
-    //void read_lists_file();
-    /*
-    void new_list();
-    void new_list(QString);
-    void add_entry_to_list();
-    void add_entry_to_list(List*, Entry*);
-    //void write_lists_to_json(QJsonObject &);
-    void write_lists_to_json(QJsonArray &);
-    void change_location_of_listsInfo();
 
-    void display_list(List* );
-    void select_new_list(QListWidgetItem * );
-    void on_listWidget_doubleClicked(QListWidgetItem*);
-    void save_current_list();
-    */
+
+
 };
 // ------------------------------------------------------------------------------------------------------ //
 
-class Entry {
-    //friend class EntryModel;
 
-    QMap<QString,QString>   info;
-    //QString               key;
-    int                     size;
-    bool                    m_selected_for_deletion;
-    //QDateTime m_creation_time;`
-    QString                 m_filename_full;
-    QStringList             m_multiple_filenamefulls;
-    QStandardItem *         m_top_view_size_item;
-    QStandardItem *         m_top_view_filename_item;
-    QTableWidgetItem *      m_bottom_view_size_item;
-    QTableWidgetItem *      m_bottom_view_filename_item;
-    QList<Entry*>           m_links_to_on_board_entries;
-    QList<Entry*>           m_links_to_bib_entries;
-    QColor                  m_temporary_color;
-public:
-    Entry();
-    Entry(const Entry&);
-    Entry (QFileInfo &);
-    Entry(QString this_key) {info.insert("key", this_key); }
-    Entry(QString filename, QString path, qint64 size);
-    Entry(QString filename, QString path, int size) ;
-    ~Entry();
-
-    QString display();
-
-    void append_keywords(QString k){info["keywords"] = get_keywords() + " " + k;}
-    void add_to_bib_entries(Entry* entry){m_links_to_bib_entries.append(entry);}
-    void add_to_onboard_entries(Entry* entry);
-    void add_keywords(QTableWidget *);
-    bool contains_info(QString key){return info.contains(key);}
-    QString get_info(QString);
-    int     get_size()         {return size;}
-    QString get_key()          {if (info.contains("key")) {return info["key"];} else{return QString();}}
-    QString get_title()        {if (info.contains("title")) {return info["title"];} else{return QString();}}
-    QString get_author()       {if (info.contains("author")) {return info["author"];} else{return QString();}}
-    QString get_year()         {if (info.contains("year")) {return info["year"];} else{return QString();}}
-    QString get_folder()       {if (info.contains("folder")) {return info["folder"];} else{return QString();}}
-    QString get_filenamefull();
-    QString get_keywords()     {if (info.contains("keywords")) {return info["keywords"];} else{ return QString();}}
-    QStringList* get_multiple_filenamefulls() {return &m_multiple_filenamefulls;}
-    QString get_filenamestem() {if (info.contains("filenamestem")) {return info["filenamestem"];} else{return QString();}}
-    QColor get_temporary_color() {return m_temporary_color;}
-    bool    if_linked_to_onboard_entry();
-    bool    if_linked_to_biblio_entry();
-    void write_bibentry_to_bibtex( QTextStream & ,QStringList &);
-    QList<Entry*> get_on_board_entries(){return m_links_to_on_board_entries;}
-    QList<Entry*> get_links_to_bib_entries() {return m_links_to_bib_entries;}
-    //void mark_bottom_view_entry_as_matched_to_biblio();
-    void remove_bottom_view_links();
-    void read_json(QJsonObject &);
-    void set_key(QString s) {info["key"] = s;}
-    void    set_keywords(QString s) {info["keywords"] = s;}
-    void set_title(QString s)  {info["title"] = s;}
-    void set_author(QString s) {info["author"] = s;}
-    void set_year(QString s) {info["year"] = s;}
-    void set_filename_full(QString s);// {info["filenamefull"] = s;}
-    void set_filename_stem(QString s) {info["filenamestem"] = s;}
-    void set_folder(QString folder) {info["folder"] = folder;}
-    void set_size(int s) {size = s;}
-    bool selected_for_deletion() {return m_selected_for_deletion;}
-    void set_selected_for_deletion(bool value) {m_selected_for_deletion = value;}
-    void set_top_view_size_item (QStandardItem* item ){m_top_view_size_item = item;}
-    void set_bottom_view_size_item(QTableWidgetItem* item ) {m_bottom_view_size_item = item;}
-    void set_top_view_filename_item (QStandardItem* item ){m_top_view_filename_item = item;}
-    void set_bottom_view_filename_item(QTableWidgetItem* item ) {m_bottom_view_filename_item = item;}
-    void set_info(QString key,QString value); //{info[key] = value;}
-    void set_info(QString key, int this_size) {size = this_size; }
-    void set_size_item(int);
-    void set_temporary_color(QColor color) {m_temporary_color = color;}
-    void set_filename_item_bottom(QString);
-    // keys: key, title, author, year, filenameFull, filenameStem
-
-
-
-};
-
-class List {
-    QString name;
-      QList<Entry*> entries;
-
-public:
-    List();
-    List(QString);
-    ~List();
-    QString         get_name() {return name;}
-    QList<Entry*> * get_entries() {return & entries;}
-    Entry*          get_entry(int n) {return entries[n];}
-    int             get_count_of_entries(){return entries.count();}
-    void            add_entry(Entry * entry) {entries.append(entry);}
-    void            read_json(QJsonObject & );
-    void            read_json(QJsonArray & );
-
-};
 //----------------------------------------------------------------------------------------
 class PopUp: public   QTableView
 {
@@ -437,7 +334,7 @@ public:
 class EntriesView: public QTableView{
     Q_OBJECT
 public:
-    void set_proxy_model(MySortFilterProxyModel *);
+    void set_proxy_model(My_onboard_SortFilterProxyModel *);
     //void selectionChanged(const QItemSelection &selected, const QItemSelection &deselected); // from AbstractItemView
 
 };
@@ -449,7 +346,7 @@ class EntriesView_onboard_files: public QTableView{
     Q_OBJECT
 public:
     EntriesView_onboard_files();
-    void set_proxy_model(MySortFilterProxyModel *);
+    void set_proxy_model(My_onboard_SortFilterProxyModel *);
 
 };
 
@@ -480,95 +377,7 @@ public:
 //............................................................................................
 
 
-class EntriesModel: public QAbstractTableModel{
-    Q_OBJECT
-    Widget *                   m_parent;
-    Entry*                     m_selected_entry; // ?? is this needed?
-
-    QList<Entry*>              m_entries;
-
-    QMap<QString, Entry*>      m_data_by_filename_stem;
-    QMultiMap<QString, Entry*> m_data_by_filename_stem_multiple;
-
-    QMap<int, Entry*>           m_data_by_size;
-    QMultiMap<int, Entry*>      m_data_by_size_multiple;
-
-
-    QMap<QString, Entry*>       m_data_by_filenamefull;
-
-
-
-
-public:
-    EntriesModel ( Widget *parent );
-    ~EntriesModel();
-    MySortFilterProxyModel *   m_proxyModel;
-
-    //index() override;
-    //parent() override;
-    int            rowCount(const QModelIndex &parent = QModelIndex()) const override;
-    int            columnCount(const QModelIndex &parent = QModelIndex()) const override;
-    QVariant       data(const QModelIndex & index, int role = Qt::DisplayRole) const override;
-    QStringList    get_bibliography_labels() const  { return   m_parent->get_bibliography_labels();}
-    bool           setData(const QModelIndex &index, const QVariant & value, int role) override;
-    void           addEntry(Entry*);
-    QVariant       headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
-    void           setSeletedEntry(Entry* entry) {m_selected_entry = entry;}
-    MySortFilterProxyModel* getProxyModel() {return m_proxyModel;}
-    int            number_of_entries(){return m_entries.count();}
-    QList<Entry*> * get_entries(){return & m_entries;}
-    Entry*          get_entry_with_filenamestem(QString stem) {return m_data_by_filename_stem.value(stem);}
-    QList<Entry*>   get_entries_with_filenamestem(QString stem) {return m_data_by_filename_stem_multiple.values(stem);}
-    Entry*          get_entry_by_full_filename(QString filename) {return m_data_by_filenamefull.value(filename);}
-    bool            contains_entry_with_filenamestem(QString stem) {return m_data_by_filename_stem.contains(stem);}
-    bool            contains_multiple_entries_with_filenamestem(QString stem){return m_data_by_filename_stem_multiple.contains(stem);}
-    bool            contains(Entry * entry) { return m_entries.contains(entry);}
-
-    void            register_entry(Entry*);
-    void            register_entry_by_size(Entry*);
-    void            register_entry_by_filename_full(Entry*);
-
-    int             get_count_of_multiply_used_sizes() {return m_data_by_size_multiple.keys().count();}
-    Entry*          get_entry_by_size(int size) {return m_data_by_size[size];}
-    QList<int>      get_list_of_sizes_used() {return m_data_by_size.keys();}
-    QList<Entry*>   get_multiple_entries_from_size(int size) {return m_data_by_size_multiple.values(size);}
-    bool            if_size_occurs_multiply(int size) {return m_data_by_size_multiple.contains(size);}
-    bool            contains_size(int this_size);
-
-    int             get_count_of_multiply_used_filename_stems() {return m_data_by_filename_stem_multiple.keys().count();}
-    Entry*          get_entry_by_filename_stem(QString stem) {return m_data_by_filename_stem[stem];}
-    QList<QString>  get_list_of_filename_stems_used() {return m_data_by_filename_stem.keys();}
-    QList<Entry*>   get_multiple_entries_from_filename_stem(QString stem) {return m_data_by_filename_stem_multiple.values(stem);}
-    bool            if_filename_stem_occurs_multiply(QString stem) {return m_data_by_filename_stem_multiple.contains(stem);}
-    bool            contains_filename_stem(QString stem);
-
-};
 //....................................................................................................
-class EntryModel : public QAbstractListModel{
-    //friend class Widget;
-
-    Q_OBJECT
-    Entry*          m_entry;
-    QStringList    m_bibliography_labels;
-    QWidget         m_parent;
-
-public:
-                   EntryModel (Entry *, QStringList bibliography_labels);
-                   ~EntryModel();
-    int            rowCount(const QModelIndex &parent = QModelIndex()) const override;
-    int            columnCount(const QModelIndex &parent = QModelIndex()) const override;
-    QVariant       data(const QModelIndex & index, int role = Qt::DisplayRole) const override;
-    QStringList    get_bibliography_labels() const  { return   m_bibliography_labels;}
-    int             get_filename_row();
-    bool           setData(const QModelIndex &index, const QVariant & value, int role) override;
-    Qt::ItemFlags  flags(const QModelIndex &index) const override;
-    void           display(Entry* entry);
-    void           change_entry(Entry*);
-    Entry*          get_entry(){return m_entry;}
-//    void           dataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &roles = QVector<int>());
-//    void           setData(Entry* entry);
-//    bool           setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole);
-};
 
 
 class EntryView: public QTableView{

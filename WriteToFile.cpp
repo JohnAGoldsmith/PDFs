@@ -22,14 +22,13 @@
 #include <QScrollBar>
 #include<QAbstractScrollArea>
 #include <EGL/egl.h>
-
+#include "Entry.h"
 #include "BiblioTableModel.h"
 
-class List;
+//class List;
 QString remove_prefix_and_remove_spaces(QString & string);
 
 void Widget::read_ToK_from_json(QString filename){
-
     QFile fileIn(filename);
     if (!fileIn.open(QIODevice::ReadWrite | QIODevice::Text))
         return;
@@ -46,18 +45,12 @@ void Widget::read_ToK_from_json(QString filename){
     }
     QJsonArray json_ToK;
     json_ToK =  json_doc["ToK"].toArray();
-
     foreach (QJsonValue value, json_ToK){
         QJsonObject this_object = value.toObject();
         QString prefix = this_object["prefix"].toString();
         QString string =  this_object["string"].toString();
-        //qDebug() << "";
-        //qDebug() << 77 << "reading json"<< this_object["prefix"].toString() << this_object["string"].toString();
         m_ToK_model->addItem(prefix, string);
-
-
     }
-
 }
 void Widget::write_ToK_to_file(){
     QString outfile_name = "pdf_manager_tok_init.json";
@@ -84,24 +77,7 @@ void Widget::write_ToK_to_file(){
 
 }
 /*           WRITE TO FILE              */
-void write_list_to_json(List* list, QJsonArray & json_array ){
-    QJsonObject this_list;
-    this_list["list_name"] = list->get_name();
-    QJsonArray this_list_entries;
-    for (int n=0; n < list->get_count_of_entries(); n++){
-        QJsonObject this_entry;
-        Entry* entry = list->get_entry(n);
-        this_entry["key"]= entry->get_key();
-        this_entry["title"]= entry->get_title();
-        this_entry["author"]= entry->get_author();
-        this_entry["year"]= entry->get_year();
-        this_entry["size"]= entry->get_size();
-        this_list_entries.append(this_entry);
-    }
-    this_list["entries"] = this_list_entries;
-    json_array.append(this_list);
 
-}
 /*
 void Widget::write_lists_to_json(QJsonArray & json_array){
     foreach (List* list, m_Lists){
@@ -115,6 +91,7 @@ void Widget::write_bibliography(){
     write_ToK_to_file();
 }
 void Widget::write_bibliography_to_json( ){
+    if (!m_biblioModel) {return;}
     QDateTime date = QDateTime::currentDateTime();
     QString formattedTime = date.toString("yyyy_MM_dd_hh:mm:ss");
     qDebug() << 487 << formattedTime;
@@ -147,6 +124,7 @@ void Widget::write_bibliography_to_json( ){
     }
 }
 void Widget::write_bibliography_to_bibtex(){
+    if (! m_biblioModel) {return;}
     QDateTime date = QDateTime::currentDateTime();
     QString formattedTime = date.toString("yyyy_MM_dd_hh:mm:ss");
     QString filename = m_json_folder + "this_bibliography.bibtex";

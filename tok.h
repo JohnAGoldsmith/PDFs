@@ -1,4 +1,4 @@
-#ifndef TOK_H
+    #ifndef TOK_H
 #define TOK_H
 
 #include <QVariant>
