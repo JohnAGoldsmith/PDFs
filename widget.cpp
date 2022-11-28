@@ -57,6 +57,7 @@ void Widget::set_screen_layout(){
     m_mainSplitter->addWidget(m_leftSplitter);
     m_mainSplitter->addWidget(m_center_entry_view);
     m_mainSplitter->addWidget(m_rightSplitter);
+    m_mainSplitter->setStretchFactor(0,1);
 
     // left column
     m_leftSplitter->addWidget(m_topTableView);
@@ -73,15 +74,14 @@ void Widget::set_screen_layout(){
     m_proposed_new_title_label = new QLabel("Proposed new title") ;
 
     m_proposed_new_title_widget = new QLineEdit();
-    m_proposed_new_title_widget->setFixedWidth(200);
+    //m_proposed_new_title_widget->setFixedWidth(200);
 
     m_new_ToK_item_button = new QPushButton();
     m_new_ToK_item_button->setText("New ToK item");
     m_new_ToK_prefix_widget = new QLineEdit();
-        //m_new_ToK_prefix_widget->setMaximumWidth(100);
     m_new_ToK_prefix_widget->setFixedWidth(120);
     m_new_ToK_prose_widget = new QLineEdit();
-    m_new_ToK_prose_widget->setFixedWidth(200);
+    //m_new_ToK_prose_widget->setFixedWidth(200);
     m_generate_new_filename_button = new QPushButton("Generate new filename and key");
   //m_change_filename_button = new QPushButton("Change file name to (^K):");
     m_create_new_bibentry_button = new QPushButton("Create new biblio entry (^K):");
@@ -122,7 +122,8 @@ void Widget::set_screen_layout(){
     m_rightSplitter->addWidget(m_ToK_view);
     m_rightSplitter->addWidget(m_middle_right_widget); // this is the grid-layout
     m_rightSplitter->addWidget(m_directoryView);
-
+    m_rightSplitter->setStretchFactor(0,60);
+    m_rightSplitter->setStretchFactor(2,40);
 }
 
 Widget::Widget(QWidget *parent)
@@ -388,7 +389,8 @@ void Widget::add_ToK_item(){
     QString prefix = m_new_ToK_prefix_widget->text();
     QString title = m_new_ToK_prose_widget->text();
     m_ToK_model->addItem(prefix, title);
-
+    m_ToK_model->dataChanged(QModelIndex(), QModelIndex());
+    write_ToK_to_file();
 }
 
 
@@ -593,15 +595,13 @@ void Widget::set_screen_state(){
     switch ( m_screen_state ) {
         case 0:{
             m_topTableView->setVisible(true);
-            //m_middle_table_wdget->setVisible(true);
             m_bottomTableView->setVisible(true);
             m_entry_match_view->setVisible(false);
             m_rightSplitter->setVisible(true);
             m_middle_right_widget->setVisible(true);
-            //m_listNamesWidget->setVisible(true);
             m_directoryView->setVisible(true);
-            //m_listWidget->setVisible(true);
             m_mainSplitter->setSizes(QList<int>({2000, 100, 1000}));
+            m_mainSplitter->setStretchFactor(1,1);
             break;
         }
         case 1:{ // only biblio entries   entry view for selected item
@@ -665,74 +665,6 @@ void Widget::set_screen_state(){
     }
 
 }
-void Widget::load_file_prefixes(QTableWidget* table){
-    int ROWCOUNT = 55;
-    table->setColumnCount(3);
-    //table->setColumnWidth(0,6);
-    //table->setColumnWidth(1,6);
-    //table->setColumnWidth(2,200);
-    // Disable scroll bar of the table
-    table->horizontalScrollBar()->setDisabled(true);
-    //table->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    //table->setHorizontalScrollBarPolicy(AdjustIgnored);
-    table->horizontalHeader()->setStretchLastSection(true);
-
-    table->setRowCount(ROWCOUNT);
-    QStringList Column1, Column2, Column3;
-    Column1 << QString("0") << QString("0") <<  QString("0") << QString("0") ;
-    Column2 << QString("0") << QString("1") << QString("2") << QString("3");
-    Column3 << QString("Zellig2Noam") << QString("Linguistica and segmentation") << QString("Prime suspect") << QString ("Battle in the Mind Fields");
-    Column1 << QString("1") << QString("1") << QString("1") << QString("1")<< QString("1") << QString("1") << QString("1") << QString("1");
-    Column2 << QString("") << QString("1") << QString("2")<< QString("3")<< QString("4")<< QString("5")<< QString("6")<< QString("7");
-    Column3 << QString("Linguistics") << QString("Phonology") << QString("Morphology") << QString ("Syntax")<< QString ("History of lx")<< QString ("Semantics")<< QString ("ASL")<< QString ("African");
-    Column1 << QString("2") << QString("2") << QString("2") << QString("2")<< QString("2") << QString("2") << QString("2");
-    Column2 << QString("") << QString("1") << QString("2")<< QString("3")<< QString("4")<< QString("5")<< QString("6");
-    Column3 << QString("Philosophy") << QString("Philosophy of science") << QString("Philosophy of mathematics") << QString ("Continental philosophy")<< QString ("Analytic philosophy")<< QString ("Continental vs analytic")<< QString ("other history of philosophy");
-    Column1 << QString("3") << QString("3") << QString("3") ;
-    Column2 << QString("") << QString("1") << QString("2") ;
-    Column3 << QString("Psychology") << QString("cognitive psychology") << QString("history of psychology");
-    Column1 << QString("4") << QString("4") << QString("4") << QString("4") << QString("4") << QString("4") ;
-    Column2 << QString("") << QString("1") << QString("2") << QString("3") << QString("4") << QString("5") ;
-    Column3 << QString("Computer science") << QString("Machine learning") << QString("Data visualization")
-            << QString("Programming") << QString("Comp Lx NLP") << QString("Algorithmic complexity");
-    Column1 << QString("5") << QString("5") << QString("5") << QString("5") << QString("5") << QString("5")
-               << QString("5") << QString("5") << QString("5");
-    Column2 << QString("") << QString("1") << QString("2") << QString("3") << QString("4") << QString("5")<< QString("6") << QString("7") << QString("8") ;
-    Column3 << QString("Mathematics") << QString("History of math") << QString("Algebra")
-            << QString("Category theory") << QString("Statistics") << QString("Graphs")
-            << QString("Number theory") << QString("Topology (algebraic)") << QString("Probability");
-    Column1 << QString("6") << QString("6") << QString("6");
-    Column2 << QString("") << QString("1") << QString("2")  ;
-    Column3 << QString("Enlightenment") << QString("Sufism") << QString("Esotericism");
-    Column1 << QString("7") << QString("7") << QString("7") << QString("7") << QString("7") << QString("7")
-               << QString("7") ;
-    Column2 << QString("") << QString("1") << QString("2") << QString("3") << QString("4") << QString("5")<< QString("6")  ;
-    Column3 << QString("History and politics") << QString("European history") << QString("Drug trafficking")
-            << QString("Afghanistan") << QString("Russia") << QString("Intelligence")
-            << QString("France");
-    Column1 << QString("8") << QString("8") << QString("8") << QString("8") ;
-    Column2 << QString("") << QString("1") << QString("2") << QString("3")  ;
-    Column3 << QString("Science") << QString("History of science") << QString("Physics")
-            << QString("Statistical models");
-
-    Column1 << QString("9") << QString("9") << QString("9") << QString("9") ;
-    Column2 << QString("") << QString("1") << QString("2") << QString("3")  ;
-    Column3 << QString("Social sciences") << QString("Economics") << QString("Anthropology")
-            << QString("Sociology");
-
-
-    QTableWidgetItem * item1, *item2, *item3;
-    for (int row = 0; row < ROWCOUNT; row++ ){
-        item1 = new QTableWidgetItem(Column1[row]);
-        table->setItem(row,0,item1);
-        item2 = new QTableWidgetItem(Column2[row]);
-        table->setItem(row,1,item2);
-        item3 = new QTableWidgetItem(Column3[row]);
-        table->setItem(row,2,item3);
-
-    }
-}
-
 void Widget::place_entries_with_shared_keys_on_table(){
     int row(0), rowcount(0);
     rowcount = m_biblioModel->get_count_of_multiply_used_keys();
@@ -1124,99 +1056,4 @@ void Widget::generate_new_filename(){
     emit m_selected_entry_model->dataChanged(filename_index, filename_index);
     */
 }
-/*
-void Widget::on_listWidget_doubleClicked(QListWidgetItem* item){
-    int row = m_listWidget->row(item);
-    qDebug() << 724 << row;
-    Entry * entry = m_current_list->get_entry(row);
-    QString filename = entry->get_filenamefull();
-    qDebug() << 728 << filename;
-    QDesktopServices::openUrl(QUrl::fromLocalFile(filename));
-    setWindowState(Qt::WindowActive);
-}
-*/
 
-
-void Widget::set_screen_layout_old(){
-    if (m_layout) delete m_layout;
-    m_layout = new QVBoxLayout(this);
-
-    switch (m_screen_state) {
-        case 0:{
-            if (m_mainSplitter) delete m_mainSplitter;
-            m_mainSplitter = new QSplitter (Qt::Horizontal,this);
-            m_layout->addWidget(m_mainSplitter);
-            //m_mainSplitter->setSizes(QList<int>({4000, 4000}));
-            m_leftSplitter = new QSplitter(Qt::Vertical, m_mainSplitter);
-            m_rightSplitter = new QSplitter(Qt::Vertical,m_mainSplitter);
-
-            m_mainSplitter->addWidget(m_leftSplitter);
-            m_mainSplitter->addWidget(m_center_entry_view);
-            m_mainSplitter->addWidget(m_rightSplitter);
-
-            m_leftSplitter->addWidget(m_topTableView);
-            m_leftSplitter->addWidget(m_bottom_table_widget2);
-            m_leftSplitter->addWidget(m_bottomTableView);
-            m_leftSplitter->addWidget(m_entry_match_view);
-
-            m_middle_right_widget = new QWidget(this);
-            m_small_grid_layout = new QGridLayout;
-            m_middle_right_widget->setLayout(m_small_grid_layout);
-
-            m_proposed_new_title_label = new QLabel("Proposed new title") ;
-            m_proposed_new_title_widget = new QLineEdit();
-
-            m_new_list_name_widget = new QLineEdit("(enter name of new list here)");
-            m_generate_new_filename_button = new QPushButton("Generate new filename and key");
-            m_create_new_bibentry_button = new QPushButton("Create new biblio entry (^K):");
-            m_change_root_directory = new QPushButton("Change root directory");
-            m_create_new_list_button = new QPushButton("Create new list (^N):");
-            m_save_biblio_file_button = new QPushButton("Save biblio file (^S)");
-            m_add_to_list_button = new QPushButton("Add entry to selected list (^U)");
-            m_link_two_entries = new QPushButton("Link top and bottom entries (^Z)");
-            m_delete_selected_files_button = new QPushButton("Delete selected files");
-            m_delete_size_on_selected_biblio_entries = new QPushButton("Delete size on selected biblio entries");
-            m_check_biblio_for_shared_key_button = new QPushButton("Check biblio for shared keys");
-            m_check_biblio_for_shared_size_button = new QPushButton("Check biblio for shared sizes");
-            m_check_biblio_for_shared_filename_button = new QPushButton("Check biblio for shared filenames");
-
-            m_small_grid_layout->addWidget(m_create_new_list_button,0,0);
-            m_small_grid_layout->addWidget(m_new_list_name_widget,0,1);
-            //small_grid_layout->addWidget(m_change_filename_button,1,0);
-            m_small_grid_layout->addWidget(m_create_new_bibentry_button,1,0);
-            m_small_grid_layout->addWidget(m_proposed_new_title_widget,1,1);
-            m_small_grid_layout->addWidget(m_generate_new_filename_button,2,0);
-            m_small_grid_layout->addWidget(m_delete_size_on_selected_biblio_entries,3,0);
-            m_small_grid_layout->addWidget(m_change_root_directory,4,0);
-            m_small_grid_layout->addWidget(m_save_biblio_file_button,5,0);
-            m_small_grid_layout->addWidget(m_add_to_list_button,6,0);
-            m_small_grid_layout->addWidget(m_link_two_entries,7,0);
-            m_small_grid_layout->addWidget(m_delete_selected_files_button,8,0);
-            m_small_grid_layout->addWidget(m_check_biblio_for_shared_key_button,9,0);
-            m_small_grid_layout->addWidget(m_check_biblio_for_shared_size_button,10,0);
-            m_small_grid_layout->addWidget(m_check_biblio_for_shared_filename_button,11,0);
-            m_rightSplitter->addWidget(m_middle_right_widget);
-            m_rightSplitter->addWidget(m_directoryView);
-
-            break;
-            }
-    case 1:{
-        m_mainSplitter = new QSplitter (Qt::Horizontal,this);
-        m_layout->addWidget(m_mainSplitter);
-        m_mainSplitter->setSizes(QList<int>({4000, 4000}));
-        m_leftSplitter = new QSplitter(Qt::Vertical, m_mainSplitter);
-        m_rightSplitter = new QSplitter(Qt::Vertical,m_mainSplitter);
-        m_mainSplitter->addWidget(m_leftSplitter);
-        m_mainSplitter->addWidget(m_rightSplitter);
-        m_leftSplitter->addWidget(m_topTableView);
-           break;
-        }
-    case 2:{
-        break;
-        }
-    case 3:{
-
-        break;
-        }
-    }
-}

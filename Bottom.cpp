@@ -39,10 +39,9 @@
 
 void Widget::on_bottom_table_view_clicked(const QModelIndex& index){
     if (m_onboard_pdf_model->number_of_entries() < 1) {return;}
-    //QModelIndex index2 = m_onboard_pdf_model->getProxyModel()->mapToSource( index  );
     int row =  m_onboard_pdf_model->getProxyModel()->mapToSource( index  ).row() ;
     if (row < 0) {return;}
-    //Entry * entry_2 = static_cast<Entry*>(index2.internalPointer());
+    // what follows is the wrong way to do it; it should be done with internal pointer and index
     QString  stem =   m_onboard_pdf_model->index(row,1).data().toString();
     QString filename = m_onboard_pdf_model->index(row,2).data().toString() + "/" + stem;
     Entry * entry = m_onboard_pdf_model->get_entry_by_full_filename(filename);
@@ -53,8 +52,6 @@ void Widget::on_bottom_table_view_clicked(const QModelIndex& index){
         m_selected_onboard_entry = entry;
     }
 }
-
-
 void Widget::search_folders_for_pdf()
 {
     // For each entry in the top model, remove the link to items in the bottom widget:
@@ -85,7 +82,6 @@ void Widget::search_folders_for_pdf()
     // this is done in a different function ::  todo to do
     if (m_biblioModel){
         link_biblio_entries_and_onboard_entries_from_size(); // TODO: clear out any previous linkings before doing this;
-        // link_top_and_bottom_entries_from_filename(); // TODO: clear out any previous linkings before doing this;
     }
 }
 void Widget::set_filename_item_bottom_widget(int row, QString new_name){
@@ -94,18 +90,26 @@ void Widget::set_filename_item_bottom_widget(int row, QString new_name){
 void Widget::delete_selected_files(){
     // TODO why the rowcount -1 ? Check for presence of entries in the widget.
     for(int row = 0; row < m_bottom_table_widget->rowCount()-1; row++){
-        //qDebug() << 1287 << "row" << row;
         if (m_bottom_table_widget->item(row,0)->checkState()==Qt::Checked){
-            //qDebug() << 1289;
             QString filename = m_bottom_table_widget->item(row,2)->text() + "/" + m_bottom_table_widget->item(row,1)->text();
-            QFile file(filename);
-            //qDebug() << 1292;
-            file.remove();
+            QFile::moveToTrash(filename);
+            //QFile file(filename);
+            //file.remove();
         }
-        //qDebug() << 1293 << "row" << row;
     }
     m_bottom_table_widget->clear();
     search_folders_for_pdf();
+
+    QModelIndexList selection = m_bottomTableView->selectionModel()->selectedRows();
+
+    // Multiple rows can be selected
+    for(int i=0; i< selection.count(); i++)
+    {
+        QModelIndex index = selection.at(i);
+        qDebug() << index.row();
+    }
+
+
 }
 void Widget::show_files_with_same_size(){
     QStringList horizontal_headers;

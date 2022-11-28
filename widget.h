@@ -231,7 +231,6 @@ private slots:
     void create_new_biblio_entry();
     void create_or_update_biblio_entry();
     void set_screen_layout();
-    void set_screen_layout_old();
     void quit_now() {QApplication::quit();}
     void read_JSON_file_old();
     void read_JSON_file_new(QString filename = QString());

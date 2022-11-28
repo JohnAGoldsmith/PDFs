@@ -242,6 +242,7 @@ void ToK_model::addItem(  QString & prefix,  const QString & string){
     TreeItem * item = m_rootItem->find_place_in_tree(prefix_copy);
     item->setData(string);
     item->set_prefix(prefix);
+
 }
 
 TreeItem* TreeItem::find_child_ending_with_char(QChar this_char){
