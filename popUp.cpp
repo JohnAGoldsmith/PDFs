@@ -12,7 +12,7 @@ PopUp::PopUp(EntryModel * selected_entry_model){
                         resizeColumnToContents(0);
      QShortcut *        m_keyCtrlRightBracket; // ] hide popUp
                         m_keyCtrlRightBracket = new QShortcut(this);
-                        m_keyCtrlRightBracket->setKey(Qt::CTRL  + Qt::Key_BracketRight);
+                        m_keyCtrlRightBracket->setKey(Qt::CTRL  | Qt::Key_BracketRight);
                         connect(m_keyCtrlRightBracket, SIGNAL(activated()), this, SLOT(hide()));
                         setGeometry(0,0,450,1400);
                         horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
@@ -24,8 +24,8 @@ PopUp::PopUp(EntryModel * selected_entry_model){
 
 void Widget::open_popUp(){
     if (myPopUp== nullptr){
-
-        if (! m_selected_onboard_entry ) {
+        
+        if (! m_selected_file ) {
             QMessageBox box;
 
             box.setText( "Select an item first.");
@@ -35,10 +35,10 @@ void Widget::open_popUp(){
 
         myPopUp = new PopUp(m_selected_entry_model);
         m_keyCtrlRightBracket = new QShortcut(this);
-        m_keyCtrlRightBracket->setKey(Qt::CTRL  + Qt::Key_BracketRight);
+        m_keyCtrlRightBracket->setKey(Qt::CTRL  | Qt::Key_BracketRight);
         connect(m_keyCtrlRightBracket, SIGNAL(activated()), this, SLOT(close_popUp()));
     } else{
-        myPopUp->setEntry(m_selected_onboard_entry);
+      //  myPopUp->setEntry(m_selected_onboard_entry);
 
     }
 

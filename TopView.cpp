@@ -31,11 +31,11 @@
 
 void Widget::on_top_table_view_clicked(const QModelIndex&index){
     qDebug() << "top table clicked";
-    if (m_biblioModel->get_entries().count()== 0) return;
-    QModelIndex basic_index = m_biblioModel->m_proxyModel->mapToSource(index);
+    if (m_biblio_model->get_entries().count()== 0) return;
+    QModelIndex basic_index = m_biblio_model->m_proxyModel->mapToSource(index);
     int model_row = basic_index.row();
     qDebug() <<1035  << "model row" <<model_row ;
-    Entry * entry = m_biblioModel->get_entries().at(model_row);
+    Entry * entry = m_biblio_model->get_entries().at(model_row);
     //m_entry_in_top_table  = entry;   // Oct 30 2022
 
     if (!m_selected_entry_model){
@@ -57,7 +57,7 @@ void Widget::on_top_table_view_clicked(const QModelIndex&index){
              qDebug() << 1061 << "this box is now not checked";
         }
     }
-    m_biblioModel->dataChanged(basic_index, basic_index);
+    m_biblio_model->dataChanged(basic_index, basic_index);
 
 
     //put_bibitem_info_on_middle_table_widget(index);
@@ -69,10 +69,10 @@ void Widget::on_top_table_view_clicked(const QModelIndex&index){
 }
 
 void Widget::on_top_table_view_doubleClicked(const QModelIndex&index){
-    QModelIndex underlying_index = m_biblioModel->m_proxyModel->mapToSource(index);
+    QModelIndex underlying_index = m_biblio_model->m_proxyModel->mapToSource(index);
     int model_row = underlying_index.row();
  qDebug() <<63   <<  index << "index row"<<index.row() << "model row" <<model_row ;
-    Entry * entry = m_biblioModel->get_entries().at(model_row);
+    Entry * entry = m_biblio_model->get_entries().at(model_row);
 
     QString filename =  entry->get_filenamefull();
     QDesktopServices::openUrl(QUrl::fromLocalFile(filename));

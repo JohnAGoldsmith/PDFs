@@ -25,33 +25,36 @@
 #include <QFileSystemModel>
 #include "widget.h"
 #include "BiblioTableModel.h"
-#include "EntriesModel.h"
-#include <Entry.h>
+#include "FilesModel.h"
+#include "entry_match_model.h"
+#include "Entry.h"
 
-EntryMatchModel::EntryMatchModel(BiblioTableModel* biblio_model, EntriesModel* file_model, QWidget* parent){
+EntryMatchModel::EntryMatchModel(BiblioTableModel* biblio_model, FilesModel* file_model, QWidget* parent){
    m_biblio_model = biblio_model;
    m_file_model = file_model;
 };
 
 
 void EntryMatchModel::match_filestems(){
-    // for each entry in biblioEntries, find all the entries in onboardFiles that match the filestem-name.
-    QList<Entry*> entry_list;
+    // for each entry in biblioEntries, find all the files in onboardFiles that match the filestem-name.
+    QList<File*> file_list;
+    if (!m_biblio_model) {return;}
+    if (!m_file_model) {return;}
     foreach (Entry* entry, m_biblio_model->get_entries()){
         if (entry->get_size() > 0) {continue;}
-        if (entry->get_filenamestem().length() == 0){ continue;}
-        QString filename = entry->get_filenamestem();
-        if (m_file_model->contains_multiple_entries_with_filenamestem( filename ) ) {
-            entry_list = m_file_model->get_entries_with_filenamestem( filename );
-            m_entries.append(entry);
-            foreach (Entry* entry2,  entry_list){
-                m_entries.append(entry2);
+        if (entry->get_filename().length() == 0){ continue;}
+        QString filename = entry->get_filename();
+        if (m_file_model->contains_multiple_entries_with_filename( filename ) ) {
+            file_list = m_file_model->get_files_with_filename( filename );
+            foreach (File* file,  file_list){
+                QPair<Entry*, File*> * pair = new QPair< Entry*, File*>(entry, file);
+                m_entries.append(pair);
             }
         } // end of multiple matches
-        else { Entry* entry3 = m_file_model->get_entry_with_filenamestem(filename);
-               if (entry3){
-                       m_entries.append(entry);
-                       m_entries.append(entry3);
+        else { File* file = m_file_model->get_file_with_filename(filename);
+               if (file){
+                  QPair<Entry*,File*>* pair = new QPair <Entry*,File*>(entry, file);
+                  m_entries.append(pair);
                }
         }
     }
@@ -77,14 +80,15 @@ QVariant EntryMatchModel::data(const QModelIndex & index, int role )const
     if (m_entries.count() == 0){
         return QVariant();
     }
-    Entry* entry = m_entries.at(row);
+    // todo to do
+    Entry* entry = m_entries.at(row)->first;
     if (!entry) return QVariant();
     if (role == 0) {
         switch (index.column()){
         case 0:
             return QVariant (index.row()+1);
          case 1:
-            return QVariant(entry->get_filenamestem() );
+            return QVariant(entry->get_filename() );
             break;
         case 2:
            return QVariant(entry->get_folder());
@@ -104,10 +108,6 @@ QVariant EntryMatchModel::data(const QModelIndex & index, int role )const
      // end of role 0, which is displayed material
 
     return QVariant();
-}
-
-EntryMatchView::EntryMatchView () {
-
 }
 
 

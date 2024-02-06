@@ -42,7 +42,7 @@ EntryModel::~EntryModel(){
 }
 int  EntryModel::get_filename_row(){
     for (int n = 0; n < m_bibliography_labels.length(); n++){
-        if (m_bibliography_labels[n] == "filenamestem"){
+        if (m_bibliography_labels[n] == "filename"){
             return n;
         }
     }
@@ -83,7 +83,7 @@ bool EntryModel::setData(const QModelIndex &index, const QVariant & value, int r
                 return true;
             } else{
                 qDebug() << "label" << label;
-                qDebug() << "value.string" << value.String;
+                //qDebug() << "value.string" << value.toString();
                 m_entry->set_info(label, value.toString().trimmed() );
                 emit dataChanged(index,index);
                 return true;
@@ -107,6 +107,12 @@ QVariant EntryModel::data(const QModelIndex & index, int role )const
             if (! m_entry ) { return QVariant(); }
             if (get_bibliography_labels().at(row) == "size"){
                 return QVariant(m_entry->get_size());
+            }
+            if (row == 0) {
+                return QVariant(m_entry->get_filename());
+            }
+            if (row ==1){
+                return QVariant(m_entry->get_folder());
             }
             QString label = get_bibliography_labels().at(row);
             QString value =  m_entry->get_info(  label );

@@ -23,38 +23,49 @@
 #include<QAbstractScrollArea>
 #include <EGL/egl.h>
 #include "Entry.h"
+#include "file.h"
 //class List;
 
 
 Entry::Entry(){
-    size = 0;
-    m_top_view_size_item = NULL;
-    m_top_view_filename_item = NULL;
-    m_bottom_view_size_item = NULL;
-    m_bottom_view_filename_item = NULL;
+    m_size = 0;
+    //m_top_view_size_item = NULL;
+    //m_top_view_filename_item = NULL;
+    //m_bottom_view_size_item = NULL;
+    //m_bottom_view_filename_item = NULL;
     //m_creation_time = QDateTime(QDate::currentDate(), QTime::currentTime());
      m_selected_for_deletion = false;
      m_temporary_color = QColorConstants::Black;
 
 }
 Entry::Entry(const Entry& entry){
-    size = entry.size;
+    m_size = entry.m_size;
     foreach (QString label, entry.info.keys()){
         info[label] = entry.info[label];
     }
 }
+Entry::Entry(File* file){
+    m_size = file->get_size();
+    m_filename = file->get_filename();
+    m_folder = file->get_folder();
+    info["folder"] = file->get_folder();
+    info["date_created"] = file->get_date_created();
+    info["date_last_read"] = file->get_date_last_read();
+    info["date_last_modified"] = file->get_date_last_modified();
+}
+/*
 Entry::Entry (QFileInfo& info){
-    QString filenameStem = info.fileName().trimmed();
+    QString filename = info.fileName().trimmed();
     QString folder = info.dir().absolutePath();
-    QString filenamefull = folder + "/" + filenameStem;
+    QString filenamefull = folder + "/" + filename;
     int     size = info.size();
     set_folder(folder);
-    set_filename_stem(filenameStem);
+    set_filename_stem(filename);
     set_info("filenamefull", filenamefull);
     set_info("date", info.lastModified().date().toString("yyyy MM dd"));
     set_info("lastread", info.lastRead().date().toString("yyyy MM dd"));
     set_size(size);
-}
+}*/
 Entry::~Entry(){
 
 }
@@ -62,9 +73,9 @@ Entry::Entry(QString stem, QString folder, qint64 a_size)
 {
     int this_size = static_cast<int>(a_size);
     info["folder"] = folder;
-    info["filenamestem"] = stem;
+    info["filename"] = stem;
     info["filenamefull"] = folder + "/" + stem;
-    size = this_size;
+    m_size = this_size;
     /*
     m_top_view_size_item = NULL;
     m_top_view_filename_item = NULL;
@@ -77,7 +88,7 @@ Entry::Entry(QString stem, QString folder, qint64 a_size)
 }
 Entry::Entry(QString stem, QString folder, int this_size)
 {
-  size = this_size;
+  m_size = this_size;
   QString filenameFull = folder + "/" + stem;
   set_folder(folder);
   set_filename_stem(stem);
@@ -92,17 +103,18 @@ Entry::Entry(QString stem, QString folder, int this_size)
   //m_creation_time = QDateTime(QDate::currentDate(), QTime::currentTime());
    m_selected_for_deletion = false;
 }
+/*
 bool Entry::if_linked_to_biblio_entry(){
     if (m_links_to_bib_entries.size() > 0) {return true;}
     return false;
-}
+}*/
 bool Entry::if_linked_to_onboard_entry(){
-    if (m_links_to_on_board_entries.size() > 0){return true;}
+    if (m_links_to_files.size() > 0){return true;}
     return false;
 }
 void Entry::set_info(QString this_key,QString this_value)
 {   if (this_key == "size"){
-        size = this_value.toInt();
+        m_size = this_value.toInt();
     } else{
         info.insert(this_key, this_value);
     }
@@ -131,12 +143,19 @@ QString Entry::get_info(QString key){
     }
 }
 
+void Entry::ingest_file(File* file){
+    set_size(file->get_size());
+    set_filename_stem(file->get_filename());
+    set_folder(file->get_folder());
+}
 
-
+/*
 void Entry::add_to_onboard_entries(Entry *bottom_entry){
     m_links_to_on_board_entries.append(bottom_entry);
 }
+*/
 // Don't use this next function??
+/*
 void Entry::set_size_item(int size){
     QStandardItem * item;
     if (m_top_view_size_item) {
@@ -150,7 +169,7 @@ void Entry::add_keywords(QTableWidget* middlewidget){
     int row_for_keywords = 7;
     set_keywords(middlewidget->item(row_for_keywords,1)->text());
 }
-
+*/
 
 QString Entry::get_filenamefull() {
     QString filenamefull;
@@ -160,15 +179,16 @@ QString Entry::get_filenamefull() {
     if (filenamefull.length() > 0){
         return filenamefull;
     }
-    if (info["filenamestem"].length()>0 &&
+    if (info["filename"].length()>0 &&
          info["folder"].length() > 0){
-            return info["folder"]  + "/" + info["filenamestem"];
+            return info["folder"]  + "/" + info["filename"];
     }
     return QString();
 }
 
 
-
+/*
 void Entry::set_filename_item_bottom(QString filename){
     m_bottom_view_filename_item->setText(filename);
 }
+*/

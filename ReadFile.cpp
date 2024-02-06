@@ -35,14 +35,14 @@ int function2 (QString line, Entry * entry, int n){ //file_info * this_file_info
     if (line.endsWith("]")){line.chop(1);}
     if (line.startsWith("[ ")) { line.remove(0,2);}
     QStringList pieces = line.split(".pdf,");
-    QString filenamestem = pieces[0];
+    QString filename = pieces[0];
     QString fullfilename = pieces[1];
     QString filesize = pieces[2];
     int i_filesize = filesize.toUInt();
     if (fullfilename.startsWith(" ../../")){
         fullfilename = fullfilename.mid(7);
     }
-    filenamestem += ".pdf";
+    filename += ".pdf";
     fullfilename += ".pdf";
     QString key = "possible_file::" + QString::number(n);
     entry->set_info(key, fullfilename );
@@ -54,7 +54,7 @@ int function3 (QString line, Entry * entry){ //file_info * this_file_info){
     if (line.endsWith("]")){line.chop(1);}
     if (line.startsWith("[ ")) { line.remove(0,2);}
     QStringList pieces = line.split(".pdf,");
-    QString filenamestem = pieces[0];
+    QString filename = pieces[0];
     QString fullfilename = pieces[1];
     QString filesize = pieces[2];
     int i_filesize = filesize.toUInt();
@@ -65,7 +65,7 @@ void Entry::read_json(QJsonObject & json){
         QString key = key_json.toString();
         qDebug() << 349 << key;
         if (key == "size"){
-            size = json[key].toInt();
+            m_size = json[key].toInt();
         }else{
             info[key] = json[key].toString() ;
         }
@@ -116,8 +116,8 @@ void set_qtableview_widths(QTableView * TV){
     TV->setColumnWidth(8,400);
 }
 void Widget::read_JSON_file_new(QString filename){
-    if (m_biblioModel) { delete m_biblioModel; }
-    m_biblioModel =  m_biblioModel = new BiblioTableModel(this);
+    if (m_biblio_model) { delete m_biblio_model; }
+    m_biblio_model =  m_biblio_model = new BiblioTableModel(this);
     int version(-1);
     QJsonObject json_bibliography;
     QString foldername;
@@ -176,7 +176,7 @@ void Widget::read_JSON_file_new(QString filename){
         if (j_this_entry.count() > 0){
             Entry* entry = new Entry();
             foreach (QString entry_internal_key, j_this_entry.keys()){
-                if (entry_internal_key == "filenamestem" || entry_internal_key == "folder") { // to do todo  We probably don't want to ignore this in the future
+                if (entry_internal_key == "filename" || entry_internal_key == "folder") { // to do todo  We probably don't want to ignore this in the future
                     continue;
                 }
                 if (entry_internal_key == "size"){
@@ -186,17 +186,17 @@ void Widget::read_JSON_file_new(QString filename){
                     entry->set_info(entry_internal_key, value);
                 }
             }
-            m_biblioModel->add_entry(entry);
+            m_biblio_model->add_entry(entry);
         }
     }
-    m_biblioModel->register_all_entries();
-    m_biblioModel->m_proxyModel = new My_biblio_SortFilterProxyModel () ;
-    m_biblioModel->m_proxyModel->setSourceModel( m_biblioModel );
-
-    m_topTableView->setModel( m_biblioModel->m_proxyModel );
-    set_qtableview_widths(m_topTableView);
+    m_biblio_model->register_all_entries();
+    m_biblio_model->m_proxyModel = new My_biblio_SortFilterProxyModel () ;
+    m_biblio_model->m_proxyModel->setSourceModel( m_biblio_model );
+    
+    m_top_tableView_biblio->setModel( m_biblio_model->m_proxyModel );
+    set_qtableview_widths(m_top_tableView_biblio);
 
     if (m_onboard_pdf_model){
-         link_biblio_entries_and_onboard_entries_from_size();
+        link_biblio_entries_and_files_by_size();
     }
 }

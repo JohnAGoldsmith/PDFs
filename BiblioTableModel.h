@@ -17,8 +17,8 @@ class BiblioTableModel : public QAbstractTableModel
     QMultiMap<QString, Entry*>      m_data_by_key_multiple;
     QMap<QString, Entry*>           m_data_by_fullfilename;
     QMultiMap<QString, Entry*>      m_data_by_fullfilename_multiple;
-    QMap<QString, Entry*>           m_data_by_filenamestem;
-    QMultiMap<QString, Entry*>      m_data_by_filenamestem_multiple;
+    QMap<QString, Entry*>           m_data_by_filename;
+    QMultiMap<QString, Entry*>      m_data_by_filename_multiple;
     QMap<int,Entry*>                m_data_by_size;
     QMultiMap<int,Entry*>           m_data_by_size_multiple;
 
@@ -50,7 +50,7 @@ public:
     void            register_biblioentry_by_key(Entry * entry );
     void            register_biblioentry_by_size(Entry * entry );
     void            register_biblioentry_by_fullfilename(Entry* entry);
-    void            register_biblioentry_by_filenamestem(Entry* entry);
+    void            register_biblioentry_by_filename(Entry* entry);
 
     Entry*          contains_fullfilename(QString);
 
@@ -61,14 +61,14 @@ public:
     QList<Entry*>   get_multiple_entries_from_one_key(QString key) { return m_data_by_key_multiple.values(key); }
 
     /*     filename stems        */
-    bool            contains_filenamestem(const QString &);
-    int             get_count_of_multiply_used_filenames(){ return m_data_by_filenamestem_multiple.count();}
-    int             get_count_of_entries_with_filename_stem(){ return m_data_by_filenamestem.count(); }
-    Entry*          get_entry_by_filename_stem(QString stem) {return m_data_by_filenamestem.value(stem);}
-    QList<QString>  get_list_of_filename_stems_used() {return m_data_by_filenamestem.keys();}
-    QList<QString>  get_list_of_filename_stems_used_muliply() {return m_data_by_filenamestem_multiple.keys();}
+    bool            contains_filename(const QString &);
+    int             get_count_of_multiply_used_filenames(){ return m_data_by_filename_multiple.count();}
+    int             get_count_of_entries_with_filename_stem(){ return m_data_by_filename.count(); }
+    Entry*          get_entry_by_filename_stem(QString stem) {return m_data_by_filename.value(stem);}
+    QList<QString>  get_list_of_filename_stems_used() {return m_data_by_filename.keys();}
+    QList<QString>  get_list_of_filename_stems_used_muliply() {return m_data_by_filename_multiple.keys();}
     QList<Entry*>   get_multiple_entries_from_filename_stem(QString stem);
-    bool            if_filename_stem_occurs_multiply(QString stem) {return m_data_by_filenamestem_multiple.contains(stem);}
+    bool            if_filename_stem_occurs_multiply(QString stem) {return m_data_by_filename_multiple.contains(stem);}
 
     /*       size                */
     int             get_count_of_multiply_used_sizes() {return m_data_by_size_multiple.count();}

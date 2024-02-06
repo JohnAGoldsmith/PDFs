@@ -26,9 +26,12 @@
 #include <EGL/egl.h>
 #include "BiblioTableModel.h"
 #include "widget.h"
-#include "EntriesModel.h"
+#include "FilesModel.h"
+#include "file_model.h"
 #include "EntryModel.h"
 #include "Entry.h"
+#include "file.h"
+#include "entry_match_model.h"
 
 //class List;
 
@@ -48,6 +51,10 @@ void Widget::set_screen_layout(){
     m_layout = new QVBoxLayout(this);
     if (m_mainSplitter) delete m_mainSplitter;
     m_mainSplitter = new QSplitter (Qt::Horizontal,this);
+
+    m_mainSplitter->sizePolicy();
+    m_mainSplitter->setStretchFactor(0,10);
+    //m_mainSplitter->setStretchFactor(1,10);
     m_layout->addWidget(m_mainSplitter);
 
     // top level
@@ -55,16 +62,18 @@ void Widget::set_screen_layout(){
     m_rightSplitter = new QSplitter(Qt::Vertical,m_mainSplitter);
     /*  Left, Middle , Right of screen       */
     m_mainSplitter->addWidget(m_leftSplitter);
-    m_mainSplitter->addWidget(m_center_entry_view);
+    m_mainSplitter->addWidget(m_center_tableView1_file);
+    m_mainSplitter->addWidget(m_center_tableView2_entry);
     m_mainSplitter->addWidget(m_rightSplitter);
-    m_mainSplitter->setStretchFactor(0,1);
+    m_mainSplitter->setSizes(QList<int>() << 1500 << 800 << 800 << 1000);
 
     // left column
-    m_leftSplitter->addWidget(m_topTableView);
+    m_leftSplitter->addWidget(m_top_tableView_biblio);
+    m_leftSplitter->addWidget(m_bottom_table_widget); // used for displaying shared stem-names, sizes, etc. Reports to user...
     m_leftSplitter->addWidget(m_bottom_table_widget2); // used for displaying shared stem-names, sizes, etc. Reports to user...
-    m_leftSplitter->addWidget(m_bottomTableView);
+    m_leftSplitter->addWidget(m_bottom_tableView);
     m_leftSplitter->addWidget(m_entry_match_view); // not currently used
-    m_entry_match_view->setVisible(false);
+    //m_entry_match_view->setVisible(false);
 
     // right column
     // 1. grid layout first:
@@ -74,16 +83,16 @@ void Widget::set_screen_layout(){
     m_proposed_new_title_label = new QLabel("Proposed new title") ;
 
     m_proposed_new_title_widget = new QLineEdit();
-    //m_proposed_new_title_widget->setFixedWidth(200);
 
     m_new_ToK_item_button = new QPushButton();
     m_new_ToK_item_button->setText("New ToK item");
     m_new_ToK_prefix_widget = new QLineEdit();
-    m_new_ToK_prefix_widget->setFixedWidth(120);
+    //m_new_ToK_prefix_widget->setFixedWidth(120);
     m_new_ToK_prose_widget = new QLineEdit();
     //m_new_ToK_prose_widget->setFixedWidth(200);
-    m_generate_new_filename_button = new QPushButton("Generate new filename and key");
-  //m_change_filename_button = new QPushButton("Change file name to (^K):");
+    m_change_file_name_button = new QPushButton ("Change filename (^E)");
+    m_generate_new_filename_button = new QPushButton("Generate new filename and key (^D)");
+   //m_change_filename_button = new QPushButton("Change file name to (^K):");
     m_create_new_bibentry_button = new QPushButton("Create new biblio entry (^K):");
     m_change_root_directory = new QPushButton("Change root directory");
     m_save_biblio_file_button = new QPushButton("Save biblio file (^S)");
@@ -101,12 +110,13 @@ void Widget::set_screen_layout(){
     setStyleSheet("Widget{ background-color: green}");
     setStyleSheet("ToK_model { background-color: green}");
 
-    m_small_grid_layout->addWidget(m_create_new_bibentry_button,1,0);
+    m_small_grid_layout->addWidget(m_generate_new_filename_button,1,0);
     m_small_grid_layout->addWidget(m_proposed_new_title_widget,1,1);
-    m_small_grid_layout->addWidget(m_generate_new_filename_button,2,0);
-    m_small_grid_layout->addWidget(m_delete_size_on_selected_biblio_entries,3,0);
-    m_small_grid_layout->addWidget(m_change_root_directory,4,0);
-    m_small_grid_layout->addWidget(m_save_biblio_file_button,5,0);
+    m_small_grid_layout->addWidget(m_change_file_name_button, 2,0);
+    m_small_grid_layout->addWidget(m_create_new_bibentry_button,3,0);
+    m_small_grid_layout->addWidget(m_delete_size_on_selected_biblio_entries,4,0);
+    m_small_grid_layout->addWidget(m_change_root_directory,5,0);
+    m_small_grid_layout->addWidget(m_save_biblio_file_button,6,0);
     //m_small_grid_layout->addWidget(m_add_to_list_button,6,0);
     m_small_grid_layout->addWidget(m_link_two_entries,7,0);
     m_small_grid_layout->addWidget(m_delete_selected_files_button,8,0);
@@ -115,15 +125,15 @@ void Widget::set_screen_layout(){
     m_small_grid_layout->addWidget(m_check_biblio_for_shared_filename_button,11,0);
     m_small_grid_layout->addWidget(m_new_ToK_item_button,12,0);
     m_small_grid_layout->addWidget(m_new_ToK_prefix_widget,12, 1);
-    m_small_grid_layout->addWidget(m_new_ToK_prose_widget, 12,2);
+    m_small_grid_layout->addWidget(m_new_ToK_prose_widget, 13,1);
 
 
     // 2.  the right column:
     m_rightSplitter->addWidget(m_ToK_view);
     m_rightSplitter->addWidget(m_middle_right_widget); // this is the grid-layout
     m_rightSplitter->addWidget(m_directoryView);
-    m_rightSplitter->setStretchFactor(0,60);
-    m_rightSplitter->setStretchFactor(2,40);
+   //m_rightSplitter->setStretchFactor(0,60);
+   // m_rightSplitter->setStretchFactor(2,40);
 }
 
 Widget::Widget(QWidget *parent)
@@ -136,23 +146,19 @@ Widget::Widget(QWidget *parent)
     pal.setColor(QPalette::Window, Qt::yellow);
     setAutoFillBackground(true);
     setPalette(pal);
-    //show();
-
-
-
-
     showMaximized();
     setFocusPolicy(Qt::FocusPolicy::StrongFocus);
     setFocus();
     m_isDirty = false;
-    m_bibliography_labels  <<  "filenamestem" <<  "folder"<< "size"<< "author" << "title" << "year" << "key" << "fillnamefull"
+    m_bibliography_labels  <<  "filename" <<  "folder"<< "size"<< "author" << "title" << "year" << "key" << "fillnamefull" <<
+                                "date_created" << "date_last_read" << "date_last_modified"<<
                                "type"<< "booktitle"<< "month" << "organization" << "series" << "number" << "volume" << "doi" <<
                                "file (not found)" << "issn"<< "isbn" <<  "url" << "pages" << "abstract" <<  "address" <<
                                "annote" << "mendeley-tags" << "publisher" << "journal"  << "editor" << "school" << "type" <<
                                "archiveprefix" << "arxivid" << "pmid" << "eprint" << "possible file" << "pmid" << "edition" <<
                                "primaryclass" << "chapter" << "institution" << "howpublished" << "candidates" << "file" << "translator" <<
                                "date_entry_created";
-    m_bibliography_short_labels  << "author" << "title" << "year" << "key" << "filenamestem" << "size" << "folder" << "keywords";
+    m_bibliography_short_labels  << "author" << "title" << "year" << "key" << "filename" << "size" << "folder" << "keywords";
     m_prefered_location = "Dropbox/library/";
 
     QSettings settings ("JohnAGoldsmith", "PdfManager");
@@ -165,51 +171,46 @@ Widget::Widget(QWidget *parent)
     setPalette(palette);
 
     m_mainSplitter = nullptr;
-    m_selected_onboard_entry = nullptr;
+    m_selected_file = nullptr;
     m_selected_biblio_entry = nullptr;
     m_selected_ToK_item = nullptr;
     m_bottom_table_widget = new QTableWidget;
     m_bottom_table_widget2 = new QTableWidget;
 
     // for the selected entry
-
-    m_center_entry_view = new QTableView();
-    m_center_entry_view->horizontalHeader()->setStretchLastSection(QHeaderView::Stretch);
-    m_center_entry_view->setMaximumWidth(1400);
-    m_center_entry_view->setMinimumWidth(500);  
+    m_center_tableView2_entry = new QTableView();
+    m_center_tableView2_entry->horizontalHeader()->setStretchLastSection(QHeaderView::Stretch);
+    //m_center_tableView2_entry->setMaximumWidth(1400);
+    //m_center_tableView2_entry->setMinimumWidth(500);
      m_selected_entry_model  = new EntryModel(new Entry(), get_bibliography_labels());
-    m_center_entry_view->setModel(m_selected_entry_model);
-    m_center_entry_view->setColumnWidth(0,160);
+    m_center_tableView2_entry->setModel(m_selected_entry_model);
+     //m_center_tableView2_entry->setColumnWidth(0,160);
 
+    // for the selected file
+    m_center_tableView1_file = new QTableView();
+    m_center_tableView1_file->horizontalHeader()->setStretchLastSection(QHeaderView::Stretch);
+    m_center_tableView1_file->setMaximumWidth(1000);
+    //m_center_tableView1_file->setMinimumWidth(500);
+    m_selected_file_model  = nullptr;
+    //m_center_tableView1_file->setColumnWidth(0,160);
 
     m_directoryView = new QTreeView;
 
     // Models
-    m_onboard_pdf_model = new EntriesModel(this);
-    m_same_size_files_model = new EntriesModel(this);
-    m_biblioModel = nullptr;
+    m_onboard_pdf_model = new FilesModel(this);
+    m_same_size_files_model = new FilesModel(this);
+    m_biblio_model = nullptr;
+    m_selected_file_model = nullptr;
     m_ToK_model = new ToK_model(this);
     read_ToK_from_json("pdf_manager_tok_init.json");
 
     // Views
     // Left side
-    m_topTableView = new QTableView(this);
-    m_topTableView->setSelectionMode(QAbstractItemView::SingleSelection);
-    m_topTableView->setSortingEnabled(true);
-
-    m_bottomTableView = new EntriesView_onboard_files();
-    m_bottomTableView->setModel(m_onboard_pdf_model->getProxyModel());
-    m_bottomTableView->setColumnHidden(0,true);
-    m_bottomTableView->setColumnWidth(1,200);
-    m_entry_match_view = new EntryMatchView();
-
-    // More table widgets, which we will get rid of:
-    m_bottom_table_widget2->setColumnWidth(0,1000);
-    m_bottom_table_widget2->setColumnWidth(1,1000);
-    m_bottom_table_widget2->setColumnWidth(3,800);
-    m_bottom_table_widget2->setColumnWidth(4,800);
-    m_bottom_table_widget2->setVisible(false);
-
+    m_top_tableView_biblio = new QTableView(this);
+    m_top_tableView_biblio->setSelectionMode(QAbstractItemView::SingleSelection);
+    m_top_tableView_biblio->setSortingEnabled(true);
+    m_bottom_tableView = new TableView_for_files();
+    m_entry_match_view = new QTableView();
     m_file_system_model = new QFileSystemModel(this);
     m_file_system_model->setFilter(QDir::Dirs);
     m_file_system_model->setRootPath("/home/john/");
@@ -227,29 +228,22 @@ Widget::Widget(QWidget *parent)
     m_screen_state = 0;
     set_screen_layout();
 
-    m_entry_match_model = new EntryMatchModel(m_biblioModel, m_onboard_pdf_model, this);
-
-    /*        Selection changed signal          */
-    //connect(m_bottomTableView, &QAbstractItemView::selectionChanged,
-    //        this, &Widget::on_top_table_view_clicked);
+    m_entry_match_model = new EntryMatchModel(m_biblio_model, m_onboard_pdf_model, this);
 
     /*      Single clicks                      */
-    connect(m_topTableView, &QTableView::clicked,
+    connect(m_top_tableView_biblio, &QTableView::clicked,
              this , &Widget::on_top_table_view_clicked);
-    connect(m_bottomTableView, &EntriesView::clicked,
+    connect(m_bottom_tableView, &EntriesView::clicked,
             this, &Widget::on_bottom_table_view_clicked );
     connect(m_generate_new_filename_button, &QPushButton::clicked,
-            this, &Widget::generate_new_filename);
-
+            this, &Widget::generate_new_filename_from_selected_biblio_entry);
+    connect(    m_change_file_name_button, &QPushButton::clicked,
+                this, &Widget::change_selected_file_filename);
     connect(m_delete_size_on_selected_biblio_entries,SIGNAL(clicked()) ,
             this , SLOT(delete_size_on_selected_biblio_entries())  );
-    //connect(m_change_filename_button,SIGNAL(clicked()),
-    //            this,SLOT(change_filename()));
     connect(m_create_new_bibentry_button,SIGNAL(clicked()),
-            this,SLOT(create_new_bibentry()));
-    //connect(m_listNamesWidget,SIGNAL(itemClicked(QListWidgetItem*)),
-    //            this,SLOT(select_new_list(QListWidgetItem*)));
-
+            this,SLOT(create_new_biblio_entry()));
+          this,SLOT(select_new_list(QListWidgetItem*));
     connect(m_save_biblio_file_button,SIGNAL(clicked()),
                 this,SLOT(write_bibliography()));
     connect(m_link_two_entries,SIGNAL(clicked()),                         // to do todo this should be replaced by "link_biblio_entry_and_onboard_entry"
@@ -269,105 +263,130 @@ Widget::Widget(QWidget *parent)
 
 
     // Double clicks
-    connect(m_topTableView, &QTableView::doubleClicked,
+    connect(m_top_tableView_biblio, &QTableView::doubleClicked,
              this , &Widget::on_top_table_view_doubleClicked);
 
-
-    connect(m_bottomTableView, &QAbstractItemView::doubleClicked,
+    connect(m_bottom_tableView, &QAbstractItemView::doubleClicked,
             this, &Widget::on_bottom_table_view_doubleClicked);
 
-
-
-/*
-    bool success = connect(bottomTableView, &TableView::currentChanged,
-            this, &Widget::put_file_info_on_entry_view );
-    Q_ASSERT(bool);
-*/
     connect(m_change_root_directory,SIGNAL(clicked()),
                 this,SLOT(set_new_root_folder()));
 
+    /* open and close pop-up */
     m_keyCtrlLeftBracket = new QShortcut(this);
-    m_keyCtrlLeftBracket->setKey(Qt::CTRL  + Qt::Key_BracketLeft);
+    m_keyCtrlLeftBracket->setKey(Qt::CTRL  | Qt::Key_BracketLeft);
     connect(m_keyCtrlLeftBracket, SIGNAL(activated()), this, SLOT(open_popUp()));
     m_keyCtrlRightBracket = new QShortcut(this);
-    m_keyCtrlRightBracket->setKey(Qt::CTRL  + Qt::Key_BracketRight);
+    m_keyCtrlRightBracket->setKey(Qt::CTRL  | Qt::Key_BracketRight);
     connect(m_keyCtrlRightBracket, SIGNAL(activated()), this, SLOT(close_popUp()));
 
-
+    /*  show files with same size */
     m_keyCtrlA = new QShortcut(this);
-    m_keyCtrlA->setKey(Qt::CTRL + Qt::Key_A);
+    m_keyCtrlA->setKey(Qt::CTRL | Qt::Key_A);
     connect(m_keyCtrlA, SIGNAL(activated()), this, SLOT(show_files_with_same_size()));
 
-    m_keyCtrlC = new QShortcut(this);
-    m_keyCtrlC->setKey(Qt::CTRL + Qt::Key_G);
-    connect(m_keyCtrlC, SIGNAL(activated()), this, SLOT(change_selected_filename()));
+    /*  chreate possible new file name */
+    m_keyCtrlD = new QShortcut(this);
+    m_keyCtrlD->setKey(Qt::CTRL | Qt::Key_D);
+    connect(m_keyCtrlD, SIGNAL(activated()), this, SLOT(generate_new_filename_from_selected_biblio_entry()));
 
+    /*  change selected file's name */
+    m_keyCtrlE = new QShortcut(this);
+    m_keyCtrlE->setKey(Qt::CTRL | Qt::Key_E);
+    connect(m_keyCtrlE, SIGNAL(activated()), this, SLOT( ()));
+
+    /* change filename of selected file to proposed new name */
+    m_keyCtrlC = new QShortcut(this);
+    m_keyCtrlC->setKey(Qt::CTRL | Qt::Key_G);
+    //connect(m_keyCtrlC, SIGNAL(activated()), this, SLOT(change_selected_filename()));
+
+    /* search folders for pdfs */
     m_keyCtrlF = new QShortcut(this);
-    m_keyCtrlF->setKey(Qt::CTRL + Qt::Key_F);
+    m_keyCtrlF->setKey(Qt::CTRL | Qt::Key_F);
     connect(m_keyCtrlF, SIGNAL(activated()), this, SLOT(search_folders_for_pdf()));
 
 
     m_keyCtrlH = new QShortcut(this);
-    m_keyCtrlH->setKey(Qt::CTRL + Qt::Key_H);
+    m_keyCtrlH->setKey(Qt::CTRL | Qt::Key_H);
     connect(m_keyCtrlH, SIGNAL(activated()), this, SLOT(read_JSON_file_old()));
 
     m_keyCtrlJ = new QShortcut(this);
-    m_keyCtrlJ->setKey(Qt::CTRL + Qt::Key_J);
+    m_keyCtrlJ->setKey(Qt::CTRL | Qt::Key_J);
     connect(m_keyCtrlJ, SIGNAL(activated()), this, SLOT(change_location_of_listsInfo()));
 
+    /*  add prefix to selected file name (perhaps change biblio entries, not yet done? */
     m_keyCtrlK = new QShortcut(this);
-    m_keyCtrlK->setKey(Qt::CTRL + Qt::Key_K);
+    m_keyCtrlK->setKey(Qt::CTRL | Qt::Key_K);
     connect(m_keyCtrlK,  &QShortcut::activated, this, &Widget::add_prefix_to_selected_onboard_filename);
 
 
+    /* match filestems and put in model */
     m_keyCtrlM = new QShortcut(this);
-    m_keyCtrlM->setKey(Qt::CTRL + Qt::Key_M);
+    m_keyCtrlM->setKey(Qt::CTRL | Qt::Key_M);
     connect(m_keyCtrlM, SIGNAL(activated()), this, SLOT(match_filestems() ));
 
 
     m_keyCtrlN = new QShortcut(this);
-    m_keyCtrlN->setKey(Qt::CTRL + Qt::Key_N);
+    m_keyCtrlN->setKey(Qt::CTRL | Qt::Key_N);
 
 
     m_keyCtrlO = new QShortcut(this);
-    m_keyCtrlO->setKey(Qt::CTRL + Qt::Key_O);
+    m_keyCtrlO->setKey(Qt::CTRL | Qt::Key_O);
     connect(m_keyCtrlO, SIGNAL(activated()), this, SLOT(read_JSON_file_new()));
 
     m_keyCtrlQ = new QShortcut(this);
-    m_keyCtrlQ->setKey(Qt::CTRL + Qt::Key_Q);
+    m_keyCtrlQ->setKey(Qt::CTRL | Qt::Key_Q);
     connect(m_keyCtrlQ, SIGNAL(activated()), this, SLOT(quit_now()));
 
     m_keyCtrlR = new QShortcut(this);
-    m_keyCtrlR->setKey(Qt::CTRL + Qt::Key_R);
+    m_keyCtrlR->setKey(Qt::CTRL | Qt::Key_R);
     connect(m_keyCtrlR, SIGNAL(activated()), this, SLOT(set_new_root_folder()));
 
     m_keyCtrlS = new QShortcut(this);
-    m_keyCtrlS->setKey(Qt::CTRL + Qt::Key_S);
+    m_keyCtrlS->setKey(Qt::CTRL |  Qt::Key_S);
     connect(m_keyCtrlS, SIGNAL(activated()), this, SLOT(Control_S()) ); // write_bibliography())); // context dependent meaning of Control-S
 
     m_keyCtrlU = new QShortcut(this);
-    m_keyCtrlU->setKey(Qt::CTRL + Qt::Key_U);
+    m_keyCtrlU->setKey(Qt::CTRL | Qt::Key_U);
     connect(m_keyCtrlU, SIGNAL(activated()), this, SLOT(add_entry_to_list()));
 
     m_keyCtrlZ = new QShortcut(this);
-    m_keyCtrlZ->setKey(Qt::CTRL + Qt::Key_Z);
+    m_keyCtrlZ->setKey(Qt::CTRL | Qt::Key_Z);
     connect(m_keyCtrlZ, SIGNAL(activated()), this, SLOT(link_biblio_entry_and_onboard_entry()));  // to do todo this should be replaced by "link_biblio_entry_and_onboard_entry"
 
     m_keyCtrlComma = new QShortcut(this);
-    m_keyCtrlComma->setKey(Qt::CTRL + Qt::Key_Comma);
+    m_keyCtrlComma->setKey(Qt::CTRL | Qt::Key_Comma);
     connect(m_keyCtrlComma, SIGNAL(activated()), this, SLOT(toggle_screens_backwards()));
 
     m_keyCtrlPeriod = new QShortcut(this);
-    m_keyCtrlPeriod->setKey(Qt::CTRL + Qt::Key_Period);
+    m_keyCtrlPeriod->setKey(Qt::CTRL | Qt::Key_Period);
     connect(m_keyCtrlPeriod, SIGNAL(activated()), this, SLOT(toggle_screens()));
 }
 
+/*
 bool Widget::biblio_model_contains(Entry* entry) {
-    return m_biblioModel->contains(entry);
+    return m_biblio_model->contains(entry);
 }
+*/
+void Widget::search_folders_for_pdf()
+{
+    delete m_onboard_pdf_model;
+    m_onboard_pdf_model = new FilesModel(this);
+    m_onboard_pdf_model->search_folders_for_pdfs(m_root_folder);
+    m_bottom_tableView->setModel(m_onboard_pdf_model->getProxyModel());
+    m_bottom_tableView->resizeColumnsToContents();
+
+
+    // this is done in a different function ::  todo to do
+    if (m_biblio_model){
+        link_biblio_entries_and_files_by_size(); // TODO: clear out any previous linkings before doing this;
+    }
+}
+
+
 void Widget::on_bottom_table_view_doubleClicked(QModelIndex index){
     // this way goes through the model's entry
-    QModelIndex underlying_index = m_onboard_pdf_model->m_proxyModel->mapToSource(index);
+    QModelIndex underlying_index = m_onboard_pdf_model->getProxyModel()->mapToSource(index);
     int row = underlying_index.row();
     QModelIndex folder_index = m_onboard_pdf_model->index(row,2);
     QString folder = folder_index.data().toString();
@@ -377,6 +396,27 @@ void Widget::on_bottom_table_view_doubleClicked(QModelIndex index){
 }
 
 
+void Widget::on_bottom_table_view_clicked(const QModelIndex& index){
+    if (m_onboard_pdf_model->number_of_files() < 1) {return;}
+    int row =  m_onboard_pdf_model->getProxyModel()->mapToSource( index  ).row() ;
+    if (row < 0) {return;}
+    // what follows is the wrong way to do it; it should be done with internal pointer and index
+    QString  stem =   m_onboard_pdf_model->index(row,1).data().toString();
+    QString filename = m_onboard_pdf_model->index(row,2).data().toString() + "/" + stem;
+    File * file = m_onboard_pdf_model->get_file_by_full_filename(filename);
+    m_selected_file = file;
+    if (m_selected_file_model){
+        delete m_selected_file_model;
+    }
+
+    m_selected_file_model = new FileModel(m_selected_file, this);
+    m_center_tableView1_file->setModel(m_selected_file_model);
+
+    m_selected_biblio_entry = new Entry(file);
+    m_selected_entry_model = new EntryModel(m_selected_biblio_entry, m_bibliography_labels);
+    m_center_tableView2_entry->setModel(m_selected_entry_model);
+
+}
 
 // not used: todo
 void Widget::on_ToK_view_selection_changed(){
@@ -412,27 +452,23 @@ void Widget::match_filestems() {
 /*               WIDGETS             */
 Widget::~Widget()
 {
-   delete m_biblioModel;
+    delete m_biblio_model;
    delete m_onboard_pdf_model;
 }
 
 void Widget::create_or_update_biblio_entry(){
-    if (! m_biblioModel->contains(m_selected_biblio_entry) ) {
+    if (! m_biblio_model->contains(m_selected_biblio_entry) ) {
         create_new_biblio_entry();
     }
     update_selected_biblio_entry();
 }
 
-void Widget::create_new_bibentry(){
- // TODO change this to biblio_entry...
-}
-
 // this creates a new database Entry.
 void Widget::create_new_biblio_entry(){
     if (!m_selected_biblio_entry) {return;} // todo that's not a biblio entry
-    Entry * new_entry  = new Entry(*m_selected_onboard_entry);
-    m_biblioModel->add_entry(new_entry);
-    m_biblioModel->make_dirty();
+    Entry * new_entry  = new Entry(m_selected_file);
+    m_biblio_model->add_entry(new_entry);
+    m_biblio_model->make_dirty();
 }
 void Widget::update_selected_biblio_entry(){
     for (int row = 0; row < m_bibliography_labels.count(); row++){
@@ -448,89 +484,97 @@ QString Widget::get_selected_ToK_item_with_spaces(){
     return prefix;
 }
 
+/* 1  User clicks on file, with intent to display it for user to add author, article name; and also to create a new biblio entry */
+void Widget::put_selected_file_into_new_selected_biblio_entry(File* file, Entry* entry){
+    if (entry) {delete entry;}
+    entry = new Entry(file);
+    m_selected_biblio_entry = entry;
+}
+
+/* 2   Now the user may add information about the file by hand, into the selected_biblio_entry model
+*   That will generate a potential new name for the file
+*   And the user can select it, and thereby change the name of the file on the computer.
+*   Alternatively, the user can choose to simply add the tok prefix to the file name and
+*   change it on the computer.
+*/
+
 /*  Control K   */
 void Widget::add_prefix_to_selected_onboard_filename(){
-    Entry* entry = m_selected_onboard_entry;
-    if (!entry) {return;}
+    File* file = m_selected_file;
+    if (!file) {return;}
     QString new_stem_name;
-    QString old_stem_name = entry->get_filenamestem();
-    QString old_full_name = entry->get_filenamefull();
-    QFileInfo fileInfo(old_full_name);
-    QString folder= fileInfo.absolutePath();
+    QString old_stem_name = file->get_filename();
+    QString old_full_name = file->get_folder() + "/" +  file->get_filename();
+    //QFileInfo fileInfo(old_full_name);
+    //QString folder= fileInfo.absolutePath();
+    QString folder = file->get_folder();
     QString prefix = get_selected_ToK_item_with_spaces().trimmed();
-    QString year = m_selected_onboard_entry->get_year();
-    QString author = m_selected_onboard_entry->get_author();
-    QString title = m_selected_onboard_entry->get_title();
-    if (prefix.length() > 0) { new_stem_name = prefix + " ";}
-    if (year.length() > 0)   { new_stem_name += year + " ";}
-    if (author.length() > 0) { new_stem_name += author + " ";}
-    if (title.length() > 0)  { new_stem_name += title + ".pdf";}
-    else { new_stem_name += old_stem_name;}
-    QString new_folder = "/home/john/Dropbox/documents/";
-    QString new_full_name = new_folder +  new_stem_name;
-    entry->set_key(new_stem_name.trimmed());
-    QFile file(old_full_name);
-    file.rename(old_full_name, new_full_name);
-    if (!m_biblioModel) {return;}                   // this assumes we only want to save a pdf to our records if we have opened a records file. That's not obvious.
-    if (m_biblioModel->get_entries().size() > 0){
-        m_biblioModel->add_entry(entry);
+    new_stem_name = prefix + " " + old_stem_name;
+    QString new_full_name = folder +  new_stem_name;
+    QFile qfile(old_full_name);
+    qfile.rename(old_full_name, new_full_name);
+}
+
+
+void Widget::generate_new_filename_from_selected_biblio_entry(){
+    QString prefix, author, author_surname;
+    QString  title, year, new_filename, new_biblio_key;
+
+    prefix = get_selected_ToK_item_with_spaces();
+    year =  m_selected_biblio_entry->get_year();
+    if (year.length() == 0) {
+        year = QString("9999");
     }
-}
-void Widget::create_new_onboard_filename(){
-    /* for selected onboard file  */
-    /* new name = ToK code + year + author-lastname + title;
-     * target folder is ./documents/
-     * post the name in a widget; don't change the actual filename.
-     * */
-    QString new_filename = get_selected_ToK_item_with_spaces();
-    QString year = m_selected_onboard_entry->get_year();
-    QString name = m_selected_onboard_entry->get_author();
-    new_filename += year + name;
+    author = get_first_author(m_selected_biblio_entry->get_author());
+    author_surname = find_surname(author);
+    int max_title_length = 50;
+    title = m_selected_biblio_entry->get_title();
+    QString treated_title("");
+    if (title.length() == 0) {
+        treated_title = "title";
+    } else {
+        QStringList titlelist = title.split(" ");
+        for (int no = 0; no < titlelist.size(); no++){
+            treated_title += " " + titlelist[no];
+            if (treated_title.length() >= max_title_length){
+                break;
+            }
+        }
+    }
+    QString space = " ";
+    QString underscore = "_";
 
-}
-
-/*   was called by function change_selected_filename, but no longer  */
-void Widget::change_onboard_filename(QString new_full_filename){
-/*    Purpose is to change the onboard_filename.
- *    It can be changed (i) by adding the "prefix" from the ToK, or
- *    (ii) by adding year, author, title (or both, of course);
-           It is intended for changing the filename on the computer, not in the biblio database.
-           There can be several copies of the same file on the computer, and it *should* change the names of
-            those files that have the same filenamestem.
-
-            i. change the filename on the computer
-            ii. change the filename in the onboard Entry;
-            iii. update hashes from filename to entry
-            iv.   change the name on onboard widgets' Item
-            Vi.  if there is a matching biblio_entry already, change the filename in the database too.
-        Figure out what action triggers this. Keyboard entry at the least.
-
- */
-    // Verify that selected entry is a member of the onboard group:
-    if (!m_onboard_pdf_model->contains( m_selected_biblio_entry) ) {
+    new_filename = prefix + space + year + space + author_surname + space + treated_title + ".pdf";
+    new_biblio_key = author_surname + underscore + year + underscore + treated_title;
+    m_proposed_new_title_widget->setText(new_filename);
+    if (!m_biblio_model){
+        qDebug() << "No biblio model currently.";
         return;
     }
-    //(i.)
-    QString new_stem_name;
-    Entry* entry = m_selected_onboard_entry;
-    QString old_filename_stem = entry->get_filenamestem();
-    QString old_full_filename = entry->get_filenamefull();
-    QFileInfo fileInfo(old_full_filename);
-    QString folder= fileInfo.dir().dirName();
-    new_stem_name = create_new_filename_stem(old_filename_stem);
-
-    change_full_filename(old_full_filename, folder + "\\"  + new_full_filename);
-    //(ii.)
-    entry->set_filename_full(new_full_filename);
-    QFileInfo fileInfo2(new_full_filename);
-    QString new_filename_stem = fileInfo2.fileName();
-    entry->set_filename_stem(new_filename_stem);
-    // iii.
-    update_files_onboard_by_fullfilename(old_full_filename, new_full_filename, entry );
-    update_files_onboard_by_filenamestem(old_filename_stem, new_filename_stem, entry );
-    // iv.
-    //set_filename_item_bottom_widget(m_selected_row_in_bottom_table, new_filename_stem);
+    if (m_biblio_model->contains_key(new_biblio_key) ) {
+        new_biblio_key += title;
+    }
 }
+
+
+
+
+/*   was called by function change_selected_filename, but no longer used  */
+void Widget::change_selected_file_filename( ){
+/*    Purpose is to change the selected_file name to the string on m_proposed_new_title_widget
+ *
+ */ 
+    File* file = m_selected_file;
+    QString old_filename = file->get_filename();
+    QString old_full_filename = file->get_folder() + "/" + file->get_filename();
+    QString folder = file->get_folder();
+    QString new_stem_name = m_proposed_new_title_widget->text();
+    change_full_filename(old_full_filename, folder + "/"  + new_stem_name);
+    // NB: we have not changed the biblio_entries at all.... to do
+}
+
+
+
 
 /*  called by "change_onboard_filename"   */
 void Widget::change_full_filename(QString old_name, QString new_name){
@@ -543,19 +587,6 @@ void Widget::change_full_filename(QString old_name, QString new_name){
     file.rename(old_name, new_name);
 }
 
-/*  Called by "change_onboard_filename"  */
-QString Widget::create_new_filename_stem(QString old_stem_name){
-    QString prefix;
-    if (m_selected_ToK_item){
-        prefix = m_selected_ToK_item->get_prefix();
-    }
-    return prefix + " " + old_stem_name;
-}
-// how does this relate to the function just above, change_onboard_filename?
-void Widget::change_selected_filename(){
-
-
-}
 
 
 /*
@@ -568,8 +599,8 @@ void Widget::update_files_onboard_by_fullfilename(QString full_old_name, QString
     m_files_onboard_by_filenamefull.remove(full_old_name);
     m_files_onboard_by_filenamefull[full_new_name] = entry;
 }
-void Widget::update_files_onboard_by_filenamestem(QString oldfilename, QString newfilename, Entry* entry){
-   // m_files_onboard_by_filenamestem.
+void Widget::update_files_onboard_by_filename(QString oldfilename, QString newfilename, Entry* entry){
+   // m_files_onboard_by_filename.
 }
 
 //-------------------------------------------------------------------------------------------------------
@@ -594,49 +625,52 @@ void Widget::toggle_screens(){
 void Widget::set_screen_state(){
     switch ( m_screen_state ) {
         case 0:{
-            m_topTableView->setVisible(true);
-            m_bottomTableView->setVisible(true);
+            m_top_tableView_biblio->setVisible(true);
+            m_bottom_tableView->setVisible(true);
             m_entry_match_view->setVisible(false);
             m_rightSplitter->setVisible(true);
             m_middle_right_widget->setVisible(true);
             m_directoryView->setVisible(true);
-            m_mainSplitter->setSizes(QList<int>({2000, 100, 1000}));
+            m_mainSplitter->setSizes(QList<int>({2000, 100, 100, 400}));
             m_mainSplitter->setStretchFactor(1,1);
             break;
         }
         case 1:{ // only biblio entries   entry view for selected item
-            m_topTableView->setVisible(true);
-            m_bottomTableView->setVisible(false);
+            m_top_tableView_biblio->setVisible(true);
+            m_bottom_tableView->setVisible(true);
+            m_bottom_table_widget->setVisible(false);
+            m_bottom_table_widget2->setVisible(false);
             //m_middle_table_wdget->setVisible(false);
             m_entry_match_view->setVisible(false);
-            m_rightSplitter->setVisible(false);
-            m_mainSplitter->setSizes(QList<int>({1000, 10, 00}));
+            m_rightSplitter->setVisible(true);
+            m_mainSplitter->setSizes(QList<int>({2000, 100, 1000,400}));
+            m_mainSplitter->setStretchFactor(1,1);
 
             break;
         }
         case 2:// only onboard files and entry view for select4ed item
-        {   m_bottomTableView->setVisible(true);
-                m_topTableView->setVisible(false);
+        {   m_bottom_tableView->setVisible(true);
+            m_top_tableView_biblio->setVisible(false);
                 //m_middle_table_wdget->setVisible(false);
                 m_entry_match_view->setVisible(false);
                 m_rightSplitter->setVisible(false);
-            m_mainSplitter->setSizes(QList<int>({1000, 10, 00}));
+            m_mainSplitter->setSizes(QList<int>({1000, 10, 00, 400}));
             break;
         }
         case 3:{
-            m_topTableView->setVisible(true);
-            m_bottomTableView->setVisible(true);
+            m_top_tableView_biblio->setVisible(true);
+            m_bottom_tableView->setVisible(true);
                 //m_middle_table_wdget->setVisible(false);
                 m_entry_match_view->setVisible(false);
                 m_rightSplitter->setVisible(false);
-            m_mainSplitter->setSizes(QList<int>({1000, 10, 0}));
+            m_mainSplitter->setSizes(QList<int>({1000, 10, 0,400}));
 
             break;
         }
         case 4:{
             m_entry_match_view->setVisible(true); // not currently used, however.
-                m_topTableView->setVisible(false);
-                m_bottomTableView->setVisible(false);
+            m_top_tableView_biblio->setVisible(false);
+                m_bottom_tableView->setVisible(false);
                 //m_middle_table_wdget->setVisible(false);
                 m_rightSplitter->setVisible(false);
             m_mainSplitter->setSizes(QList<int>({1000, 100, 100}));
@@ -645,8 +679,8 @@ void Widget::set_screen_state(){
         case 5:{
             // onboard file editing
             m_rightSplitter->setVisible(true);
-            m_bottomTableView->setVisible(true);
-                m_topTableView->setVisible(false);
+            m_bottom_tableView->setVisible(true);
+            m_top_tableView_biblio->setVisible(false);
                 //m_middle_table_wdget->setVisible(false);
                 m_entry_match_view->setVisible(false);
                 //m_small_grid_layout->setVisible(false);
@@ -657,8 +691,8 @@ void Widget::set_screen_state(){
             break;
         }
         default:{
-            m_bottomTableView->setVisible(true);
-            m_topTableView->setVisible(true);
+            m_bottom_tableView->setVisible(true);
+            m_top_tableView_biblio->setVisible(true);
             //m_middle_table_wdget->setVisible(true);
             m_rightSplitter->setVisible(true);
         }
@@ -667,7 +701,7 @@ void Widget::set_screen_state(){
 }
 void Widget::place_entries_with_shared_keys_on_table(){
     int row(0), rowcount(0);
-    rowcount = m_biblioModel->get_count_of_multiply_used_keys();
+    rowcount = m_biblio_model->get_count_of_multiply_used_keys();
     if (rowcount == 0) return;
     m_bottom_table_widget2->clear();
     m_bottom_table_widget2->setVisible(true);
@@ -675,11 +709,11 @@ void Widget::place_entries_with_shared_keys_on_table(){
     m_bottom_table_widget2->setColumnWidth(0,400);
     m_bottom_table_widget2->setColumnWidth(1,500);
     m_bottom_table_widget2->setRowCount(rowcount);
-    foreach (QString  key, m_biblioModel->get_keys_used_multiply() ) {
-        QList<Entry*> entries = m_biblioModel-> get_multiple_entries_from_one_key(key);
+    foreach (QString  key, m_biblio_model->get_keys_used_multiply() ) {
+        QList<Entry*> entries = m_biblio_model-> get_multiple_entries_from_one_key(key);
         foreach (Entry* entry, entries){
-            QTableWidgetItem * item = new QTableWidgetItem (entry->get_filenamestem());
-            qDebug() << 664 << entry->get_filenamestem();
+            QTableWidgetItem * item = new QTableWidgetItem (entry->get_filename());
+            qDebug() << 664 << entry->get_filename();
             m_bottom_table_widget2->setItem(row,0,item);
             QTableWidgetItem * item1 = new QTableWidgetItem (entry->get_key());
             m_bottom_table_widget2->setItem(row,1, item1);
@@ -689,20 +723,20 @@ void Widget::place_entries_with_shared_keys_on_table(){
 }
 void Widget::place_entries_with_shared_filename_on_table(){
     int row(0), rowcount(0);
-    rowcount = m_biblioModel->get_count_of_multiply_used_filenames();
+    rowcount = m_biblio_model->get_count_of_multiply_used_filenames();
     if (rowcount == 0) return;
     m_bottom_table_widget2->setRowCount(rowcount);
     m_bottom_table_widget2->setVisible(true);
     m_bottom_table_widget2->setColumnCount(2);
     m_bottom_table_widget2->setColumnWidth(0,400);
     m_bottom_table_widget2->setColumnWidth(1,500);
-    foreach (QString  filename, m_biblioModel->get_list_of_filename_stems_used_muliply() ) {
-        QList<Entry*> entries = m_biblioModel->get_multiple_entries_from_filename_stem(filename);
+    foreach (QString  filename, m_biblio_model->get_list_of_filename_stems_used_muliply() ) {
+        QList<Entry*> entries = m_biblio_model->get_multiple_entries_from_filename_stem(filename);
         foreach (Entry* entry, entries){
             QTableWidgetItem * item = new QTableWidgetItem (entry->get_author());
-            qDebug() << 708 << entry->get_filenamestem();
+            qDebug() << 708 << entry->get_filename();
             m_bottom_table_widget2->setItem(row,0,item);
-            QTableWidgetItem * item1 = new QTableWidgetItem (entry->get_filenamestem());
+            QTableWidgetItem * item1 = new QTableWidgetItem (entry->get_filename());
             m_bottom_table_widget2->setItem(row,1, item1);
             row++;
         }
@@ -714,7 +748,7 @@ void Widget::place_biblio_entries_with_shared_size_on_table(){
     int startrow(0);
     qDebug() << 718 << "check for shared size";
 
-    int rowcount = m_biblioModel->get_count_of_multiply_used_sizes();
+    int rowcount = m_biblio_model->get_count_of_multiply_used_sizes();
     /*
     foreach (int size, m_data_by_size.uniqueKeys() ){
         if (size == 0){continue;}
@@ -779,12 +813,12 @@ void Widget::read_JSON_file_old()
 // this is not needed.
 void Widget::delete_size_on_selected_biblio_entries(){
     int column_for_size = 5;
-    for (int rowno = 0; rowno<m_biblioModel->rowCount(); rowno++){
-        QModelIndex index = m_biblioModel->index(rowno, column_for_size);
-        if (m_biblioModel->itemData(index).value(Qt::CheckStateRole) == Qt::Checked) {
+    for (int rowno = 0; rowno<m_biblio_model->rowCount(); rowno++){
+        QModelIndex index = m_biblio_model->index(rowno, column_for_size);
+        if (m_biblio_model->itemData(index).value(Qt::CheckStateRole) == Qt::Checked) {
             qDebug() << 1049 << "row number to be deleting size"<< rowno;
-            m_biblioModel->get_entries().at(rowno)->set_size(0);
-            m_biblioModel->dataChanged(index, index);
+            m_biblio_model->get_entries().at(rowno)->set_size(0);
+            m_biblio_model->dataChanged(index, index);
         }
     }
 }
@@ -812,7 +846,7 @@ void Widget::link_top_and_bottom_entries(){         // to do todo remove this? &
    qDebug() << 1303 << "row"<< m_entry_in_top_table << "size" << size;
    m_selected_biblio_entry->set_size(size);
    m_selected_biblio_entry->add_to_onboard_entries(m_selected_onboard_entry);
-   m_selected_biblio_entry->set_filename_stem(m_selected_onboard_entry->get_filenamestem());
+   m_selected_biblio_entry->set_filename_stem(m_selected_onboard_entry->get_filename());
    m_selected_biblio_entry->set_folder(m_selected_onboard_entry->get_folder());
    m_selected_biblio_entry->set_filename_full(m_selected_onboard_entry->get_filenamefull());
    //m_selected_biblio_entry->add_keywords(m_middle_table_wdget);
@@ -821,95 +855,95 @@ void Widget::link_top_and_bottom_entries(){         // to do todo remove this? &
 }
 */
 
-void Widget::link_biblio_entry_and_onboard_entry(Entry* biblio, Entry* onboard){
-    biblio->add_to_onboard_entries(onboard);
-    onboard->add_to_bib_entries(biblio);
+void Widget::link_biblio_entry_and_file(Entry* biblio, File* file){
+    biblio->add_to_onboard_entries(file);
+    file->add_to_bib_entries(biblio);
     //biblio->set_filenameFull(onboard->get_filenamefull());
-    biblio->set_filename_stem(onboard->get_filenamestem());
-    biblio->set_folder(onboard->get_folder());
-    biblio->set_info("date", onboard->get_info("date"));
-    biblio->set_info("lastread", onboard->get_info("lastread"));
-    biblio->set_size(onboard->get_size());
+    biblio->set_filename_stem(file->get_filename());
+    biblio->set_folder(file->get_folder());
+    biblio->set_info("date_created", file->get_date_created());
+    biblio->set_info("lastread", file->get_date_last_read());
+    biblio->set_size(file->get_size());
 }
-void Widget::link_biblio_entries_and_onboard_entries_from_size( ){
-    if (m_biblioModel->get_entries().count() == 0 || m_onboard_pdf_model->number_of_entries() == 0) {
+void Widget::link_biblio_entries_and_files_by_size( ){
+    if (m_biblio_model->get_entries().count() == 0 || m_onboard_pdf_model->number_of_files() == 0) {
         return;
     }
-    foreach (int this_size, m_biblioModel->get_list_of_sizes_used()){
+    foreach (int this_size, m_biblio_model->get_list_of_sizes_used()){
         if (this_size==0) { continue; }
         if (! m_onboard_pdf_model->contains_size(this_size)){
             continue;
         }
-        if (m_biblioModel->if_size_occurs_multiply(this_size)){
+        if (m_biblio_model->if_size_occurs_multiply(this_size)){
             if (m_onboard_pdf_model->if_size_occurs_multiply(this_size)){
-                 QList<Entry*> biblios = m_biblioModel->get_multiple_entries_from_size(this_size);
+                QList<Entry*> biblios = m_biblio_model->get_multiple_entries_from_size(this_size);
                  foreach (Entry* biblio, biblios){
-                     QList<Entry*> onboards = m_onboard_pdf_model->get_multiple_entries_from_size(this_size);
-                     foreach (Entry* onboard, onboards){
-                         link_biblio_entry_and_onboard_entry(biblio, onboard);
+                     QList<File*> onboards = m_onboard_pdf_model->get_multiple_files_from_size(this_size);
+                     foreach (File* file, onboards){
+                         link_biblio_entry_and_file(biblio, file);
                      }
                  }
             }else{
-                Entry* onboard = m_onboard_pdf_model->get_entry_by_size(this_size);
-                QList<Entry*> biblios = m_biblioModel->get_multiple_entries_from_size(this_size);
+                File* file = m_onboard_pdf_model->get_file_by_size(this_size);
+                QList<Entry*> biblios = m_biblio_model->get_multiple_entries_from_size(this_size);
                 foreach (Entry* biblio, biblios){
-                    link_biblio_entry_and_onboard_entry(biblio, onboard);
+                    link_biblio_entry_and_file(biblio, file);
                 }
             }
         } else{
-          Entry* biblio = m_biblioModel->get_entry_by_size(this_size);
+            Entry* biblio = m_biblio_model->get_entry_by_size(this_size);
           if (m_onboard_pdf_model->if_size_occurs_multiply(this_size)){
-              QList<Entry*>  onboards = m_onboard_pdf_model->get_multiple_entries_from_size(this_size);
-              foreach (Entry* onboard, onboards){
-                  link_biblio_entry_and_onboard_entry(biblio, onboard);
+              QList<File*>  onboards = m_onboard_pdf_model->get_multiple_files_from_size(this_size);
+              foreach (File* file, onboards){
+                  link_biblio_entry_and_file(biblio, file);
               }
           }  else{ // the usual case!
-                Entry* onboard = m_onboard_pdf_model->get_entry_by_size(this_size);
-                link_biblio_entry_and_onboard_entry(biblio, onboard);
+                File* file = m_onboard_pdf_model->get_file_by_size(this_size);
+                link_biblio_entry_and_file(biblio, file);
           }
         }
     }
-    emit m_biblioModel->dataChanged(QModelIndex(), QModelIndex());
+    emit m_biblio_model->dataChanged(QModelIndex(), QModelIndex());
 }
 void Widget::link_biblio_entries_and_onboard_entries_by_filename(){
-    if (m_biblioModel->get_entries().count() == 0 || m_onboard_pdf_model->number_of_entries() == 0) {
+    if (m_biblio_model->get_entries().count() == 0 || m_onboard_pdf_model->number_of_files() == 0) {
         return;
     }
-    foreach (QString filename_stem, m_biblioModel->get_list_of_filename_stems_used() ) {
+    foreach (QString filename_stem, m_biblio_model->get_list_of_filename_stems_used() ) {
 
         if (! m_onboard_pdf_model->contains_filename_stem(filename_stem)){
             continue;
         }
-        if (m_biblioModel->if_filename_stem_occurs_multiply(filename_stem)){
+        if (m_biblio_model->if_filename_stem_occurs_multiply(filename_stem)){
             if (m_onboard_pdf_model->if_filename_stem_occurs_multiply(filename_stem)){
-                 QList<Entry*> biblios = m_biblioModel->get_multiple_entries_from_filename_stem(filename_stem);
+                QList<Entry*> biblios = m_biblio_model->get_multiple_entries_from_filename_stem(filename_stem);
                  foreach (Entry* biblio, biblios){
-                     QList<Entry*> onboards = m_onboard_pdf_model->get_multiple_entries_from_filename_stem(filename_stem);
-                     foreach (Entry* onboard, onboards){
-                         link_biblio_entry_and_onboard_entry(biblio, onboard);
+                     QList<File*> onboards = m_onboard_pdf_model->get_multiple_files_from_filename_stem(filename_stem);
+                     foreach (File* file, onboards){
+                         link_biblio_entry_and_file(biblio, file);
                      }
                  }
             }else{
-                Entry* onboard = m_onboard_pdf_model->get_entry_by_filename_stem(filename_stem);
-                QList<Entry*> biblios = m_biblioModel->get_multiple_entries_from_filename_stem(filename_stem);
+                File* file = m_onboard_pdf_model->get_file_by_filename_stem(filename_stem);
+                QList<Entry*> biblios = m_biblio_model->get_multiple_entries_from_filename_stem(filename_stem);
                 foreach (Entry* biblio, biblios){
-                    link_biblio_entry_and_onboard_entry(biblio, onboard);
+                    link_biblio_entry_and_file(biblio, file);
                 }
             }
         } else{
-          Entry* biblio = m_biblioModel->get_entry_by_filename_stem(filename_stem);
-          if (m_onboard_pdf_model->if_filename_stem_occurs_multiply(filename_stem)){
-              QList<Entry*>  onboards = m_onboard_pdf_model->get_multiple_entries_from_filename_stem(filename_stem);
-              foreach (Entry* onboard, onboards){
-                  link_biblio_entry_and_onboard_entry(biblio, onboard);
+            Entry* biblio = m_biblio_model->get_entry_by_filename_stem(filename_stem);
+            if (m_onboard_pdf_model->if_filename_stem_occurs_multiply(filename_stem)){
+              QList<File*>  onboards = m_onboard_pdf_model->get_multiple_files_from_filename_stem(filename_stem);
+              foreach (File* file, onboards){
+                  link_biblio_entry_and_file(biblio, file);
               }
           }  else{ // the usual case!
-                Entry* onboard = m_onboard_pdf_model->get_entry_by_filename_stem(filename_stem);
-                link_biblio_entry_and_onboard_entry(biblio, onboard);
+                File* file = m_onboard_pdf_model->get_file_by_filename_stem(filename_stem);
+                link_biblio_entry_and_file(biblio, file);
           }
         }
     }
-    emit m_biblioModel->dataChanged(QModelIndex(), QModelIndex());
+    emit m_biblio_model->dataChanged(QModelIndex(), QModelIndex());
 
 }
 
@@ -948,10 +982,7 @@ void display_entry_on_tablewidget(QTableWidget* table_widget, Entry* entry, QStr
     }
 }
 
-void Widget::put_file_info_on_entry_view(QModelIndex & current_model_index){
 
-
-}
 //void Widget::put_bibitem_info_on_middle_table_widget(const Entry* entry){
 //}
 void Widget::on_middle_widget_item_changed(int row, int column ){
@@ -959,101 +990,6 @@ void Widget::on_middle_widget_item_changed(int row, int column ){
     if (  ( m_bottom_table_widget->hasFocus()    &&
           (row == 1 || row == 2 || row == 3)  ) )
     {
-        generate_new_filename();
+        generate_new_filename_from_selected_biblio_entry();
     }
 }
-
-/*              BIB MODEL               */
-/*              we're moving this into the BiblioModel               */
-/*
-void Widget::register_biblioentry_by_key_name_and_size(Entry* entry){
-    //new:
-    biblioModel->register_entry(entry);
-    // old:
-    register_biblioentry_by_key(entry);
-    register_biblioentry_by_filenamestem(entry);
-    register_biblioentry_by_fullfilename(entry);
-    register_biblioentry_by_size(entry);
-}
-*/
-// remove:
-/*
-void Widget::register_biblioentry_by_size(Entry * entry ){
-    int this_size = entry->get_size();
-    if (m_data_by_size.contains(this_size)){
-        //qDebug() << 1310 << entry->get_author() << entry->get_filenamestem();
-    }
-    m_data_by_size.insert(this_size, entry);
-}
-*/
-//remove:
-/*
-void Widget::register_biblioentry_by_fullfilename(Entry* entry){
-    m_data_by_fullfilename[entry->get_filenamefull()] = entry;
-}
-*
-//remove:
-void Widget::register_biblioentry_by_filenamestem(Entry* entry){
-    m_data_by_filenamestem.insert(entry->get_filenamestem(), entry);
-}
-*/
-/*
-void Widget::register_biblioentry_by_key(Entry* entry){
-    QString key;
-    if (entry->get_key().length() > 0 && m_data_by_key.contains(entry->get_key())){
-        m_filename_collisions.insert(entry->get_key(), entry);
-        qDebug() << 594 << "collision by key" << entry->get_key();
-    } else{
-        if (entry->get_key().length() > 0){            
-            m_data_by_key[entry->get_key()] = entry;
-        } else {
-            key = entry->get_filenamestem();
-            entry->set_key(key);
-            m_data_by_key[key] = entry;
-        }
-    }
-}
-*/
-void Widget::generate_new_filename(){
-    QString prefix, author, author_surname;
-    QString  title, year, new_filename, new_biblio_key;
-
-    prefix = get_selected_ToK_item_with_spaces();
-    year =  m_selected_onboard_entry->get_year();
-    if (year.length() == 0) {
-        year = QString("9999");
-    }
-    author = get_first_author(m_selected_onboard_entry->get_author());
-    author_surname = find_surname(author);
-    int max_title_length = 50;
-    title = m_selected_onboard_entry->get_title();
-    if (title.length() == 0) {
-            title = "title";
-    } else {
-            QStringList titlelist = title.split(" ");
-            for (int no = 0; no < titlelist.size(); no++){
-                title += " " + titlelist[no];
-                if (title.length() >= max_title_length){
-                    break;
-                }
-            }            
-    }    
-    QString space = " ";
-    QString underscore = "_";
-
-    new_filename = prefix + space + year + space + author_surname + space + title + ".pdf";
-    new_biblio_key = author_surname + underscore + year + underscore + author_surname;
-    m_proposed_new_title_widget->setText(new_filename);
-
-    if (m_biblioModel->contains_key(new_biblio_key) ) {
-        new_biblio_key += title;
-    }
-    /*
-    m_selected_entry->set_filenameStem(new_filename);
-    m_selected_entry->set_key(new_biblio_key);
-
-    QModelIndex filename_index = m_selected_entry_model->index(  m_selected_entry_model->get_filename_row() ,1 );
-    emit m_selected_entry_model->dataChanged(filename_index, filename_index);
-    */
-}
-

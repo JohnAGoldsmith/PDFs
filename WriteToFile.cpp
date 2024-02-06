@@ -91,7 +91,7 @@ void Widget::write_bibliography(){
     write_ToK_to_file();
 }
 void Widget::write_bibliography_to_json( ){
-    if (!m_biblioModel) {return;}
+    if (!m_biblio_model) {return;}
     QDateTime date = QDateTime::currentDateTime();
     QString formattedTime = date.toString("yyyy_MM_dd_hh:mm:ss");
     qDebug() << 487 << formattedTime;
@@ -104,7 +104,7 @@ void Widget::write_bibliography_to_json( ){
     json_top.append(json_settings);
 
     QJsonObject json_object_for_biblio;
-    foreach (Entry* entry, m_biblioModel->get_entries()){
+    foreach (Entry* entry, m_biblio_model->get_entries()){
         write_bibentry_to_json(entry, json_object_for_biblio ); //TODO  HERE IS WHERE I stopped. have to iterate over the right key.
     }
     json_top.append(json_object_for_biblio);
@@ -124,7 +124,7 @@ void Widget::write_bibliography_to_json( ){
     }
 }
 void Widget::write_bibliography_to_bibtex(){
-    if (! m_biblioModel) {return;}
+    if (! m_biblio_model) {return;}
     QDateTime date = QDateTime::currentDateTime();
     QString formattedTime = date.toString("yyyy_MM_dd_hh:mm:ss");
     QString filename = m_json_folder + "this_bibliography.bibtex";
@@ -134,7 +134,7 @@ void Widget::write_bibliography_to_bibtex(){
          return;
     }
     QTextStream stream(&file);
-    foreach (Entry* entry, m_biblioModel->get_entries()){
+    foreach (Entry* entry, m_biblio_model->get_entries()){
         entry -> write_bibentry_to_bibtex(  stream , m_bibliography_labels); //TODO  HERE IS WHERE I stopped. have to iterate over the right key.
     }
     qDebug() << 770 << filename;
